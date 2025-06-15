@@ -2,11 +2,12 @@ import { useState } from "react";
 import { WordRepository } from "../../data/repository";
 import { colors } from "@/lib/colors";
 import { ExtractedWordsEditor } from "./ExtractedWordsEditor";
+import { ExtractedWord } from "@/api";
 
 export const FreeTextInput = () => {
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
-  const [extractedWords, setExtractedWords] = useState<any[] | null>(null);
+  const [extractedWords, setExtractedWords] = useState<ExtractedWord[] | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

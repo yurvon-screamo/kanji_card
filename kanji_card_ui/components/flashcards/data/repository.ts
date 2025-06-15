@@ -1,5 +1,5 @@
 import { JapaneseWord, Set, Collection } from "../types";
-import { ExtractedWord, SetResponse, SetState, WordOverview, WordResponse } from "../../../api";
+import { ExtractedWord as ApiExtractedWord, ExtractedWord, SetResponse, SetState, WordOverview, WordResponse } from "../../../api";
 import { apiService } from "@/lib/api-service";
 
 export class WordRepository {
@@ -38,7 +38,7 @@ export class WordRepository {
   }
 
   public async getLearnedWords(search: string | undefined): Promise<JapaneseWord[]> {
-    const response = await apiService.listReleasedWords();
+    const response = await apiService.listReleasedWords(search);
     return response.map(x => this.mapWordResponseToJapaneseWord(x))
   }
 
@@ -81,12 +81,22 @@ export class WordRepository {
     }
   }
 
+  private mapApiExtractedWordToExtractedWord(word: ApiExtractedWord): ExtractedWord {
+    return {
+      word: word.word,
+      reading: word.reading || null,
+      translation: word.translation
+    };
+  }
+
   public async extractWordsFromText(text: string): Promise<ExtractedWord[]> {
-    return await apiService.extractWordsFromText(text);
+    const words = await apiService.extractWordsFromText(text);
+    return words.map(this.mapApiExtractedWordToExtractedWord);
   }
 
   public async extractWordsFromImage(imageData: Uint8Array): Promise<ExtractedWord[]> {
-    return await apiService.extractWordsFromImage(imageData);
+    const words = await apiService.extractWordsFromImage(imageData);
+    return words.map(this.mapApiExtractedWordToExtractedWord);
   }
 
   public async saveWords(words: ExtractedWord[]): Promise<void> {

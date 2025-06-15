@@ -1,14 +1,16 @@
 import { useState, useRef, useEffect } from "react";
-import { Upload, Image as ImageIcon } from "lucide-react";
+import { Image as ImageIcon } from "lucide-react";
+import Image from "next/image";
 import { colors } from "@/lib/colors";
 import { WordRepository } from "../../data/repository";
 import { ExtractedWordsEditor } from "./ExtractedWordsEditor";
+import { ExtractedWord } from "@/api";
 
 export const ImageInput = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [extractedWords, setExtractedWords] = useState<any[] | null>(null);
+  const [extractedWords, setExtractedWords] = useState<ExtractedWord[] | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -95,10 +97,12 @@ export const ImageInput = () => {
       {preview && (
         <div className="space-y-4">
           <div className="relative aspect-video rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-            <img
+            <Image
               src={preview}
               alt="Preview"
-              className="w-full h-full object-contain"
+              fill
+              className="object-contain"
+              unoptimized
             />
           </div>
           <button

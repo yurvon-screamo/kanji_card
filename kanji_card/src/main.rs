@@ -8,14 +8,15 @@ mod release_repository;
 mod set_repository;
 mod set_service;
 mod user_repository;
+mod web_ui;
 
 use anyhow::Result;
 use axum::{
-    Router,
     http::{
         Method,
         header::{ACCEPT, CONTENT_TYPE, COOKIE},
     },
+    routing::get,
 };
 use clap::Parser;
 use config::Config;
@@ -34,7 +35,7 @@ use tracing_subscriber::EnvFilter;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::release_repository::ReleaseRepository;
+use crate::{release_repository::ReleaseRepository, web_ui::static_handler};
 
 #[derive(Debug, Deserialize)]
 struct ServerConfig {
@@ -140,9 +141,11 @@ async fn main() -> Result<()> {
         .allow_headers([ACCEPT, CONTENT_TYPE, COOKIE])
         .allow_credentials(true);
 
-    let router = router.merge(SwaggerUi::new("/swagger").url("/api/openapi.json", api));
-    let app = Router::new()
-        .merge(router)
+    let app = router
+        .merge(SwaggerUi::new("/swagger").url("/api/openapi.json", api))
+        .route("/", get(static_handler))
+        .route("/index.html", get(static_handler))
+        .route("/{*file}", get(static_handler))
         .layer(cors)
         .with_state(())
         .into_make_service();

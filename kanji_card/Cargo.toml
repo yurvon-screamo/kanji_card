@@ -29,3 +29,4 @@ cookie = "0.18"
 jsonwebtoken = "9.2"
 hyper = { version = "1.6", features = ["full"] }
 sha2 = "0.10.8"
+mime_guess = "2.0"

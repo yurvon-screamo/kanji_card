@@ -1037,6 +1037,7 @@ dependencies = [
  "cookie",
  "hyper",
  "jsonwebtoken",
+ "mime_guess",
  "opentelemetry",
  "opentelemetry-appender-tracing",
  "opentelemetry-otlp",

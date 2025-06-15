@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { WordRepository } from "./data/repository";
@@ -24,6 +24,18 @@ import {
 type WordCollection = Collection;
 
 export default function JapaneseFlashcards() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-500"></div>
+      </div>
+    }>
+      <JapaneseFlashcardsContent />
+    </Suspense>
+  );
+}
+
+function JapaneseFlashcardsContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [viewMode, setViewMode] = useState<ViewMode>("pool");
@@ -112,13 +124,6 @@ export default function JapaneseFlashcards() {
       const repository = WordRepository.getInstance();
 
       try {
-        // Check if data exists by trying to get overview
-        const overview = await repository.getOverview();
-        const totalWords =
-          overview.finished.total_words +
-          overview.current.total_words +
-          overview.tobe.total_words;
-
         // Handle URL parameters
         const typeParam = searchParams.get("type");
         const setIdParam = searchParams.get("setId");

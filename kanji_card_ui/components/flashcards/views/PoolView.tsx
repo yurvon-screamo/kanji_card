@@ -13,7 +13,7 @@ import {
 } from "../types";
 import { colors } from "@/lib/colors";
 import { Toolbar } from "../components/Toolbar";
-import { WordOverview, WordResponse, SetState } from "../../../api";
+import { WordOverview, WordResponse } from "../../../api";
 
 interface PoolViewProps {
   setViewMode: (mode: ViewMode) => void;

@@ -26,7 +26,7 @@ export const RegisterForm = () => {
         try {
             await apiService.register(login, password);
             router.push('/login');
-        } catch (err) {
+        } catch {
             setError('Пользователь с таким логином уже существует');
         }
     };

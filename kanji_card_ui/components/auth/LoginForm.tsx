@@ -20,7 +20,7 @@ export const LoginForm = () => {
         try {
             await apiService.login(login, password);
             router.push('/');
-        } catch (err) {
+        } catch {
             setError('Неверный логин или пароль');
         }
     };

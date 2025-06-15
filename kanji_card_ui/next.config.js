@@ -1,13 +1,10 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-    async rewrites() {
-        return [
-            {
-                source: '/api/:path*',
-                destination: 'http://localhost:8080/api/:path*',
-            },
-        ];
+    output: 'export',
+    distDir: 'dist',
+    images: {
+        unoptimized: true,
     },
 }
 
-module.exports = nextConfig 
+module.exports = nextConfig

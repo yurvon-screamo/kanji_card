@@ -1,7 +1,5 @@
-import { AuthService, DefaultService, SetState, OpenAPI, MarkAsTobeRequest } from '@/api';
-import { redirect } from 'next/navigation';
+import { AuthService, DefaultService, OpenAPI, MarkAsTobeRequest, ExtractedWord } from '@/api';
 
-// Configure the API client
 function configureApi() {
     OpenAPI.BASE = process.env.NEXT_PUBLIC_API_URL || '';
     OpenAPI.WITH_CREDENTIALS = true;
@@ -11,7 +9,6 @@ function configureApi() {
     };
 }
 
-// Initialize the API configuration
 configureApi();
 
 class ApiService {
@@ -29,7 +26,7 @@ class ApiService {
     private async handleRequest<T>(request: () => Promise<T>): Promise<T> {
         try {
             return await request();
-        } catch (error: any) {
+        } catch (error) {
             console.error('API request failed:', error);
             // if (error.status === 401) {
             window.location.href = '/login';
@@ -118,7 +115,7 @@ class ApiService {
         );
     }
 
-    public async saveWords(words: any[]) {
+    public async saveWords(words: ExtractedWord[]) {
         return this.handleRequest(() =>
             DefaultService.saveWords({ words })
         );

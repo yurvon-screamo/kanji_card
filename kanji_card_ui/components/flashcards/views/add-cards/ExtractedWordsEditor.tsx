@@ -2,12 +2,7 @@ import { useState } from "react";
 import { WordRepository } from "../../data/repository";
 import { colors } from "@/lib/colors";
 import { Trash2, Plus } from "lucide-react";
-
-interface ExtractedWord {
-    word: string;
-    reading: string | null;
-    translation: string;
-}
+import { ExtractedWord } from "@/api";
 
 interface ExtractedWordsEditorProps {
     initialWords: ExtractedWord[];
