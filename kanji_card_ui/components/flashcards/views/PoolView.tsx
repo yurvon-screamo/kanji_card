@@ -35,6 +35,7 @@ export const PoolView = ({
   useEffect(() => {
     setMounted(true);
     setLoading(false);
+    loadOverview();
   }, []);
 
   const loadOverview = async () => {
