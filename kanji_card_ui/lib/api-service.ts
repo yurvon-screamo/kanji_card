@@ -29,7 +29,7 @@ class ApiService {
         } catch (error) {
             console.error('API request failed:', error);
             if (window.location.pathname !== '/login') {
-                window.location.href = '/login';
+                window.location.replace('/login');
             }
             throw error;
         }

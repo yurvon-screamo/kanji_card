@@ -32,6 +32,11 @@ export const PoolView = ({
   const [overview, setOverview] = useState<WordOverview | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    setMounted(true);
+    setLoading(false);
+  }, []);
+
   const loadOverview = async () => {
     try {
       const repository = WordRepository.getInstance();
@@ -42,6 +47,7 @@ export const PoolView = ({
       console.error("Error loading overview:", error);
       setError("Ошибка загрузки данных. Попробуйте обновить страницу.");
       setOverview(null);
+      throw error
     } finally {
       setLoading(false);
     }
@@ -99,14 +105,6 @@ export const PoolView = ({
       console.error("Error loading sets:", error);
     }
   };
-
-  useEffect(() => {
-    const init = async () => {
-      setMounted(true);
-      await loadOverview();
-    };
-    init();
-  }, []);
 
   if (!mounted || loading) {
     return (

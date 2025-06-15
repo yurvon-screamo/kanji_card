@@ -9,3 +9,4 @@ kanji_card/data
 kanji_card/config.toml
 kanji_card/target
 kanji_card/openapi.json
+kanji_card_ui/dist
