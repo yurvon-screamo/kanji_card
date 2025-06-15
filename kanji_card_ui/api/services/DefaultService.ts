@@ -7,8 +7,8 @@ import type { ExtractWordsFromImageRequest } from '../models/ExtractWordsFromIma
 import type { ExtractWordsFromTextRequest } from '../models/ExtractWordsFromTextRequest';
 import type { SaveWordsRequest } from '../models/SaveWordsRequest';
 import type { SetResponse } from '../models/SetResponse';
-import type { SetState } from '../models/SetState';
 import type { WordOverview } from '../models/WordOverview';
+import type { WordResponse } from '../models/WordResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -27,19 +27,45 @@ export class DefaultService {
         });
     }
     /**
-     * @param state Filter by set state
-     * @returns string List of set IDs retrieved successfully
+     * @returns SetResponse List of current sets retrieved successfully
      * @throws ApiError
      */
-    public static listSets(
-        state?: SetState,
-    ): CancelablePromise<Array<string>> {
+    public static listCurrentSets(): CancelablePromise<Array<SetResponse>> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/query/sets',
-            query: {
-                'state': state,
+            url: '/api/query/sets/current',
+            errors: {
+                500: `Internal server error`,
             },
+        });
+    }
+    /**
+     * @param search Search term for cards (case-insensitive)
+     * @returns WordResponse List of released cards retrieved successfully
+     * @throws ApiError
+     */
+    public static listReleasedSets(
+        search?: string,
+    ): CancelablePromise<Array<WordResponse>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/query/sets/released',
+            query: {
+                'search': search,
+            },
+            errors: {
+                500: `Internal server error`,
+            },
+        });
+    }
+    /**
+     * @returns SetResponse List of tobe sets retrieved successfully
+     * @throws ApiError
+     */
+    public static listTobeSets(): CancelablePromise<Array<SetResponse>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/query/sets/tobe',
             errors: {
                 500: `Internal server error`,
             },

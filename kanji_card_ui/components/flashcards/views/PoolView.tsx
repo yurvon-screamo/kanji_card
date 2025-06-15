@@ -65,13 +65,18 @@ export const PoolView = ({
 
       switch (collection) {
         case Collection.LEARNED:
-          sets = await repository.getSetsByState(SetState.FINISHED);
+          const learnedWords = await repository.getLearnedWords(undefined);
+          sets = [{
+            id: "learned",
+            words: learnedWords,
+            state: Collection.LEARNED
+          }];
           break;
         case Collection.IN_PROGRESS:
-          sets = await repository.getSetsByState(SetState.CURRENT);
+          sets = await repository.getInProgressSets();
           break;
         case Collection.NEW:
-          sets = await repository.getSetsByState(SetState.TOBE);
+          sets = await repository.getUnlearnedSets();
           break;
       }
 

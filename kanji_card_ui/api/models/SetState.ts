@@ -5,5 +5,4 @@
 export enum SetState {
     TOBE = 'Tobe',
     CURRENT = 'Current',
-    FINISHED = 'Finished',
 }

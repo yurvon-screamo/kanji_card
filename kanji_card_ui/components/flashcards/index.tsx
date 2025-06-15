@@ -10,6 +10,7 @@ import { PoolView } from "./views/PoolView";
 import { SetSelectionView } from "./views/SetSelectionView";
 import { StudyView } from "./views/StudyView";
 import { AddCardsView } from "./views/AddCardsView";
+import { LearnedWordsView } from "./views/LearnedWordsView";
 import {
   ViewMode,
   StudyMode,
@@ -139,13 +140,18 @@ export default function JapaneseFlashcards() {
               let sets: Set[] = [];
               switch (type) {
                 case Collection.LEARNED:
-                  sets = await repository.getSetsByState(SetState.FINISHED);
+                  const learnedWords = await repository.getLearnedWords(undefined);
+                  sets = [{
+                    id: "learned",
+                    words: learnedWords,
+                    state: Collection.LEARNED
+                  }];
                   break;
                 case Collection.IN_PROGRESS:
-                  sets = await repository.getSetsByState(SetState.CURRENT);
+                  sets = await repository.getInProgressSets();
                   break;
                 case Collection.NEW:
-                  sets = await repository.getSetsByState(SetState.TOBE);
+                  sets = await repository.getUnlearnedSets();
                   break;
               }
               setSelectedSetList({
@@ -204,7 +210,6 @@ export default function JapaneseFlashcards() {
           studyMode={studyMode}
           setViewMode={(mode) => {
             setViewMode(mode);
-            // Clear URL params and reset states when going back
             if (mode === "set-selection" || mode === "pool") {
               router.push("/");
               if (mode === "pool") {
@@ -227,59 +232,68 @@ export default function JapaneseFlashcards() {
         selectedSetList &&
         selectedSetList.sets &&
         selectedSetList.sets.length > 0 && (
-          <SetSelectionView
-            setViewMode={(mode) => {
-              setViewMode(mode);
-              // Clear URL params and reset states when going back to pool
-              if (mode === "pool") {
+          selectedSetList.type === Collection.LEARNED ? (
+            <LearnedWordsView
+              onBack={() => {
+                setViewMode("pool");
                 router.push("/");
                 setSelectedSet(null);
                 setSelectedSetList(null);
                 setCurrentWordIndex(0);
                 setCurrentSide(0);
                 setWordCollection(Collection.LEARNED);
-              }
-            }}
-            setCurrentSetIndex={(index) => {
-              const collections: WordCollection[] = [
-                Collection.LEARNED,
-                Collection.IN_PROGRESS,
-                Collection.NEW,
-              ];
-              const newCollection = collections[index];
-              setWordCollection(newCollection);
-            }}
-            setCurrentWordIndex={setCurrentWordIndex}
-            selectedSetList={selectedSetList}
-            setSelectedSet={(newSet) => {
-              setSelectedSet(newSet);
-              // Update word collection based on set type
-              setWordCollection(newSet.type);
-              // Update URL with new set
-              updateUrlParams(newSet.type, newSet.set?.id);
-            }}
-            setCollection={(collection) => {
-              setWordCollection(collection);
-
-              setSelectedSet((prev) =>
-                prev
-                  ? {
-                    ...prev,
-                    type: collection,
-                  }
-                  : {
-                    type: collection,
-                    set: null,
-                  },
-              );
-            }}
-          />
+              }}
+            />
+          ) : (
+            <SetSelectionView
+              setViewMode={(mode) => {
+                setViewMode(mode);
+                if (mode === "pool") {
+                  router.push("/");
+                  setSelectedSet(null);
+                  setSelectedSetList(null);
+                  setCurrentWordIndex(0);
+                  setCurrentSide(0);
+                  setWordCollection(Collection.LEARNED);
+                }
+              }}
+              setCurrentSetIndex={(index) => {
+                const collections: WordCollection[] = [
+                  Collection.LEARNED,
+                  Collection.IN_PROGRESS,
+                  Collection.NEW,
+                ];
+                const newCollection = collections[index];
+                setWordCollection(newCollection);
+              }}
+              setCurrentWordIndex={setCurrentWordIndex}
+              selectedSetList={selectedSetList}
+              setSelectedSet={(newSet) => {
+                setSelectedSet(newSet);
+                setWordCollection(newSet.type);
+                updateUrlParams(newSet.type, newSet.set?.id);
+              }}
+              setCollection={(collection) => {
+                setWordCollection(collection);
+                setSelectedSet((prev) =>
+                  prev
+                    ? {
+                      ...prev,
+                      type: collection,
+                    }
+                    : {
+                      type: collection,
+                      set: null,
+                    },
+                );
+              }}
+            />
+          )
         )}
       {viewMode === "pool" && (
         <PoolView
           setViewMode={(mode) => {
             setViewMode(mode);
-            // Clear URL params when going to pool
             if (mode === "pool") {
               router.push("/");
               setSelectedSet(null);

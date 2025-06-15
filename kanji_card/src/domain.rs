@@ -14,7 +14,6 @@ pub struct CardSet {
 pub enum SetState {
     Tobe,
     Current,
-    Finished,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -61,13 +60,11 @@ impl CardSet {
         Ok(())
     }
 
-    pub fn as_finished(&mut self) -> Result<()> {
+    pub fn release(self) -> Result<Vec<Card>> {
         if self.state != SetState::Current {
             return Err(anyhow!("State is not current"));
         }
-
-        self.state = SetState::Finished;
-        Ok(())
+        Ok(self.words)
     }
 
     pub fn is_writabe(&self) -> bool {

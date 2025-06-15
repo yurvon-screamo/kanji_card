@@ -1,5 +1,5 @@
 import { JapaneseWord, Set, Collection } from "../types";
-import { ExtractedWord, SetState, WordOverview, WordResponse } from "../../../api";
+import { ExtractedWord, SetResponse, SetState, WordOverview, WordResponse } from "../../../api";
 import { apiService } from "@/lib/api-service";
 
 export class WordRepository {
@@ -14,6 +14,18 @@ export class WordRepository {
     return WordRepository.instance;
   }
 
+  private mapSetResponseToSet(
+    setResponse: SetResponse,
+  ): Set {
+    return {
+      id: setResponse.id,
+      words: setResponse.words.map((w) =>
+        this.mapWordResponseToJapaneseWord(w),
+      ),
+      state: this.mapSetStateToCollection(setResponse.state),
+    };
+  }
+
   private mapWordResponseToJapaneseWord(
     wordResponse: WordResponse,
   ): JapaneseWord {
@@ -25,31 +37,19 @@ export class WordRepository {
     };
   }
 
-  private async getWordsByState(state: SetState): Promise<JapaneseWord[]> {
-    const setIds = await apiService.getListSets(state);
-    const allWords: JapaneseWord[] = [];
-
-    for (const setId of setIds) {
-      const setResponse = await apiService.getSet(setId);
-      const words = setResponse.words.map((w) =>
-        this.mapWordResponseToJapaneseWord(w),
-      );
-      allWords.push(...words);
-    }
-
-    return allWords;
+  public async getLearnedWords(search: string | undefined): Promise<JapaneseWord[]> {
+    const response = await apiService.listReleasedWords();
+    return response.map(x => this.mapWordResponseToJapaneseWord(x))
   }
 
-  public async getLearnedWords(): Promise<JapaneseWord[]> {
-    return this.getWordsByState(SetState.FINISHED);
+  public async getInProgressSets(): Promise<Set[]> {
+    const response = await apiService.listCurrentSets();
+    return response.map(x => this.mapSetResponseToSet(x))
   }
 
-  public async getInProgressWords(): Promise<JapaneseWord[]> {
-    return this.getWordsByState(SetState.CURRENT);
-  }
-
-  public async getUnlearnedWords(): Promise<JapaneseWord[]> {
-    return this.getWordsByState(SetState.TOBE);
+  public async getUnlearnedSets(): Promise<Set[]> {
+    const response = await apiService.listCurrentSets();
+    return response.map(x => this.mapSetResponseToSet(x))
   }
 
   public async markSetAsLearned(setId: string): Promise<void> {
@@ -64,40 +64,14 @@ export class WordRepository {
     return await apiService.getOverview();
   }
 
-  public async getSetsByState(state: SetState): Promise<Set[]> {
-    const setIds = await apiService.getListSets(state);
-    const sets: Set[] = [];
-
-    for (const setId of setIds) {
-      const setResponse = await apiService.getSet(setId);
-      const mappedSet: Set = {
-        id: setResponse.id,
-        words: setResponse.words.map((w) =>
-          this.mapWordResponseToJapaneseWord(w),
-        ),
-        state: this.mapSetStateToCollection(setResponse.state),
-      };
-      sets.push(mappedSet);
-    }
-
-    return sets;
-  }
 
   public async getSetById(setId: string): Promise<Set | null> {
     const setResponse = await apiService.getSet(setId);
-    return {
-      id: setResponse.id,
-      words: setResponse.words.map((w) =>
-        this.mapWordResponseToJapaneseWord(w),
-      ),
-      state: this.mapSetStateToCollection(setResponse.state),
-    };
+    return this.mapSetResponseToSet(setResponse);
   }
 
   private mapSetStateToCollection(state: SetState): Collection {
     switch (state) {
-      case SetState.FINISHED:
-        return Collection.LEARNED;
       case SetState.CURRENT:
         return Collection.IN_PROGRESS;
       case SetState.TOBE:

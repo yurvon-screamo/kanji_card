@@ -182,11 +182,7 @@ async fn mark_as_finished(
     axum::extract::Path(set_id): axum::extract::Path<String>,
     Extension(claims): Extension<Claims>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    match state
-        .set_service
-        .mark_as_finished(&claims.sub, &set_id)
-        .await
-    {
+    match state.set_service.release_set(&claims.sub, &set_id).await {
         Ok(_) => Ok(StatusCode::OK),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     }

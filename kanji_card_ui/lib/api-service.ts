@@ -52,10 +52,23 @@ class ApiService {
         );
     }
 
-    // Word methods
-    public async getListSets(state: SetState) {
+    public async listTobeSets() {
         return this.handleRequest(() =>
-            DefaultService.listSets(state)
+            DefaultService.listTobeSets()
+        );
+    }
+
+
+    public async listCurrentSets() {
+        return this.handleRequest(() =>
+            DefaultService.listCurrentSets()
+        );
+    }
+
+
+    public async listReleasedWords(search?: string) {
+        return this.handleRequest(() =>
+            DefaultService.listReleasedSets(search)
         );
     }
 

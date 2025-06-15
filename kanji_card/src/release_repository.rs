@@ -1,16 +1,16 @@
-use crate::domain::{CardSet, SetState};
+use crate::domain::Card;
 use anyhow::anyhow;
 use std::path::PathBuf;
 use tokio::fs;
 
-const STORAGE_DIR: &str = "data/cardsets";
+const STORAGE_DIR: &str = "data/release";
 
 #[derive(Clone)]
-pub struct CardSetRepository {
+pub struct ReleaseRepository {
     storage_dir: PathBuf,
 }
 
-impl CardSetRepository {
+impl ReleaseRepository {
     pub async fn new() -> anyhow::Result<Self> {
         let storage_dir = PathBuf::from(STORAGE_DIR);
         fs::create_dir_all(&storage_dir).await?;
@@ -23,17 +23,28 @@ impl CardSetRepository {
         self.storage_dir.join(user_login)
     }
 
-    pub async fn save(&self, user_login: &str, card_set: &CardSet) -> anyhow::Result<()> {
-        let json = serde_json::to_string_pretty(card_set)?;
+    pub async fn remove(&self, user_login: &str, card_set_id: &str) -> anyhow::Result<()> {
         let file_path = self
             .get_user_path(user_login)
-            .join(format!("{}.json", card_set.id()));
+            .join(format!("{}.json", card_set_id));
 
-        fs::write(file_path, json).await?;
+        fs::remove_file(file_path).await?;
         Ok(())
     }
 
-    pub async fn load(&self, user_login: &str, id: &str) -> anyhow::Result<CardSet> {
+    pub async fn save(&self, user_login: &str, cards: &[Card]) -> anyhow::Result<()> {
+        for card in cards {
+            let json = serde_json::to_string_pretty(card)?;
+            let file_path = self
+                .get_user_path(user_login)
+                .join(format!("{}.json", card.id()));
+
+            fs::write(file_path, json).await?;
+        }
+        Ok(())
+    }
+
+    pub async fn load(&self, user_login: &str, id: &str) -> anyhow::Result<Card> {
         let file_path = self.get_user_path(user_login).join(format!("{}.json", id));
         if file_path.exists() {
             let json = fs::read_to_string(file_path).await?;
@@ -42,21 +53,7 @@ impl CardSetRepository {
         Err(anyhow!("Card set not found"))
     }
 
-    pub async fn list_ids(
-        &self,
-        user_login: &str,
-        state: &SetState,
-    ) -> anyhow::Result<Vec<String>> {
-        let all = self.list_all(user_login).await?;
-
-        Ok(all
-            .into_iter()
-            .filter(|x| x.state() == state)
-            .map(|x| x.id().to_owned())
-            .collect())
-    }
-
-    pub async fn list_all(&self, user_login: &str) -> anyhow::Result<Vec<CardSet>> {
+    pub async fn list_ids(&self, user_login: &str) -> anyhow::Result<Vec<String>> {
         let mut ids = Vec::new();
         let state_dir = self.get_user_path(user_login);
 
@@ -71,6 +68,11 @@ impl CardSetRepository {
             }
         }
 
+        Ok(ids)
+    }
+
+    pub async fn list_all(&self, user_login: &str) -> anyhow::Result<Vec<Card>> {
+        let ids = self.list_ids(user_login).await?;
         let mut all_sets = Vec::new();
 
         for id in ids {

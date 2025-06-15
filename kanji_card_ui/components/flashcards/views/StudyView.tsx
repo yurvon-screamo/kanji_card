@@ -111,7 +111,12 @@ export const StudyView = ({
   const handleGridCardClick = (index: number) => {
     setGridCardSides((prev) => {
       const newSides = [...prev];
-      newSides[index] = ((newSides[index] + 1) % 3) as CardSide;
+      const currentWord = activeChunk[index];
+      if (!currentWord.reading || currentWord.reading.trim() === '' || currentWord.reading == currentWord.word) {
+        newSides[index] = (newSides[index] === 0 ? 1 : 0) as CardSide;
+      } else {
+        newSides[index] = ((newSides[index] + 1) % 3) as CardSide;
+      }
       return newSides;
     });
   };

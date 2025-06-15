@@ -4,7 +4,8 @@ mod auth_api;
 mod domain;
 mod llm;
 mod query;
-mod repository;
+mod release_repository;
+mod set_repository;
 mod set_service;
 mod user_repository;
 
@@ -22,8 +23,8 @@ use llm::LlmService;
 use opentelemetry::global;
 use opentelemetry_otlp::{Protocol, WithExportConfig};
 use opentelemetry_sdk::{Resource, propagation::TraceContextPropagator, trace::SdkTracerProvider};
-use repository::CardSetRepository;
 use serde::Deserialize;
+use set_repository::CardSetRepository;
 use set_service::SetService;
 use std::{net::Ipv4Addr, time::Duration};
 use tokio::fs;
@@ -32,6 +33,8 @@ use tracing::info;
 use tracing_subscriber::EnvFilter;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
+
+use crate::release_repository::ReleaseRepository;
 
 #[derive(Debug, Deserialize)]
 struct ServerConfig {
@@ -77,7 +80,8 @@ async fn main() -> Result<()> {
         .build()?
         .try_deserialize::<Settings>()?;
 
-    let repository = CardSetRepository::new().await?;
+    let set_repository = CardSetRepository::new().await?;
+    let release_repository = ReleaseRepository::new().await?;
     let user_repository = user_repository::UserRepository::new().await?;
     let jwt_config = auth::JwtConfig {
         secret: settings.jwt.secret_key.as_bytes().to_vec(),
@@ -89,7 +93,11 @@ async fn main() -> Result<()> {
         settings.openrouter.api_key.clone(),
         settings.openrouter.model.clone(),
     );
-    let set_service = SetService::new(repository.clone(), llm_service);
+    let set_service = SetService::new(
+        set_repository.clone(),
+        release_repository.clone(),
+        llm_service,
+    );
 
     let open_api_router = OpenApiRouter::new()
         .nest(
@@ -102,7 +110,7 @@ async fn main() -> Result<()> {
         )
         .nest(
             "/api/query",
-            query::query_router(repository, jwt_config.clone()),
+            query::query_router(set_repository, release_repository, jwt_config.clone()),
         );
 
     let (router, mut api) = open_api_router.split_for_parts();

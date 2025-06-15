@@ -13,25 +13,34 @@ use utoipa_axum::{router::OpenApiRouter, routes};
 use crate::{
     auth::{Claims, JwtConfig, auth_middleware},
     domain::SetState,
-    repository::CardSetRepository,
+    release_repository::ReleaseRepository,
+    set_repository::CardSetRepository,
 };
 
 #[derive(Clone)]
 struct QueryState {
     repository: Arc<CardSetRepository>,
+    release_repository: Arc<ReleaseRepository>,
 }
 
-pub fn query_router(repository: CardSetRepository, jwt_config: JwtConfig) -> OpenApiRouter {
+pub fn query_router(
+    set_repository: CardSetRepository,
+    release_repository: ReleaseRepository,
+    jwt_config: JwtConfig,
+) -> OpenApiRouter {
     OpenApiRouter::new()
         .routes(routes!(get_set))
-        .routes(routes!(list_sets))
+        .routes(routes!(list_tobe_sets))
+        .routes(routes!(list_current_sets))
+        .routes(routes!(list_released_sets))
         .routes(routes!(get_overview))
         .layer(middleware::from_fn_with_state(
             jwt_config.clone(),
             auth_middleware,
         ))
         .with_state(QueryState {
-            repository: Arc::new(repository),
+            repository: Arc::new(set_repository),
+            release_repository: Arc::new(release_repository),
         })
 }
 
@@ -61,6 +70,11 @@ struct WordOverview {
 struct SetPreview {
     total_words: usize,
     preview_words: Vec<WordResponse>,
+}
+
+#[derive(Deserialize, Debug)]
+struct ReleasedSetsQuery {
+    search: Option<String>,
 }
 
 #[utoipa::path(
@@ -103,35 +117,127 @@ async fn get_set(
     }
 }
 
-#[derive(Deserialize, Debug)]
-struct ListSetsQuery {
-    state: Option<SetState>,
+#[utoipa::path(
+    get,
+    path = "/sets/tobe",
+    responses(
+        (status = 200, description = "List of tobe sets retrieved successfully", body = Vec<SetResponse>),
+        (status = 500, description = "Internal server error")
+    )
+)]
+#[instrument(skip(state, claims))]
+async fn list_tobe_sets(
+    State(state): State<QueryState>,
+    Extension(claims): Extension<Claims>,
+) -> Result<axum::Json<Vec<SetResponse>>, (StatusCode, String)> {
+    match state.repository.list_all(&claims.sub).await {
+        Ok(sets) => {
+            let response = sets
+                .into_iter()
+                .filter(|set| set.state() == &SetState::Tobe)
+                .map(|set| SetResponse {
+                    id: set.id().to_string(),
+                    state: set.state().clone(),
+                    words: set
+                        .words()
+                        .iter()
+                        .map(|w| WordResponse {
+                            id: w.id().to_string(),
+                            word: w.word().to_string(),
+                            reading: w.reading().map(|r| r.to_string()),
+                            translation: w.translation().to_string(),
+                        })
+                        .collect(),
+                })
+                .collect();
+            Ok(axum::Json(response))
+        }
+        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    }
 }
 
 #[utoipa::path(
     get,
-    path = "/sets",
-    params(
-        ("state" = Option<SetState>, Query, description = "Filter by set state")
-    ),
+    path = "/sets/current",
     responses(
-        (status = 200, description = "List of set IDs retrieved successfully", body = Vec<String>),
+        (status = 200, description = "List of current sets retrieved successfully", body = Vec<SetResponse>),
         (status = 500, description = "Internal server error")
     )
 )]
-#[instrument(skip(state, claims), fields(state = ?params.state))]
-async fn list_sets(
+#[instrument(skip(state, claims))]
+async fn list_current_sets(
     State(state): State<QueryState>,
-    Query(params): Query<ListSetsQuery>,
     Extension(claims): Extension<Claims>,
-) -> Result<axum::Json<Vec<String>>, (StatusCode, String)> {
-    let state_to_query = params.state.unwrap_or(SetState::Current);
-    match state
-        .repository
-        .list_ids(&claims.sub, &state_to_query)
-        .await
-    {
-        Ok(ids) => Ok(axum::Json(ids)),
+) -> Result<axum::Json<Vec<SetResponse>>, (StatusCode, String)> {
+    match state.repository.list_all(&claims.sub).await {
+        Ok(sets) => {
+            let response = sets
+                .into_iter()
+                .filter(|set| set.state() == &SetState::Current)
+                .map(|set| SetResponse {
+                    id: set.id().to_string(),
+                    state: set.state().clone(),
+                    words: set
+                        .words()
+                        .iter()
+                        .map(|w| WordResponse {
+                            id: w.id().to_string(),
+                            word: w.word().to_string(),
+                            reading: w.reading().map(|r| r.to_string()),
+                            translation: w.translation().to_string(),
+                        })
+                        .collect(),
+                })
+                .collect();
+            Ok(axum::Json(response))
+        }
+        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    }
+}
+
+#[utoipa::path(
+    get,
+    path = "/sets/released",
+    params(
+        ("search" = Option<String>, Query, description = "Search term for cards (case-insensitive)")
+    ),
+    responses(
+        (status = 200, description = "List of released cards retrieved successfully", body = Vec<WordResponse>),
+        (status = 500, description = "Internal server error")
+    )
+)]
+#[instrument(skip(state, claims), fields(search = ?params.search))]
+async fn list_released_sets(
+    State(state): State<QueryState>,
+    Query(params): Query<ReleasedSetsQuery>,
+    Extension(claims): Extension<Claims>,
+) -> Result<axum::Json<Vec<WordResponse>>, (StatusCode, String)> {
+    let search = params.search.map(|x| x.to_lowercase());
+
+    match state.release_repository.list_all(&claims.sub).await {
+        Ok(cards) => {
+            let response = cards
+                .iter()
+                .filter(|w| {
+                    if let Some(search) = &search {
+                        w.word().to_lowercase().contains(search)
+                            || w.translation().to_lowercase().contains(search)
+                            || w.reading()
+                                .map(|r| r.to_lowercase().contains(search))
+                                .unwrap_or(false)
+                    } else {
+                        true
+                    }
+                })
+                .map(|w| WordResponse {
+                    id: w.id().to_string(),
+                    word: w.word().to_string(),
+                    reading: w.reading().map(|r| r.to_string()),
+                    translation: w.translation().to_string(),
+                })
+                .collect();
+            Ok(axum::Json(response))
+        }
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     }
 }
@@ -164,13 +270,13 @@ async fn get_overview(
         },
     };
 
+    // Handle current and tobe sets
     match state.repository.list_all(&claims.sub).await {
         Ok(all_sets) => {
             for card_set in all_sets {
                 let preview = match card_set.state() {
                     SetState::Tobe => &mut overview.tobe,
                     SetState::Current => &mut overview.current,
-                    SetState::Finished => &mut overview.finished,
                 };
 
                 preview.total_words += card_set.words().len();
@@ -190,8 +296,31 @@ async fn get_overview(
                     );
                 }
             }
-            Ok(Json(overview))
         }
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     }
+
+    // Handle finished cards from release repository
+    match state.release_repository.list_all(&claims.sub).await {
+        Ok(finished_cards) => {
+            overview.finished.total_words = finished_cards.len();
+
+            if overview.finished.preview_words.len() < 3 {
+                overview.finished.preview_words.extend(
+                    finished_cards
+                        .iter()
+                        .take(3 - overview.finished.preview_words.len())
+                        .map(|w| WordResponse {
+                            id: w.id().to_string(),
+                            word: w.word().to_string(),
+                            reading: w.reading().map(|r| r.to_string()),
+                            translation: w.translation().to_string(),
+                        }),
+                );
+            }
+        }
+        Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    }
+
+    Ok(Json(overview))
 }

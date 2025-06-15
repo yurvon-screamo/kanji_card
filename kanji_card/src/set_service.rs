@@ -1,19 +1,26 @@
 use crate::domain::{CardSet, SetState};
 use crate::llm::{ExtractedWord, LlmService};
-use crate::repository::CardSetRepository;
+use crate::release_repository::ReleaseRepository;
+use crate::set_repository::CardSetRepository;
 use anyhow::Result;
 use base64::{Engine as _, engine::general_purpose};
 use std::collections::HashSet;
 
 pub struct SetService {
-    repository: CardSetRepository,
+    set_repository: CardSetRepository,
+    release_repository: ReleaseRepository,
     llm_service: LlmService,
 }
 
 impl SetService {
-    pub fn new(repository: CardSetRepository, llm_service: LlmService) -> Self {
+    pub fn new(
+        set_repository: CardSetRepository,
+        release_repository: ReleaseRepository,
+        llm_service: LlmService,
+    ) -> Self {
         Self {
-            repository,
+            set_repository,
+            release_repository,
             llm_service,
         }
     }
@@ -40,7 +47,7 @@ impl SetService {
             return Ok(());
         }
 
-        let all_sets = self.repository.list_all(user_login).await?;
+        let all_sets = self.set_repository.list_all(user_login).await?;
         let mut existing_words = HashSet::new();
         for set in all_sets {
             for card in set.words() {
@@ -58,7 +65,7 @@ impl SetService {
         }
 
         let mut current_ids = self
-            .repository
+            .set_repository
             .list_ids(user_login, &SetState::Tobe)
             .await?;
         let mut current_set = if current_ids.is_empty() {
@@ -66,7 +73,7 @@ impl SetService {
         } else {
             current_ids.sort_by(|a, b| b.cmp(a));
             let latest_id = current_ids.first().unwrap();
-            let set = self.repository.load(user_login, latest_id).await?;
+            let set = self.set_repository.load(user_login, latest_id).await?;
 
             if set.is_writabe() {
                 set
@@ -77,35 +84,38 @@ impl SetService {
 
         for word_data in unique_words {
             if !current_set.is_writabe() {
-                self.repository.save(user_login, &current_set).await?;
+                self.set_repository.save(user_login, &current_set).await?;
                 current_set = CardSet::new();
             }
 
             current_set.push(word_data.word, word_data.reading, word_data.translation)?;
         }
 
-        self.repository.save(user_login, &current_set).await?;
+        self.set_repository.save(user_login, &current_set).await?;
         Ok(())
     }
 
     pub async fn mark_as_current(&self, user_login: &str, set_id: &str) -> Result<()> {
-        let mut card_set = self.repository.load(user_login, set_id).await?;
+        let mut card_set = self.set_repository.load(user_login, set_id).await?;
         card_set.as_current()?;
-        self.repository.save(user_login, &card_set).await?;
+        self.set_repository.save(user_login, &card_set).await?;
         Ok(())
     }
 
-    pub async fn mark_as_finished(&self, user_login: &str, set_id: &str) -> Result<()> {
-        let mut card_set = self.repository.load(user_login, set_id).await?;
-        card_set.as_finished()?;
-        self.repository.save(user_login, &card_set).await?;
+    pub async fn release_set(&self, user_login: &str, set_id: &str) -> Result<()> {
+        let card_set = self.set_repository.load(user_login, set_id).await?;
+        let words = card_set.release()?;
+
+        self.set_repository.remove(user_login, &set_id).await?;
+        self.release_repository.save(user_login, &words).await?;
+
         Ok(())
     }
 
     pub async fn mark_as_tobe(&self, user_login: &str, set_id: &str) -> Result<()> {
-        let mut card_set = self.repository.load(user_login, set_id).await?;
+        let mut card_set = self.set_repository.load(user_login, set_id).await?;
         card_set.as_tobe();
-        self.repository.save(user_login, &card_set).await?;
+        self.set_repository.save(user_login, &card_set).await?;
         Ok(())
     }
 }
