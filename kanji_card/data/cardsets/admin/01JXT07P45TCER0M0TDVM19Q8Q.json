@@ -1,0 +1,54 @@
+{
+  "id": "01JXT07P45TCER0M0TDVM19Q8Q",
+  "state": "Tobe",
+  "words": [
+    {
+      "id": "01JXT07P45E8FTNVYYPM467159",
+      "word": "例",
+      "reading": "れい",
+      "translation": "пример"
+    },
+    {
+      "id": "01JXT07P45FKTXGK4CYP4VHPAB",
+      "word": "ミラーさん",
+      "reading": null,
+      "translation": "Мира-сан"
+    },
+    {
+      "id": "01JXT07P45ZGDX2SD48AHVE45A",
+      "word": "アメリカ人",
+      "reading": null,
+      "translation": "американец"
+    },
+    {
+      "id": "01JXT07P45M8AHPHFMJ9DQVQRQ",
+      "word": "会社員",
+      "reading": "かいしゃいん",
+      "translation": "служащий компании"
+    },
+    {
+      "id": "01JXT07P453W6BWR07819B99K1",
+      "word": "山田さん",
+      "reading": null,
+      "translation": "Ямада-сан"
+    },
+    {
+      "id": "01JXT07P45BPR6QNT26MKS4VA3",
+      "word": "学生",
+      "reading": "がくせい",
+      "translation": "студент"
+    },
+    {
+      "id": "01JXT07P45DVGK2MTE08QD9AJY",
+      "word": "ワットさん",
+      "reading": null,
+      "translation": "Уатт-сан"
+    },
+    {
+      "id": "01JXT07P45ZHGDR7JGQFN4SRF3",
+      "word": "ドイツ人",
+      "reading": null,
+      "translation": "немец"
+    }
+  ]
+}

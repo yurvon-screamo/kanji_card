@@ -1,0 +1,86 @@
+[env]
+RUST_LOG = "DEBUG"
+
+[tasks.dbg]
+description = "Runs the project"
+command = "cargo"
+workspace = false
+args = ["run", "--", "${@}"]
+
+[tasks.qa]
+description = "Runs all CI checks"
+dependencies = ["build", "fmt", "fix", "clippy", "check", "test"]
+workspace = false
+
+[tasks.build]
+description = "Builds the project in release mode"
+command = "cargo"
+args = ["build"]
+workspace = false
+
+[tasks.fmt]
+description = "Formats the code"
+command = "cargo"
+args = ["fmt", "--all"]
+workspace = false
+
+[tasks.clippy]
+description = "Runs the linter"
+command = "cargo"
+args = [
+    "clippy",
+    "--fix",
+    "--allow-dirty",
+    "--allow-staged",
+    "--all-targets",
+    "--all-features",
+    "--all",
+    "--workspace",
+]
+workspace = false
+
+[tasks.check]
+description = "Checks the code without building"
+command = "cargo"
+args = ["check", "--all"]
+workspace = false
+
+[tasks.test]
+description = "Runs all tests"
+command = "cargo"
+args = ["test", "--all", "--", "--test-threads=24"]
+workspace = false
+
+[tasks.swagger]
+description = "Generates OpenAPI documentation"
+command = "cargo"
+args = ["run", "--", "--generate-openapi"]
+workspace = false
+
+[tasks.compose-up]
+description = "Starts required services"
+command = "docker"
+args = ["compose", "-f", "compose.development.yaml", "up", "-d"]
+workspace = false
+
+[tasks.gen]
+description = "Generates TypeScript API client from OpenAPI spec"
+command = "npx"
+args = [
+    "openapi-typescript-codegen",
+    "--input",
+    "../kanri/openapi.json",
+    "--output",
+    "src/api",
+    "--client",
+    "axios",
+]
+workspace = false
+dependencies = ["swagger"]
+cwd = "kanri-ui"
+
+[tasks.fix]
+description = "Automatically fixes warnings"
+command = "cargo"
+args = ["fix", "--allow-dirty", "--allow-staged", "--all"]
+workspace = false

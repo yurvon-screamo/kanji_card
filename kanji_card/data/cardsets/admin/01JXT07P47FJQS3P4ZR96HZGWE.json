@@ -1,0 +1,42 @@
+{
+  "id": "01JXT07P47FJQS3P4ZR96HZGWE",
+  "state": "Current",
+  "words": [
+    {
+      "id": "01JXT07P47F6YKHHEEZP9VD5TR",
+      "word": "タワポンさん",
+      "reading": null,
+      "translation": "Тавапон-сан"
+    },
+    {
+      "id": "01JXT07P47FW2DFHW167GSGYGC",
+      "word": "先生",
+      "reading": "せんせい",
+      "translation": "учитель"
+    },
+    {
+      "id": "01JXT07P4731M6EPA9MR7C7EP3",
+      "word": "シュミットさん",
+      "reading": null,
+      "translation": "Шмидт-сан"
+    },
+    {
+      "id": "01JXT07P47ACDEMSXWSVCQVGT8",
+      "word": "あいません",
+      "reading": null,
+      "translation": "нет"
+    },
+    {
+      "id": "01JXT07P47CPH6WN7QXJQKM4M2",
+      "word": "例",
+      "reading": "れい",
+      "translation": "пример"
+    },
+    {
+      "id": "01JXT07P47MXWGF9YNXCM0NT61",
+      "word": "医者",
+      "reading": "いしゃ",
+      "translation": "врач"
+    }
+  ]
+}

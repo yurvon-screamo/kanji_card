@@ -1,0 +1,54 @@
+{
+  "id": "01JXT1C68VWKHC33X35HXMEXAD",
+  "state": "Current",
+  "words": [
+    {
+      "id": "01JXT1C68VJSTW75XBR5EK612C",
+      "word": "便利",
+      "reading": "べんり",
+      "translation": "удобный"
+    },
+    {
+      "id": "01JXT1C68VNF9054329JZY18XG",
+      "word": "さむい",
+      "reading": "さむい",
+      "translation": "холодный, прохладный"
+    },
+    {
+      "id": "01JXT1C68VHZDGP68AAKCMZ66G",
+      "word": "あたらしい",
+      "reading": "あたらしい",
+      "translation": "новый"
+    },
+    {
+      "id": "01JXT1C68VNRRW5ESF3688TEG9",
+      "word": "ふるい",
+      "reading": "ふるい",
+      "translation": "старый (о неодушевленных предметах)"
+    },
+    {
+      "id": "01JXT1C68VR8BANKAQX34FB95J",
+      "word": "わるい",
+      "reading": "わるい",
+      "translation": "плохой"
+    },
+    {
+      "id": "01JXT1C68VMB2TSDB7V7AGSTJY",
+      "word": "あつい",
+      "reading": "あつい",
+      "translation": "жаркий, горячий"
+    },
+    {
+      "id": "01JXT1C68V8DDYTH75QVCE4KCJ",
+      "word": "さむい",
+      "reading": "さむい",
+      "translation": "холодный (о температуре, напр., воздуха и пр.)"
+    },
+    {
+      "id": "01JXT1C68V4MDQA7PXWFTGTND0",
+      "word": "むずかしい",
+      "reading": "むずかしい",
+      "translation": "трудный, сложный"
+    }
+  ]
+}

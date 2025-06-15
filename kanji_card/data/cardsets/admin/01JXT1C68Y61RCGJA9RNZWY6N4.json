@@ -1,0 +1,54 @@
+{
+  "id": "01JXT1C68Y61RCGJA9RNZWY6N4",
+  "state": "Tobe",
+  "words": [
+    {
+      "id": "01JXT1C68Y32FTBQ2N2VBJM8VN",
+      "word": "やさしい",
+      "reading": "やさしい",
+      "translation": "лёгкий, простой"
+    },
+    {
+      "id": "01JXT1C68Y47125BDH1W259AM9",
+      "word": "たかい",
+      "reading": "たかい",
+      "translation": "высокий; дорогой (о размере предметов; о цене)"
+    },
+    {
+      "id": "01JXT1C68Y5C6C9EZS019NVXPY",
+      "word": "安い",
+      "reading": "やすい",
+      "translation": "дешевый (о цене)"
+    },
+    {
+      "id": "01JXT1C68YPBJM11ZKVCC0MJ4V",
+      "word": "おもしろい",
+      "reading": "おもしろい",
+      "translation": "интересный (фильм, книга, человек, исследование и т.п.)"
+    },
+    {
+      "id": "01JXT1C68YHQT8BB02G69ZK5VF",
+      "word": "おいしい",
+      "reading": "おいしい",
+      "translation": "вкусный"
+    },
+    {
+      "id": "01JXT1C68YY0VRA67RC89C6XPZ",
+      "word": "忙しい",
+      "reading": "いそがしい",
+      "translation": "занятый (при нехватке времени для отдыха, хобби и пр.)"
+    },
+    {
+      "id": "01JXT1C68Y0CACX68A539T06K6",
+      "word": "楽しい",
+      "reading": "たのしい",
+      "translation": "радостный, приятный, веселый"
+    },
+    {
+      "id": "01JXT1C68YEWWM9RE085F71GR8",
+      "word": "しろい",
+      "reading": "白い",
+      "translation": "белый"
+    }
+  ]
+}

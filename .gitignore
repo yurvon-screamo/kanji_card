@@ -1,0 +1,10 @@
+.keys
+node_modules
+template.md
+mutants.out
+mutants.out.old
+mongo-express.yaml
+dev-notes.md
+kanji_card/config.toml
+kanji_card/target
+kanji_card/openapi.json
