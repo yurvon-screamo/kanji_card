@@ -49,6 +49,12 @@ class ApiService {
         );
     }
 
+    public async checkAuth() {
+        return this.handleRequest(() =>
+            DefaultService.getOverview()
+        );
+    }
+
     public async listTobeSets() {
         return this.handleRequest(() =>
             DefaultService.listTobeSets()

@@ -1,5 +1,10 @@
 import JapaneseFlashcards from "@/components/flashcards"
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute"
 
 export default function Page() {
-  return <JapaneseFlashcards />
+  return (
+    <ProtectedRoute>
+      <JapaneseFlashcards />
+    </ProtectedRoute>
+  )
 }

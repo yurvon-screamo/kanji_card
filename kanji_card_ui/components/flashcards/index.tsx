@@ -52,18 +52,8 @@ function JapaneseFlashcardsContent() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      console.log(window.location.href)
-      if (!window.location.href.endsWith("/login")) {
-        try {
-          const repository = WordRepository.getInstance();
-          await repository.getOverview();
-        } catch {
-          window.location.replace('/login');
-        }
-      }
-    };
-    checkAuth();
+    setMounted(true);
+    setLoading(false);
   }, []);
 
   const handleStartLearning = async () => {
