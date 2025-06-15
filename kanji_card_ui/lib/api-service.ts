@@ -32,7 +32,6 @@ class ApiService {
         }
     }
 
-    // Auth methods
     public async login(login: string, password: string) {
         return this.handleRequest(() =>
             AuthService.login({ login, password })
