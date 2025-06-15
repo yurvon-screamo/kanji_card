@@ -5,6 +5,7 @@ mutants.out
 mutants.out.old
 mongo-express.yaml
 dev-notes.md
+kanji_card/data
 kanji_card/config.toml
 kanji_card/target
 kanji_card/openapi.json
