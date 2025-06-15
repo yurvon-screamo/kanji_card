@@ -10,6 +10,7 @@ import { Progress } from "@/components/ui/progress";
 import { LayoutContainer } from "../components/LayoutContainer";
 import { Toolbar } from "../components/Toolbar";
 import { colors } from "@/lib/colors";
+import { cn } from "@/lib/utils";
 
 type ViewMode = "grid" | "test";
 
@@ -183,7 +184,7 @@ export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
                         <div className="w-full max-w-[300px] space-y-2">
                             <div className="flex items-center gap-2">
                                 <Progress value={(currentWordIndex / words.length) * 100} className="h-2 flex-1" />
-                                <span className="text-sm text-gray-500 whitespace-nowrap">
+                                <span className={cn("text-sm whitespace-nowrap", colors.ui.text.secondary)}>
                                     {currentWordIndex + 1}/{words.length}
                                 </span>
                             </div>
