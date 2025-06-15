@@ -20,7 +20,6 @@ import {
   Collection,
   Set,
 } from "./types/index";
-import { SetState } from "../../api";
 
 type WordCollection = Collection;
 

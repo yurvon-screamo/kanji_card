@@ -48,7 +48,7 @@ export class WordRepository {
   }
 
   public async getUnlearnedSets(): Promise<Set[]> {
-    const response = await apiService.listCurrentSets();
+    const response = await apiService.listTobeSets();
     return response.map(x => this.mapSetResponseToSet(x))
   }
 
@@ -101,7 +101,7 @@ export class WordRepository {
     await apiService.markAsFinished(setId);
   }
 
-  public async markAsTobe(setId: string): Promise<void> {
-    await apiService.markAsTobe(setId);
+  public async markAsTobe(wordIds: string[]): Promise<void> {
+    await apiService.markAsTobe(wordIds);
   }
 }

@@ -11,6 +11,7 @@ export type { ExtractedWord } from './models/ExtractedWord';
 export type { ExtractWordsFromImageRequest } from './models/ExtractWordsFromImageRequest';
 export type { ExtractWordsFromTextRequest } from './models/ExtractWordsFromTextRequest';
 export type { LoginRequest } from './models/LoginRequest';
+export type { MarkAsTobeRequest } from './models/MarkAsTobeRequest';
 export type { RegisterRequest } from './models/RegisterRequest';
 export type { SaveWordsRequest } from './models/SaveWordsRequest';
 export type { SetPreview } from './models/SetPreview';

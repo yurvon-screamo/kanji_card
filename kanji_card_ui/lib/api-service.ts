@@ -1,4 +1,4 @@
-import { AuthService, DefaultService, SetState, OpenAPI } from '@/api';
+import { AuthService, DefaultService, SetState, OpenAPI, MarkAsTobeRequest } from '@/api';
 import { redirect } from 'next/navigation';
 
 // Configure the API client
@@ -96,9 +96,11 @@ class ApiService {
         );
     }
 
-    public async markAsTobe(setId: string) {
+    public async markAsTobe(wordIds: string[]) {
         return this.handleRequest(() =>
-            DefaultService.markAsTobe(setId)
+            DefaultService.markAsTobe({
+                word_ids: wordIds
+            } as MarkAsTobeRequest)
         );
     }
 

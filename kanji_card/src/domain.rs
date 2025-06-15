@@ -47,10 +47,6 @@ impl CardSet {
         &self.words
     }
 
-    pub fn as_tobe(&mut self) {
-        self.state = SetState::Tobe;
-    }
-
     pub fn as_current(&mut self) -> Result<()> {
         if self.state != SetState::Tobe {
             return Err(anyhow!("State is not tobe"));

@@ -112,10 +112,24 @@ impl SetService {
         Ok(())
     }
 
-    pub async fn mark_as_tobe(&self, user_login: &str, set_id: &str) -> Result<()> {
-        let mut card_set = self.set_repository.load(user_login, set_id).await?;
-        card_set.as_tobe();
-        self.set_repository.save(user_login, &card_set).await?;
+    pub async fn mark_as_tobe(&self, user_login: &str, word_ids: Vec<String>) -> Result<()> {
+        let extracted_words = self
+            .release_repository
+            .load_by_ids(user_login, &word_ids)
+            .await?
+            .into_iter()
+            .map(|word| ExtractedWord {
+                word: word.word().to_owned(),
+                reading: word.reading().map(|x| x.to_owned()),
+                translation: word.translation().to_owned(),
+            })
+            .collect();
+
+        self.save_words(user_login, extracted_words).await?;
+        self.release_repository
+            .remove_by_ids(user_login, &word_ids)
+            .await?;
+
         Ok(())
     }
 }

@@ -65,6 +65,11 @@ pub struct RegisterRequest {
     password: String,
 }
 
+#[derive(Serialize, Deserialize, ToSchema, Debug)]
+struct MarkAsTobeRequest {
+    word_ids: Vec<String>,
+}
+
 #[utoipa::path(
     post,
     path = "/sets/words/extract/text",
@@ -190,22 +195,24 @@ async fn mark_as_finished(
 
 #[utoipa::path(
     put,
-    path = "/sets/{id}/tobe",
-    params(
-        ("id" = String, Path, description = "Set ID")
-    ),
+    path = "/sets/tobe",
+    request_body = MarkAsTobeRequest,
     responses(
-        (status = 200, description = "Set marked as tobe successfully"),
+        (status = 200, description = "Words marked as tobe successfully"),
         (status = 500, description = "Internal server error")
     )
 )]
-#[instrument(skip(state, claims), fields(set_id = %set_id))]
+#[instrument(skip(state, claims))]
 async fn mark_as_tobe(
     State(state): State<ApiState>,
-    axum::extract::Path(set_id): axum::extract::Path<String>,
     Extension(claims): Extension<Claims>,
+    Json(request): Json<MarkAsTobeRequest>,
 ) -> Result<StatusCode, (StatusCode, String)> {
-    match state.set_service.mark_as_tobe(&claims.sub, &set_id).await {
+    match state
+        .set_service
+        .mark_as_tobe(&claims.sub, request.word_ids)
+        .await
+    {
         Ok(_) => Ok(StatusCode::OK),
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     }

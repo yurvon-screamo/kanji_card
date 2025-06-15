@@ -23,12 +23,19 @@ impl ReleaseRepository {
         self.storage_dir.join(user_login)
     }
 
-    pub async fn remove(&self, user_login: &str, card_set_id: &str) -> anyhow::Result<()> {
+    pub async fn remove(&self, user_login: &str, card_id: &str) -> anyhow::Result<()> {
         let file_path = self
             .get_user_path(user_login)
-            .join(format!("{}.json", card_set_id));
+            .join(format!("{}.json", card_id));
 
         fs::remove_file(file_path).await?;
+        Ok(())
+    }
+
+    pub async fn remove_by_ids(&self, user_login: &str, ids: &[String]) -> anyhow::Result<()> {
+        for id in ids {
+            self.remove(user_login, id).await?;
+        }
         Ok(())
     }
 
@@ -50,7 +57,7 @@ impl ReleaseRepository {
             let json = fs::read_to_string(file_path).await?;
             return Ok(serde_json::from_str(&json)?);
         }
-        Err(anyhow!("Card set not found"))
+        Err(anyhow!("Card not found"))
     }
 
     pub async fn list_ids(&self, user_login: &str) -> anyhow::Result<Vec<String>> {
@@ -71,16 +78,26 @@ impl ReleaseRepository {
         Ok(ids)
     }
 
+    pub async fn load_by_ids(&self, user_login: &str, ids: &[String]) -> anyhow::Result<Vec<Card>> {
+        let mut cards = Vec::new();
+        for id in ids {
+            if let Ok(card) = self.load(user_login, id).await {
+                cards.push(card);
+            }
+        }
+        Ok(cards)
+    }
+
     pub async fn list_all(&self, user_login: &str) -> anyhow::Result<Vec<Card>> {
         let ids = self.list_ids(user_login).await?;
-        let mut all_sets = Vec::new();
+        let mut all_cards = Vec::new();
 
         for id in ids {
-            if let Ok(set) = self.load(user_login, &id).await {
-                all_sets.push(set);
+            if let Ok(card) = self.load(user_login, &id).await {
+                all_cards.push(card);
             }
         }
 
-        Ok(all_sets)
+        Ok(all_cards)
     }
 }

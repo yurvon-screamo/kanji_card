@@ -5,6 +5,7 @@
 import type { ExtractedWord } from '../models/ExtractedWord';
 import type { ExtractWordsFromImageRequest } from '../models/ExtractWordsFromImageRequest';
 import type { ExtractWordsFromTextRequest } from '../models/ExtractWordsFromTextRequest';
+import type { MarkAsTobeRequest } from '../models/MarkAsTobeRequest';
 import type { SaveWordsRequest } from '../models/SaveWordsRequest';
 import type { SetResponse } from '../models/SetResponse';
 import type { WordOverview } from '../models/WordOverview';
@@ -93,6 +94,24 @@ export class DefaultService {
     }
     /**
      * @param requestBody
+     * @returns any Words marked as tobe successfully
+     * @throws ApiError
+     */
+    public static markAsTobe(
+        requestBody: MarkAsTobeRequest,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'PUT',
+            url: '/api/set/sets/tobe',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                500: `Internal server error`,
+            },
+        });
+    }
+    /**
+     * @param requestBody
      * @returns ExtractedWord Words extracted successfully
      * @throws ApiError
      */
@@ -175,25 +194,6 @@ export class DefaultService {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/api/set/sets/{id}/finished',
-            path: {
-                'id': id,
-            },
-            errors: {
-                500: `Internal server error`,
-            },
-        });
-    }
-    /**
-     * @param id Set ID
-     * @returns any Set marked as tobe successfully
-     * @throws ApiError
-     */
-    public static markAsTobe(
-        id: string,
-    ): CancelablePromise<any> {
-        return __request(OpenAPI, {
-            method: 'PUT',
-            url: '/api/set/sets/{id}/tobe',
             path: {
                 'id': id,
             },

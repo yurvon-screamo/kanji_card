@@ -76,11 +76,10 @@ export const Card = ({ currentWord, currentSide, studyMode }: CardProps) => {
     const utterance = new SpeechSynthesisUtterance(currentWord.reading);
     utterance.voice = japaneseVoice;
     utterance.lang = "ja-JP";
-    utterance.rate = 0.9; // Немного медленнее для лучшей четкости
+    utterance.rate = 0.9;
     utterance.pitch = 1.0;
     utterance.volume = 1.0;
 
-    // Останавливаем предыдущее воспроизведение
     window.speechSynthesis.cancel();
     window.speechSynthesis.speak(utterance);
   }, [currentWord, japaneseVoice]);
