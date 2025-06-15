@@ -159,29 +159,57 @@ Analyze the image and extract Japanese text:"#;
     #[instrument(skip(self, request))]
     async fn send_request(&self, request: OpenRouterRequest) -> Result<Vec<ExtractedWord>> {
         let url = format!("{}/chat/completions", self.base_url);
-        info!("Sending request to OpenRouter API");
+        info!("Sending request to OpenRouter API at {}", url);
 
-        let response = self
+        let response = match self
             .client
             .post(&url)
             .header("Authorization", format!("Bearer {}", self.api_key))
             .header("Content-Type", "application/json")
             .json(&request)
             .send()
-            .await?;
+            .await
+        {
+            Ok(resp) => resp,
+            Err(e) => {
+                error!(
+                    error = %e,
+                    error_type = ?e.status(),
+                    "Failed to send request to OpenRouter API"
+                );
+                return Err(anyhow!("Failed to send request to OpenRouter API: {}", e));
+            }
+        };
 
-        if !response.status().is_success() {
+        let status = response.status();
+        if !status.is_success() {
             let error_text = response.text().await?;
-            error!("OpenRouter API error: {}", error_text);
+            error!(
+                status = %status,
+                error_text = %error_text,
+                "OpenRouter API returned error response"
+            );
             return Err(anyhow!("OpenRouter API error: {}", error_text));
         }
 
-        let openrouter_response: OpenRouterResponse = response.json().await?;
+        let openrouter_response: OpenRouterResponse = match response.json().await {
+            Ok(resp) => resp,
+            Err(e) => {
+                error!(
+                    error = %e,
+                    "Failed to parse OpenRouter API response as JSON"
+                );
+                return Err(anyhow!("Failed to parse OpenRouter API response: {}", e));
+            }
+        };
 
         let content = openrouter_response
             .choices
             .first()
-            .ok_or_else(|| anyhow!("No choices in response"))?
+            .ok_or_else(|| {
+                error!("No choices in OpenRouter API response");
+                anyhow!("No choices in response")
+            })?
             .message
             .content
             .trim();
@@ -194,8 +222,9 @@ Analyze the image and extract Japanese text:"#;
 
         let words_response: WordsResponse = serde_json::from_str(content).map_err(|e| {
             error!(
-                "Failed to parse LLM response as JSON: {}. Content: {}",
-                e, content
+                error = %e,
+                content = %content,
+                "Failed to parse LLM response as JSON"
             );
             anyhow!(
                 "Failed to parse LLM response as JSON: {}. Content: {}",
