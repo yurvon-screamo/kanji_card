@@ -53,7 +53,6 @@ function JapaneseFlashcardsContent() {
 
   useEffect(() => {
     setMounted(true);
-    setLoading(false);
   }, []);
 
   const handleStartLearning = async () => {
