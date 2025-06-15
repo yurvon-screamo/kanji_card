@@ -28,10 +28,9 @@ class ApiService {
             return await request();
         } catch (error) {
             console.error('API request failed:', error);
-            // if (error.status === 401) {
-            window.location.href = '/login';
-            throw new Error('Unauthorized');
-            // }
+            if (window.location.pathname !== '/login') {
+                window.location.href = '/login';
+            }
             throw error;
         }
     }
