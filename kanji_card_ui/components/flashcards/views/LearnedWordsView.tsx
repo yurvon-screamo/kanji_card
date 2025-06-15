@@ -6,6 +6,7 @@ import { useDebounce } from "@/lib/hooks/use-debounce";
 import { Card } from "../components/Card";
 import { ArrowLeft, Search, Eye, Check, X, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { LayoutContainer } from "../components/LayoutContainer";
 import { Toolbar } from "../components/Toolbar";
 import { colors } from "@/lib/colors";
@@ -178,6 +179,14 @@ export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
                                 currentSide={cardSides[currentWordIndex]}
                                 studyMode="jp"
                             />
+                        </div>
+                        <div className="w-full max-w-[300px] space-y-2">
+                            <div className="flex items-center gap-2">
+                                <Progress value={(currentWordIndex / words.length) * 100} className="h-2 flex-1" />
+                                <span className="text-sm text-gray-500 whitespace-nowrap">
+                                    {currentWordIndex + 1}/{words.length}
+                                </span>
+                            </div>
                         </div>
                         <div className="flex justify-center w-full space-x-4">
                             <Button
