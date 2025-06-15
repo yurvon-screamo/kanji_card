@@ -47,10 +47,6 @@ export const PoolView = ({
       console.error("Error loading overview:", error);
       setError("Ошибка загрузки данных. Попробуйте обновить страницу.");
       setOverview(null);
-      if (window.location.href != "/login") {
-        console.log(window.location.href)
-        window.location.replace('/login')
-      }
     } finally {
       setLoading(false);
     }
