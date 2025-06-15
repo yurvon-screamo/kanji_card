@@ -13,7 +13,7 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/* && \
     update-ca-certificates
-COPY . .
+COPY kanji_card/ .
 COPY --from=frontend-builder /usr/src/frontend/dist ./kanji_card_ui/dist
 RUN cargo build --release --workspace --bin kanji_card
 
