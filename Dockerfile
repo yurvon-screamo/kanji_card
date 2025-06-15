@@ -21,6 +21,7 @@ FROM debian AS runtime
 WORKDIR /app
 ENV RUST_LOG=INFO
 COPY --from=builder /usr/src/app/target/release/kanji_card /app/kanji_card
+COPY config /app/config
 RUN apt-get update && \
     apt-get install -y openssl && \
     apt-get clean && rm -rf /var/lib/apt/lists/*

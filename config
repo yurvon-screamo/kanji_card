@@ -1,0 +1,13 @@
+[server]
+domain = "localhost"
+port = 3000
+
+[openrouter]
+base_url = "https://openrouter.ai/api/v1"
+api_key = "your-api-key-here"
+model = "mistralai/mistral-7b-instruct"
+
+[jwt]
+secret_key = "your-secret-key-here"
+token_expiry = 86400  # 24 hours in seconds
+refresh_threshold = 3600  # 1 hour in seconds 
