@@ -28,7 +28,7 @@ class ApiService {
             return await request();
         } catch (error) {
             console.error('API request failed:', error);
-            if (window.location.href.endsWith("/login")) {
+            if (!window.location.href.endsWith("/login")) {
                 console.log(window.location.href)
                 window.location.replace('/login');
             }
