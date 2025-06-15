@@ -73,7 +73,7 @@ export const Card = ({ currentWord, currentSide, studyMode }: CardProps) => {
   const playAudio = useCallback(() => {
     if (!japaneseVoice || !currentWord) return;
 
-    const utterance = new SpeechSynthesisUtterance(currentWord.reading);
+    const utterance = new SpeechSynthesisUtterance(currentWord.word);
     utterance.voice = japaneseVoice;
     utterance.lang = "ja-JP";
     utterance.rate = 0.9;

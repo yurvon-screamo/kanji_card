@@ -159,6 +159,10 @@ export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
                             </div>
                         ))}
                     </div>
+                ) : words.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center min-h-[420px] text-gray-500">
+                        <p>Нет изученных слов</p>
+                    </div>
                 ) : (
                     <div className="flex flex-col items-center space-y-4">
                         <div
