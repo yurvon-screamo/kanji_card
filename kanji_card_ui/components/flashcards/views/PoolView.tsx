@@ -41,6 +41,7 @@ export const PoolView = ({
     try {
       const repository = WordRepository.getInstance();
       const overviewData = await repository.getOverview();
+      console.log(overviewData)
       setOverview(overviewData);
       setError(null);
     } catch (error) {
@@ -156,26 +157,6 @@ export const PoolView = ({
               >
                 Повторить попытку
               </button>
-            </div>
-          </div>
-        </LayoutContainer>
-      </>
-    );
-  }
-
-  if (!overview) {
-    return (
-      <>
-        <Toolbar>
-          <div className="flex items-center space-x-4">
-            <h1 className="text-xl font-semibold">日本語</h1>
-          </div>
-        </Toolbar>
-        <LayoutContainer>
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <h2 className="text-xl font-semibold mb-2">Нет данных</h2>
-              <p className="text-gray-600">Данные не загружены</p>
             </div>
           </div>
         </LayoutContainer>
