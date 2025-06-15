@@ -56,7 +56,7 @@ function JapaneseFlashcardsContent() {
       try {
         const repository = WordRepository.getInstance();
         await repository.getOverview();
-      } catch (error) {
+      } catch {
         window.location.replace('/login');
       }
     };
