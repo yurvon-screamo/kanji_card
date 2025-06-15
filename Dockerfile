@@ -14,7 +14,7 @@ RUN apt-get update && \
     rm -rf /var/lib/apt/lists/* && \
     update-ca-certificates
 COPY kanji_card/ .
-COPY --from=frontend-builder /usr/src/frontend/dist ./kanji_card_ui/dist
+COPY --from=frontend-builder /usr/src/frontend/dist ../kanji_card_ui/dist
 RUN cargo build --release --workspace --bin kanji_card
 
 FROM debian AS runtime
