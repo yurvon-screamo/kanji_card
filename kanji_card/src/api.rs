@@ -6,7 +6,7 @@ use axum::{
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
-use tracing::instrument;
+use tracing::{error, info, instrument};
 use utoipa::ToSchema;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
@@ -79,18 +79,25 @@ struct MarkAsTobeRequest {
         (status = 500, description = "Internal server error")
     )
 )]
-#[instrument(skip(state))]
+#[instrument(skip(state, request))]
 async fn extract_words_from_text(
     State(state): State<ApiState>,
     Json(request): Json<ExtractWordsFromTextRequest>,
 ) -> Result<axum::Json<Vec<ExtractedWord>>, (StatusCode, String)> {
+    info!("Extracting words from text");
     match state
         .set_service
         .extract_words_from_text(request.text)
         .await
     {
-        Ok(words) => Ok(axum::Json(words)),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        Ok(words) => {
+            info!("Successfully extracted {} words", words.len());
+            Ok(axum::Json(words))
+        }
+        Err(e) => {
+            error!("Failed to extract words: {}", e);
+            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        }
     }
 }
 
@@ -103,18 +110,25 @@ async fn extract_words_from_text(
         (status = 500, description = "Internal server error")
     )
 )]
-#[instrument(skip(state))]
+#[instrument(skip(state, request))]
 async fn extract_words_from_image(
     State(state): State<ApiState>,
     Json(request): Json<ExtractWordsFromImageRequest>,
 ) -> Result<axum::Json<Vec<ExtractedWord>>, (StatusCode, String)> {
+    info!("Extracting words from image");
     match state
         .set_service
         .extract_words_from_image(request.image_data)
         .await
     {
-        Ok(words) => Ok(axum::Json(words)),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        Ok(words) => {
+            info!("Successfully extracted {} words from image", words.len());
+            Ok(axum::Json(words))
+        }
+        Err(e) => {
+            error!("Failed to extract words from image: {}", e);
+            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        }
     }
 }
 
@@ -127,19 +141,30 @@ async fn extract_words_from_image(
         (status = 500, description = "Internal server error")
     )
 )]
-#[instrument(skip(state, claims))]
+#[instrument(skip(state, claims, request))]
 async fn save_words(
     State(state): State<ApiState>,
     Extension(claims): Extension<Claims>,
     Json(request): Json<SaveWordsRequest>,
 ) -> Result<StatusCode, (StatusCode, String)> {
+    info!(
+        "Saving {} words for user {}",
+        request.words.len(),
+        claims.sub
+    );
     match state
         .set_service
         .save_words(&claims.sub, request.words)
         .await
     {
-        Ok(_) => Ok(StatusCode::OK),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        Ok(_) => {
+            info!("Successfully saved words for user {}", claims.sub);
+            Ok(StatusCode::OK)
+        }
+        Err(e) => {
+            error!("Failed to save words for user {}: {}", claims.sub, e);
+            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        }
     }
 }
 
@@ -160,13 +185,20 @@ async fn mark_as_current(
     axum::extract::Path(set_id): axum::extract::Path<String>,
     Extension(claims): Extension<Claims>,
 ) -> Result<StatusCode, (StatusCode, String)> {
+    info!("Marking set {} as current for user {}", set_id, claims.sub);
     match state
         .set_service
         .mark_as_current(&claims.sub, &set_id)
         .await
     {
-        Ok(_) => Ok(StatusCode::OK),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        Ok(_) => {
+            info!("Successfully marked set {} as current", set_id);
+            Ok(StatusCode::OK)
+        }
+        Err(e) => {
+            error!("Failed to mark set {} as current: {}", set_id, e);
+            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        }
     }
 }
 
@@ -187,9 +219,16 @@ async fn mark_as_finished(
     axum::extract::Path(set_id): axum::extract::Path<String>,
     Extension(claims): Extension<Claims>,
 ) -> Result<StatusCode, (StatusCode, String)> {
+    info!("Marking set {} as finished for user {}", set_id, claims.sub);
     match state.set_service.release_set(&claims.sub, &set_id).await {
-        Ok(_) => Ok(StatusCode::OK),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        Ok(_) => {
+            info!("Successfully marked set {} as finished", set_id);
+            Ok(StatusCode::OK)
+        }
+        Err(e) => {
+            error!("Failed to mark set {} as finished: {}", set_id, e);
+            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        }
     }
 }
 
@@ -202,18 +241,32 @@ async fn mark_as_finished(
         (status = 500, description = "Internal server error")
     )
 )]
-#[instrument(skip(state, claims))]
+#[instrument(skip(state, claims, request))]
 async fn mark_as_tobe(
     State(state): State<ApiState>,
     Extension(claims): Extension<Claims>,
     Json(request): Json<MarkAsTobeRequest>,
 ) -> Result<StatusCode, (StatusCode, String)> {
+    info!(
+        "Marking {} words as tobe for user {}",
+        request.word_ids.len(),
+        claims.sub
+    );
     match state
         .set_service
         .mark_as_tobe(&claims.sub, request.word_ids)
         .await
     {
-        Ok(_) => Ok(StatusCode::OK),
-        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+        Ok(_) => {
+            info!("Successfully marked words as tobe for user {}", claims.sub);
+            Ok(StatusCode::OK)
+        }
+        Err(e) => {
+            error!(
+                "Failed to mark words as tobe for user {}: {}",
+                claims.sub, e
+            );
+            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        }
     }
 }

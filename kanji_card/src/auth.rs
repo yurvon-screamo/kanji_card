@@ -43,8 +43,8 @@ struct ErrorResponse {
 pub async fn login(
     user_repo: Arc<UserRepository>,
     jwt_config: Arc<JwtConfig>,
-    login: String,
-    password: String,
+    login: &str,
+    password: &str,
 ) -> Result<Response, Response> {
     let user = user_repo
         .get_user(&login)
@@ -86,7 +86,7 @@ pub async fn login(
         .as_secs() as i64;
 
     let claims = Claims {
-        sub: login,
+        sub: login.to_owned(),
         exp: now + jwt_config.token_expiry.as_secs() as i64,
         iat: now,
     };
@@ -119,8 +119,8 @@ pub async fn login(
 
 pub async fn register(
     user_repo: Arc<UserRepository>,
-    login: String,
-    password: String,
+    login: &str,
+    password: &str,
 ) -> Result<Response, Response> {
     if user_repo
         .get_user(&login)

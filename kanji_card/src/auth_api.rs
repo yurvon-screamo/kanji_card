@@ -2,6 +2,7 @@ use std::sync::Arc;
 
 use axum::{Json, extract::State, response::IntoResponse};
 use serde::{Deserialize, Serialize};
+use tracing::{error, info, instrument};
 use utoipa::ToSchema;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
@@ -46,17 +47,34 @@ pub struct RegisterRequest {
     ),
     tag = "auth"
 )]
+#[instrument(skip(state, credentials))]
 async fn login(
     State(state): State<AuthApiState>,
     Json(credentials): Json<LoginRequest>,
 ) -> impl IntoResponse {
-    crate::auth::login(
+    info!("Login attempt for user {}", credentials.login);
+    let response = crate::auth::login(
         state.repository,
         state.jwt_config,
-        credentials.login,
-        credentials.password,
+        &credentials.login,
+        &credentials.password,
     )
-    .await
+    .await;
+
+    match &response {
+        Ok(_) => {
+            info!("Successful login for user {}", credentials.login);
+            response
+        }
+        Err(e) => {
+            error!(
+                "Failed login attempt for user {}: {}",
+                credentials.login,
+                e.status()
+            );
+            response
+        }
+    }
 }
 
 #[utoipa::path(
@@ -70,9 +88,27 @@ async fn login(
     ),
     tag = "auth"
 )]
+#[instrument(skip(state, credentials))]
 async fn register(
     State(state): State<AuthApiState>,
     Json(credentials): Json<RegisterRequest>,
 ) -> impl IntoResponse {
-    crate::auth::register(state.repository, credentials.login, credentials.password).await
+    info!("Registration attempt for user {}", credentials.login);
+    let response =
+        crate::auth::register(state.repository, &credentials.login, &credentials.password).await;
+
+    match &response {
+        Ok(_) => {
+            info!("Successful registration for user {}", credentials.login);
+            response
+        }
+        Err(e) => {
+            error!(
+                "Failed registration attempt for user {}: {}",
+                credentials.login,
+                e.status()
+            );
+            response
+        }
+    }
 }

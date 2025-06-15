@@ -1,5 +1,6 @@
 use anyhow::{Result, anyhow};
 use serde::{Deserialize, Serialize};
+use tracing::{error, info, instrument};
 use utoipa::ToSchema;
 
 #[derive(Debug, Serialize)]
@@ -72,6 +73,7 @@ pub struct LlmService {
 
 impl LlmService {
     pub fn new(base_url: String, api_key: String, model: String) -> Self {
+        info!("Initializing LLM service with model {}", model);
         Self {
             client: reqwest::Client::new(),
             base_url,
@@ -80,7 +82,9 @@ impl LlmService {
         }
     }
 
+    #[instrument(skip(self, text))]
     pub async fn extract_words_from_text(&self, text: &str) -> Result<Vec<ExtractedWord>> {
+        info!("Extracting words from text");
         let prompt = format!(
             r#"Extract all Japanese words from the following text. For each word:
 - If it contains kanji, provide the reading in hiragana
@@ -108,10 +112,14 @@ Text to analyze:
             temperature: 0.1,
         };
 
-        self.send_request(request).await
+        let words = self.send_request(request).await?;
+        info!("Successfully extracted {} words from text", words.len());
+        Ok(words)
     }
 
+    #[instrument(skip(self, image_base64))]
     pub async fn extract_words_from_image(&self, image_base64: &str) -> Result<Vec<ExtractedWord>> {
+        info!("Extracting words from image");
         let prompt = r#"Extract all Japanese words from this image. For each word:
 - If it contains kanji, provide the reading in hiragana
 - If it's only hiragana/katakana, reading is not needed
@@ -143,11 +151,15 @@ Analyze the image and extract Japanese text:"#;
             temperature: 0.1,
         };
 
-        self.send_request(request).await
+        let words = self.send_request(request).await?;
+        info!("Successfully extracted {} words from image", words.len());
+        Ok(words)
     }
 
+    #[instrument(skip(self, request))]
     async fn send_request(&self, request: OpenRouterRequest) -> Result<Vec<ExtractedWord>> {
         let url = format!("{}/chat/completions", self.base_url);
+        info!("Sending request to OpenRouter API");
 
         let response = self
             .client
@@ -160,6 +172,7 @@ Analyze the image and extract Japanese text:"#;
 
         if !response.status().is_success() {
             let error_text = response.text().await?;
+            error!("OpenRouter API error: {}", error_text);
             return Err(anyhow!("OpenRouter API error: {}", error_text));
         }
 
@@ -180,6 +193,10 @@ Analyze the image and extract Japanese text:"#;
             .trim();
 
         let words_response: WordsResponse = serde_json::from_str(content).map_err(|e| {
+            error!(
+                "Failed to parse LLM response as JSON: {}. Content: {}",
+                e, content
+            );
             anyhow!(
                 "Failed to parse LLM response as JSON: {}. Content: {}",
                 e,
@@ -187,6 +204,7 @@ Analyze the image and extract Japanese text:"#;
             )
         })?;
 
+        info!("Successfully parsed response from OpenRouter API");
         Ok(words_response.words)
     }
 }
