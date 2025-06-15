@@ -11,6 +11,7 @@ interface HorizontalCardDeckProps {
   onClick: () => void;
   isAddDeck?: boolean;
   words?: JapaneseWord[];
+  title?: string;
 }
 
 export const HorizontalCardDeck = ({
@@ -20,6 +21,7 @@ export const HorizontalCardDeck = ({
   onClick,
   isAddDeck = false,
   words = [],
+  title,
 }: HorizontalCardDeckProps) => {
   const [isHovered, setIsHovered] = useState(false);
   const [mounted, setMounted] = useState(false);
@@ -43,7 +45,7 @@ export const HorizontalCardDeck = ({
   // If we have words, use the CardFan component
   if (!isAddDeck && words.length > 0) {
     return (
-      <div className="group cursor-pointer p-6">
+      <div className="group cursor-pointer p-6 flex items-center">
         <div
           className="flex justify-center items-center"
           style={{ width: "300px", height: "200px" }}
@@ -55,15 +57,19 @@ export const HorizontalCardDeck = ({
             borderColor={borderColor}
           />
         </div>
+        <div className="ml-2">
+          <h3 className="text-lg font-semibold mb-1">{title}</h3>
+          <p className="text-sm text-gray-600">{count} слов</p>
+        </div>
       </div>
     );
   }
 
   // Original stacked deck logic for empty states and add deck
   return (
-    <div className="group cursor-pointer p-6" onClick={onClick}>
+    <div className="group cursor-pointer p-6 flex items-center" onClick={onClick}>
       <div
-        className="relative flex-shrink-0 mx-auto"
+        className="relative flex-shrink-0"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => setIsHovered(false)}
         style={{
@@ -83,13 +89,12 @@ export const HorizontalCardDeck = ({
           return (
             <div
               key={`deck-${index}`}
-              className={`absolute rounded-xl border-2 shadow-lg transition-all duration-700 ease-out ${
-                isAddDeck
-                  ? `${colors.deck.add.bg} ${colors.deck.add.border}`
-                  : count === 0
-                    ? `bg-gray-100 border-gray-300 animate-pulse`
-                    : `${bgColor} ${borderColor}`
-              }`}
+              className={`absolute rounded-xl border-2 shadow-lg transition-all duration-700 ease-out ${isAddDeck
+                ? `${colors.deck.add.bg} ${colors.deck.add.border}`
+                : count === 0
+                  ? `bg-gray-100 border-gray-300 animate-pulse`
+                  : `${bgColor} ${borderColor}`
+                }`}
               style={{
                 width: "120px",
                 height: "160px",
@@ -117,6 +122,17 @@ export const HorizontalCardDeck = ({
           );
         })}
       </div>
+      {!isAddDeck && (
+        <div className="ml-2">
+          <h3 className="text-lg font-semibold mb-1">{title}</h3>
+          <p className="text-sm text-gray-600">{count} слов</p>
+        </div>
+      )}
+      {isAddDeck && (
+        <div className="ml-2">
+          <h3 className="text-lg font-semibold mb-1">{title}</h3>
+        </div>
+      )}
     </div>
   );
 };

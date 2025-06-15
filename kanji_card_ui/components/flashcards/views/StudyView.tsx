@@ -33,6 +33,7 @@ interface StudyViewProps {
   onWordsUpdated: () => void;
   collection: Collection;
   onStartLearning: () => void;
+  onMarkAsLearned: () => void;
 }
 
 export const StudyView = ({
@@ -47,6 +48,7 @@ export const StudyView = ({
   onWordsUpdated,
   collection,
   onStartLearning,
+  onMarkAsLearned,
 }: StudyViewProps) => {
   const [gridCardSides, setGridCardSides] = useState<CardSide[]>(() =>
     Array(activeChunk.length).fill(0 as CardSide),
@@ -182,6 +184,20 @@ export const StudyView = ({
               >
                 <Check className="h-4 w-4 mr-1" />
                 Учить
+              </Button>
+            )}
+            {collection === Collection.IN_PROGRESS && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  onMarkAsLearned();
+                  onWordsUpdated();
+                  setViewMode("set-selection");
+                }}
+              >
+                <Check className="h-4 w-4 mr-1" />
+                Выучено
               </Button>
             )}
           </Toolbar>

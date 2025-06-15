@@ -57,6 +57,23 @@ export default function JapaneseFlashcards() {
     }
   };
 
+  const handleMarkAsLearned = async () => {
+    if (!selectedSet?.set) return;
+
+    setLoading(true);
+    try {
+      const repository = WordRepository.getInstance();
+      await repository.markAsFinished(selectedSet.set.id);
+      setWordCollection(Collection.LEARNED);
+      setViewMode("set-selection");
+      await refreshWords();
+    } catch (error) {
+      console.error("Error marking as learned:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const updateUrlParams = useCallback(
     (type: Collection, setId?: string) => {
       const params = new URLSearchParams();
@@ -226,6 +243,7 @@ export default function JapaneseFlashcards() {
           onWordsUpdated={handleWordsUpdated}
           collection={selectedSet.type}
           onStartLearning={handleStartLearning}
+          onMarkAsLearned={handleMarkAsLearned}
         />
       )}
       {viewMode === "set-selection" &&

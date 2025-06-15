@@ -206,6 +206,7 @@ export const PoolView = ({
                   mapWordResponseToJapaneseWord,
                 ) || []
               }
+              title="Изученные слова"
             />
 
             <HorizontalCardDeck
@@ -218,6 +219,7 @@ export const PoolView = ({
                   mapWordResponseToJapaneseWord,
                 ) || []
               }
+              title="В процессе"
             />
 
             <HorizontalCardDeck
@@ -230,6 +232,7 @@ export const PoolView = ({
                   mapWordResponseToJapaneseWord,
                 ) || []
               }
+              title="Новые слова"
             />
 
             <HorizontalCardDeck
@@ -240,6 +243,7 @@ export const PoolView = ({
                 setViewMode("add-cards");
               }}
               isAddDeck={true}
+              title="Добавить карточки"
             />
           </div>
         </div>

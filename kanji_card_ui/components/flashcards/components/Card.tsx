@@ -95,6 +95,7 @@ export const Card = ({ currentWord, currentSide, studyMode }: CardProps) => {
     primary: currentWord.word,
     ...getCardColors("kanji"),
     textSize: getAdaptiveTextSize(currentWord.word, "kanji"),
+    onPlayAudio: isTwoSided ? playAudio : undefined,
   };
 
   const hiraganaCardData: CardData = {
