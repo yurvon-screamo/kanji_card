@@ -1,0 +1,13 @@
+[server]
+domain = "127.0.0.1"
+port = 8080
+
+[openrouter]
+base_url = "https://openrouter.ai/api/v1"
+model = "google/gemma-3-27b-it:free"
+api_key = "your-api-key-here"
+
+[jwt]
+token_expiry = 2592000                         # 30 days
+refresh_threshold = 2591700                    # -5 minutes
+secret_key = "your-secret-key-here"
