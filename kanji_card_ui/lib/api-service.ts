@@ -28,7 +28,8 @@ class ApiService {
             return await request();
         } catch (error) {
             console.error('API request failed:', error);
-            if (window.location.pathname !== '/login') {
+            if (window.location.href != "/login") {
+                console.log(window.location.href)
                 window.location.replace('/login');
             }
             throw error;

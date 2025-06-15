@@ -53,11 +53,14 @@ function JapaneseFlashcardsContent() {
 
   useEffect(() => {
     const checkAuth = async () => {
-      try {
-        const repository = WordRepository.getInstance();
-        await repository.getOverview();
-      } catch {
-        window.location.replace('/login');
+      console.log(window.location.href)
+      if (window.location.href != "/login") {
+        try {
+          const repository = WordRepository.getInstance();
+          await repository.getOverview();
+        } catch {
+          window.location.replace('/login');
+        }
       }
     };
     checkAuth();
