@@ -29,6 +29,5 @@ RUN groupadd -g 1001 kanji && \
     useradd -u 1001 -g kanji -m -s /bin/bash kanji && \
     chown -R kanji:kanji /app
 
-# USER kanji
 EXPOSE 3000
 ENTRYPOINT ["/app/kanji_card"]
