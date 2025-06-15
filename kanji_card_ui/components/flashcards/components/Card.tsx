@@ -88,7 +88,7 @@ export const Card = ({ currentWord, currentSide, studyMode }: CardProps) => {
     return null;
   }
 
-  const isTwoSided = currentWord.word === currentWord.reading;
+  const isTwoSided = currentWord.word === currentWord.reading || currentWord.reading === null || currentWord.reading === "";
 
   const kanjiCardData: CardData = {
     primary: currentWord.word,
