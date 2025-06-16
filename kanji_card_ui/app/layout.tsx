@@ -25,7 +25,7 @@ const mapleMono = localFont({
 
 export const metadata: Metadata = {
   title: "Kanji Card",
-  description: "Japanese kanji learning application built with Next.js",
+  description: "Japanese kanji learning app",
 };
 
 export default function RootLayout({
