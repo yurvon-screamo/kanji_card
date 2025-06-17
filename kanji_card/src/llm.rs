@@ -86,13 +86,30 @@ impl LlmService {
     pub async fn extract_words_from_text(&self, text: &str) -> Result<Vec<ExtractedWord>> {
         info!("Extracting words from text");
         let prompt = format!(
-            r#"Extract all Japanese words from the following text. For each word:
-- If it contains kanji, provide the reading in hiragana
-- If it's only hiragana/katakana, reading is not needed
-- Provide Russian translation
-- Return ONLY valid JSON in this exact format:
+            r#"You are a Japanese language expert. Extract all Japanese words from the following text and provide accurate translations.
 
-{{"words": [{{"word": "example", "reading": "example_reading_or_null", "translation": "example_translation"}}]}}
+IMPORTANT RULES:
+1. Extract ONLY Japanese words (hiragana, katakana, kanji, or mixed)
+2. For words containing kanji, provide the reading in hiragana
+3. For words that are only hiragana/katakana, set reading to null
+4. Provide accurate Russian translations
+5. Ignore punctuation marks, numbers, and non-Japanese text
+6. Each word should be extracted separately (don't combine phrases)
+7. Include particles (は, が, を, に, etc.) as separate words if they appear alone
+8. For demonstrative pronouns (これ, それ, あれ, etc.), provide specific translations
+9. Skip duplicates - if the same word appears multiple times, include it only once
+
+EXAMPLES:
+- これ → reading: null, translation: "это"
+- どこか → reading: null, translation: "где-то, где-нибудь"
+- 日本語 → reading: "にほんご", translation: "японский язык"
+- 大きい → reading: "おおきい", translation: "большой"
+- コンピュータ → reading: null, translation: "компьютер"
+- アメリカ → reading: null, translation: "Америка"
+- ありがとう → reading: null, translation: "спасибо"
+
+Return ONLY valid JSON in this exact format:
+{{"words": [{{"word": "japanese_word", "reading": "hiragana_reading_or_null", "translation": "russian_translation"}}]}}
 
 Text to analyze:
 {}"#,
@@ -120,13 +137,30 @@ Text to analyze:
     #[instrument(skip(self, image_base64))]
     pub async fn extract_words_from_image(&self, image_base64: &str) -> Result<Vec<ExtractedWord>> {
         info!("Extracting words from image");
-        let prompt = r#"Extract all Japanese words from this image. For each word:
-- If it contains kanji, provide the reading in hiragana
-- If it's only hiragana/katakana, reading is not needed
-- Provide Russian translation
-- Return ONLY valid JSON in this exact format:
+        let prompt = r#"You are a Japanese language expert. Extract all Japanese words from this image and provide accurate translations.
 
-{"words": [{"word": "example", "reading": "example_reading_or_null", "translation": "example_translation"}]}
+IMPORTANT RULES:
+1. Extract ONLY Japanese words (hiragana, katakana, kanji, or mixed)
+2. For words containing kanji, provide the reading in hiragana
+3. For words that are only hiragana/katakana, set reading to null
+4. Provide accurate Russian translations
+5. Ignore punctuation marks, numbers, and non-Japanese text
+6. Each word should be extracted separately (don't combine phrases)
+7. Include particles (は, が, を, に, etc.) as separate words if they appear alone
+8. For demonstrative pronouns (これ, それ, あれ, etc.), provide specific translations
+9. Skip duplicates - if the same word appears multiple times, include it only once
+
+EXAMPLES:
+- これ → reading: null, translation: "это"
+- どこか → reading: null, translation: "где-то, где-нибудь"
+- 日本語 → reading: "にほんご", translation: "японский язык"
+- 大きい → reading: "おおきい", translation: "большой"
+- コンピュータ → reading: null, translation: "компьютер"
+- アメリカ → reading: null, translation: "Америка"
+- ありがとう → reading: null, translation: "спасибо"
+
+Return ONLY valid JSON in this exact format:
+{"words": [{"word": "japanese_word", "reading": "hiragana_reading_or_null", "translation": "russian_translation"}]}
 
 Analyze the image and extract Japanese text:"#;
 
