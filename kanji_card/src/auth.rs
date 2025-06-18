@@ -214,27 +214,27 @@ fn generate_token(config: &JwtConfig, claims: &Claims) -> Result<String, Respons
 }
 
 pub fn set_auth_cookie(host: &str, response: &mut Response, token: &str, config: &JwtConfig) {
-    let domain = if host.contains(':') {
-        host.split(':').next().unwrap_or(host)
-    } else {
-        host
-    };
+    // let domain = if host.contains(':') {
+    //     host.split(':').next().unwrap_or(host)
+    // } else {
+    //     host
+    // };
 
-    let is_localhost = domain == "localhost";
-    let mut cookie_builder = CookieBuilder::new(TOKEN_COOKIE_NAME, token)
-        .http_only(true)
-        .secure(!is_localhost)
-        .same_site(if is_localhost {
-            cookie::SameSite::Lax
-        } else {
-            cookie::SameSite::Strict
-        })
+    // let is_localhost = domain == "localhost";
+    let cookie_builder = CookieBuilder::new(TOKEN_COOKIE_NAME, token)
+        // .http_only(true)
+        .secure(false)
+        // .same_site(if is_localhost {
+        //     cookie::SameSite::Lax
+        // } else {
+        //     cookie::SameSite::Strict
+        // })
         .path("/")
         .max_age(CookieDuration::seconds(config.token_expiry.as_secs() as i64));
 
-    if !is_localhost {
-        cookie_builder = cookie_builder.domain(format!(".{}", domain));
-    }
+    // if !is_localhost {
+    //     cookie_builder = cookie_builder.domain(format!(".{}", domain));
+    // }
 
     let cookie = cookie_builder.build();
 
