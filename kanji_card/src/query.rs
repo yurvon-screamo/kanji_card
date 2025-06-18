@@ -32,7 +32,8 @@ pub fn query_router(
         .routes(routes!(get_set))
         .routes(routes!(list_tobe_sets))
         .routes(routes!(list_current_sets))
-        .routes(routes!(list_released_sets))
+        .routes(routes!(list_released_words))
+        .routes(routes!(list_released_stories))
         .routes(routes!(get_overview))
         .layer(middleware::from_fn_with_state(
             jwt_config.clone(),
@@ -49,6 +50,14 @@ struct SetResponse {
     id: String,
     state: SetState,
     words: Vec<WordResponse>,
+    story: Option<StoryResponse>,
+}
+
+#[derive(Serialize, ToSchema)]
+struct StoryResponse {
+    id: String,
+    story: Vec<String>,
+    story_translate: Vec<String>,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -110,6 +119,11 @@ async fn get_set(
                         translation: w.translation().to_string(),
                     })
                     .collect(),
+                story: card_set.story().map(|s| StoryResponse {
+                    id: s.id().to_string(),
+                    story: s.story().to_vec(),
+                    story_translate: s.story_translate().to_vec(),
+                }),
             };
             Ok(axum::Json(response))
         }
@@ -148,6 +162,11 @@ async fn list_tobe_sets(
                             translation: w.translation().to_string(),
                         })
                         .collect(),
+                    story: set.story().map(|s| StoryResponse {
+                        id: s.id().to_string(),
+                        story: s.story().to_vec(),
+                        story_translate: s.story_translate().to_vec(),
+                    }),
                 })
                 .collect();
             Ok(axum::Json(response))
@@ -187,6 +206,11 @@ async fn list_current_sets(
                             translation: w.translation().to_string(),
                         })
                         .collect(),
+                    story: set.story().map(|s| StoryResponse {
+                        id: s.id().to_string(),
+                        story: s.story().to_vec(),
+                        story_translate: s.story_translate().to_vec(),
+                    }),
                 })
                 .collect();
             Ok(axum::Json(response))
@@ -207,14 +231,14 @@ async fn list_current_sets(
     )
 )]
 #[instrument(skip(state, claims), fields(search = ?params.search))]
-async fn list_released_sets(
+async fn list_released_words(
     State(state): State<QueryState>,
     Query(params): Query<ReleasedSetsQuery>,
     Extension(claims): Extension<Claims>,
 ) -> Result<axum::Json<Vec<WordResponse>>, (StatusCode, String)> {
     let search = params.search.map(|x| x.to_lowercase());
 
-    match state.release_repository.list_all(&claims.sub).await {
+    match state.release_repository.list_all_words(&claims.sub).await {
         Ok(cards) => {
             let response = cards
                 .iter()
@@ -234,6 +258,49 @@ async fn list_released_sets(
                     word: w.word().to_string(),
                     reading: w.reading().map(|r| r.to_string()),
                     translation: w.translation().to_string(),
+                })
+                .collect();
+            Ok(axum::Json(response))
+        }
+        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    }
+}
+
+#[utoipa::path(
+    get,
+    path = "/stories/released",
+    params(
+        ("search" = Option<String>, Query, description = "Search term for stories (case-insensitive)")
+    ),
+    responses(
+        (status = 200, description = "List of released stories retrieved successfully", body = Vec<StoryResponse>),
+        (status = 500, description = "Internal server error")
+    )
+)]
+#[instrument(skip(state, claims), fields(search = ?params.search))]
+async fn list_released_stories(
+    State(state): State<QueryState>,
+    Query(params): Query<ReleasedSetsQuery>,
+    Extension(claims): Extension<Claims>,
+) -> Result<axum::Json<Vec<StoryResponse>>, (StatusCode, String)> {
+    let search = params.search.map(|x| x.to_lowercase());
+
+    match state.release_repository.list_all_stories(&claims.sub).await {
+        Ok(stories) => {
+            let response = stories
+                .iter()
+                .filter(|s| {
+                    if let Some(search) = &search {
+                        s.story().iter().any(|line| line.to_lowercase().contains(search))
+                            || s.story_translate().iter().any(|line| line.to_lowercase().contains(search))
+                    } else {
+                        true
+                    }
+                })
+                .map(|s| StoryResponse {
+                    id: s.id().to_string(),
+                    story: s.story().to_vec(),
+                    story_translate: s.story_translate().to_vec(),
                 })
                 .collect();
             Ok(axum::Json(response))
@@ -300,8 +367,7 @@ async fn get_overview(
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     }
 
-    // Handle finished cards from release repository
-    match state.release_repository.list_all(&claims.sub).await {
+    match state.release_repository.list_all_words(&claims.sub).await {
         Ok(finished_cards) => {
             overview.finished.total_words = finished_cards.len();
 

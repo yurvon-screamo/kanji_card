@@ -233,6 +233,7 @@ function JapaneseFlashcardsContent() {
           currentWordIndex={currentWordIndex}
           currentSide={currentSide}
           studyMode={studyMode}
+          story={selectedSet.set.story}
           setViewMode={(mode) => {
             setViewMode(mode);
             if (mode === "set-selection" || mode === "pool") {

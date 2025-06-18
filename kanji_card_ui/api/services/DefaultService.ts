@@ -8,6 +8,7 @@ import type { ExtractWordsFromTextRequest } from '../models/ExtractWordsFromText
 import type { MarkAsTobeRequest } from '../models/MarkAsTobeRequest';
 import type { SaveWordsRequest } from '../models/SaveWordsRequest';
 import type { SetResponse } from '../models/SetResponse';
+import type { StoryResponse } from '../models/StoryResponse';
 import type { WordOverview } from '../models/WordOverview';
 import type { WordResponse } from '../models/WordResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -45,7 +46,7 @@ export class DefaultService {
      * @returns WordResponse List of released cards retrieved successfully
      * @throws ApiError
      */
-    public static listReleasedSets(
+    public static listReleasedWords(
         search?: string,
     ): CancelablePromise<Array<WordResponse>> {
         return __request(OpenAPI, {
@@ -88,6 +89,25 @@ export class DefaultService {
             },
             errors: {
                 404: `Set not found`,
+                500: `Internal server error`,
+            },
+        });
+    }
+    /**
+     * @param search Search term for stories (case-insensitive)
+     * @returns StoryResponse List of released stories retrieved successfully
+     * @throws ApiError
+     */
+    public static listReleasedStories(
+        search?: string,
+    ): CancelablePromise<Array<StoryResponse>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/query/stories/released',
+            query: {
+                'search': search,
+            },
+            errors: {
                 500: `Internal server error`,
             },
         });

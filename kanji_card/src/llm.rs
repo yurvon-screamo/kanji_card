@@ -64,6 +64,12 @@ struct WordsResponse {
     words: Vec<ExtractedWord>,
 }
 
+#[derive(Debug, Deserialize)]
+struct StoryResponse {
+    story: Vec<String>,
+    story_translate: Vec<String>,
+}
+
 pub struct LlmService {
     client: reqwest::Client,
     base_url: String,
@@ -269,5 +275,146 @@ Analyze the image and extract Japanese text:"#;
 
         info!("Successfully parsed response from OpenRouter API");
         Ok(words_response.words)
+    }
+
+    #[instrument(skip(self, words))]
+    pub async fn generate_story(
+        &self,
+        words: &[crate::domain::Card],
+    ) -> Result<(Vec<String>, Vec<String>)> {
+        info!("Generating story from {} words", words.len());
+
+        let words_list: Vec<String> = words
+            .iter()
+            .map(|c| format!("{} - {}", c.word(), c.translation()))
+            .collect();
+
+        let prompt = format!(
+            r#"You are a Japanese language expert and storyteller. Create a coherent short story using the provided Japanese words.
+
+IMPORTANT RULES:
+1. Use ALL the provided words in the story
+2. You may also use basic Japanese words (particles, common verbs, adjectives) to make the story coherent
+3. Keep the story simple and understandable for Japanese learners
+4. The story should be 3-5 sentences long
+5. Each sentence should be on a separate line
+6. Provide accurate Russian translation for each sentence
+7. The story should be logical and interesting
+
+Words to use:
+{}
+
+Return ONLY valid JSON in this exact format:
+{{"story": ["sentence1_in_japanese", "sentence2_in_japanese", "sentence3_in_japanese"], "story_translate": ["sentence1_in_russian", "sentence2_in_russian", "sentence3_in_russian"]}}
+
+Create the story:"#,
+            words_list.join("\n")
+        );
+
+        let request = OpenRouterRequest {
+            model: self.model.clone(),
+            messages: vec![Message {
+                role: "user".to_string(),
+                content: vec![Content::Text {
+                    content_type: "text".to_string(),
+                    text: prompt,
+                }],
+            }],
+            max_tokens: 2000,
+            temperature: 0.7,
+        };
+
+        let url = format!("{}/chat/completions", self.base_url);
+        info!(
+            "Sending story generation request to OpenRouter API at {}",
+            url
+        );
+
+        let response = match self
+            .client
+            .post(&url)
+            .header("Authorization", format!("Bearer {}", self.api_key))
+            .header("Content-Type", "application/json")
+            .json(&request)
+            .send()
+            .await
+        {
+            Ok(resp) => resp,
+            Err(e) => {
+                error!(
+                    error = %e,
+                    error_type = ?e.status(),
+                    "Failed to send story generation request to OpenRouter API"
+                );
+                return Err(anyhow!(
+                    "Failed to send story generation request to OpenRouter API: {}",
+                    e
+                ));
+            }
+        };
+
+        let status = response.status();
+        if !status.is_success() {
+            let error_text = response.text().await?;
+            error!(
+                status = %status,
+                error_text = %error_text,
+                "OpenRouter API returned error response for story generation"
+            );
+            return Err(anyhow!(
+                "OpenRouter API error for story generation: {}",
+                error_text
+            ));
+        }
+
+        let openrouter_response: OpenRouterResponse = match response.json().await {
+            Ok(resp) => resp,
+            Err(e) => {
+                error!(
+                    error = %e,
+                    "Failed to parse OpenRouter API response as JSON for story generation"
+                );
+                return Err(anyhow!(
+                    "Failed to parse OpenRouter API response for story generation: {}",
+                    e
+                ));
+            }
+        };
+
+        let content = openrouter_response
+            .choices
+            .first()
+            .ok_or_else(|| {
+                error!("No choices in OpenRouter API response for story generation");
+                anyhow!("No choices in response for story generation")
+            })?
+            .message
+            .content
+            .trim();
+
+        let content = content
+            .trim_start_matches("```json")
+            .trim_start_matches("```")
+            .trim_end_matches("```")
+            .trim();
+
+        let story_response: StoryResponse = serde_json::from_str(content).map_err(|e| {
+            error!(
+                error = %e,
+                content = %content,
+                "Failed to parse LLM story response as JSON"
+            );
+            anyhow!(
+                "Failed to parse LLM story response as JSON: {}. Content: {}",
+                e,
+                content
+            )
+        })?;
+
+        info!(
+            "Successfully generated story with {} sentences",
+            story_response.story.len()
+        );
+        Ok((story_response.story, story_response.story_translate))
     }
 }

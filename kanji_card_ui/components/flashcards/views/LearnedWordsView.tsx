@@ -4,15 +4,17 @@ import { WordRepository } from "../data/repository";
 import { JapaneseWord, CardSide } from "../types";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { Card } from "../components/Card";
-import { ArrowLeft, Search, Eye, Check, X, BookOpen } from "lucide-react";
+import { Story } from "../components/Story";
+import { ArrowLeft, Search, Eye, Check, X, BookOpen, GraduationCap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { LayoutContainer } from "../components/LayoutContainer";
 import { Toolbar } from "../components/Toolbar";
 import { colors } from "@/lib/colors";
 import { cn } from "@/lib/utils";
+import { DefaultService, StoryResponse } from "@/api";
 
-type ViewMode = "grid" | "test";
+type ViewMode = "grid" | "test" | "stories";
 
 interface LearnedWordsViewProps {
     onBack: () => void;
@@ -20,6 +22,8 @@ interface LearnedWordsViewProps {
 
 export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
     const [words, setWords] = useState<JapaneseWord[]>([]);
+    const [stories, setStories] = useState<StoryResponse[]>([]);
+    const [selectedStory, setSelectedStory] = useState<StoryResponse | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [loading, setLoading] = useState(true);
     const [cardSides, setCardSides] = useState<CardSide[]>([]);
@@ -28,22 +32,30 @@ export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
     const debouncedSearch = useDebounce(searchQuery, 300);
 
     useEffect(() => {
-        const loadWords = async () => {
+        const loadData = async () => {
             try {
                 setLoading(true);
-                const repository = WordRepository.getInstance();
-                const learnedWords = await repository.getLearnedWords(debouncedSearch || undefined);
-                setWords(learnedWords);
-                setCardSides(Array(learnedWords.length).fill(0 as CardSide));
+
+                if (viewMode === "stories") {
+                    // Загружаем истории
+                    const storiesData = await DefaultService.listReleasedStories(debouncedSearch || undefined);
+                    setStories(storiesData);
+                } else {
+                    // Загружаем слова
+                    const repository = WordRepository.getInstance();
+                    const learnedWords = await repository.getLearnedWords(debouncedSearch || undefined);
+                    setWords(learnedWords);
+                    setCardSides(Array(learnedWords.length).fill(0 as CardSide));
+                }
             } catch (error) {
-                console.error("Error loading words:", error);
+                console.error("Error loading data:", error);
             } finally {
                 setLoading(false);
             }
         };
 
-        loadWords();
-    }, [debouncedSearch]);
+        loadData();
+    }, [debouncedSearch, viewMode]);
 
     const handleCardClick = (index: number) => {
         setCardSides((prev) => {
@@ -110,17 +122,25 @@ export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
                                     variant={viewMode === "grid" ? "default" : "outline"}
                                     size="sm"
                                     onClick={() => setViewMode("grid")}
-                                    className={viewMode === "grid" ? colors.ui.button.modeToggle.activeBg : colors.ui.button.modeToggle.inactiveBg}
+                                    className="text-xs"
                                 >
-                                    <Eye className="h-4 w-4" />
+                                    <Eye className="h-3 w-3" />
                                 </Button>
                                 <Button
                                     variant={viewMode === "test" ? "default" : "outline"}
                                     size="sm"
                                     onClick={() => setViewMode("test")}
-                                    className={viewMode === "test" ? colors.ui.button.modeToggle.activeBg : colors.ui.button.modeToggle.inactiveBg}
+                                    className="text-xs"
                                 >
-                                    <BookOpen className="h-4 w-4" />
+                                    <GraduationCap className="h-3 w-3" />
+                                </Button>
+                                <Button
+                                    variant={viewMode === "stories" ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => setViewMode("stories")}
+                                    className="text-xs"
+                                >
+                                    <BookOpen className="h-3 w-3" />
                                 </Button>
                             </div>
                             <div className="relative max-w-md">
@@ -141,6 +161,54 @@ export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
                     <div className="flex items-center justify-center min-h-[200px]">
                         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
                     </div>
+                ) : selectedStory ? (
+                    <div className="space-y-4">
+                        <Button
+                            variant="outline"
+                            onClick={() => setSelectedStory(null)}
+                            className="mb-4"
+                        >
+                            <ArrowLeft className="h-4 w-4 mr-2" />
+                            Назад к историям
+                        </Button>
+                        <Story story={selectedStory} showFullControls={true} />
+                    </div>
+                ) : viewMode === "stories" ? (
+                    stories.length === 0 ? (
+                        <div className={`flex flex-col items-center justify-center min-h-[420px] ${colors.ui.text.secondary}`}>
+                            <p>Нет доступных историй</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {stories.map((story) => (
+                                <div
+                                    key={story.id}
+                                    className={`${colors.card.translation.bg} rounded-lg border-2 ${colors.ui.border.default} hover:${colors.ui.border.default} hover:shadow-md transition-all duration-300 cursor-pointer p-6`}
+                                    onClick={() => setSelectedStory(story)}
+                                >
+                                    <div className="space-y-3">
+                                        <div className="flex items-center justify-between">
+                                            <h3 className={`text-lg font-semibold ${colors.ui.text.default}`}>
+                                                {story.story[0]?.split(' ').slice(0, 4).join(' ') || `История`}
+                                            </h3>
+                                            <BookOpen className={`h-5 w-5 ${colors.ui.icon.default}`} />
+                                        </div>
+                                        <div className="space-y-2">
+                                            {story.story_translate[0] && (
+                                                <p className={`text-sm ${colors.ui.text.secondary} italic line-clamp-2`}>
+                                                    {story.story_translate[0]}
+                                                </p>
+                                            )}
+                                        </div>
+                                        <div className={`flex items-center justify-between text-sm ${colors.ui.text.secondary}`}>
+                                            <span>{story.story.length} предложений</span>
+                                            <span className={`${colors.ui.text.primary} hover:${colors.ui.text.default}`}>Читать →</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )
                 ) : viewMode === "grid" ? (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                         {words.map((word, index) => (
@@ -162,7 +230,7 @@ export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
                         ))}
                     </div>
                 ) : words.length === 0 ? (
-                    <div className="flex flex-col items-center justify-center min-h-[420px] text-gray-500">
+                    <div className={`flex flex-col items-center justify-center min-h-[420px] ${colors.ui.text.secondary}`}>
                         <p>Нет изученных слов</p>
                     </div>
                 ) : (
@@ -214,4 +282,4 @@ export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
             </div>
         </LayoutContainer>
     );
-} 
+}

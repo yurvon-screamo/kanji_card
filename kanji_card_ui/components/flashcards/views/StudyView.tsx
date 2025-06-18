@@ -1,13 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   ChevronLeft,
   ChevronRight,
   ArrowLeft,
-  Languages,
   Shuffle,
   Check,
   Grid,
+  BookOpen,
+  Languages,
 } from "lucide-react";
+
+
 import { Button } from "@/components/ui/button";
 import { LayoutContainer } from "../components/LayoutContainer";
 import {
@@ -17,9 +20,11 @@ import {
   ViewMode,
   Collection,
 } from "../types";
+import { StoryResponse } from "../../../api";
 import { Card } from "../components/Card";
 import { Toolbar } from "../components/Toolbar";
 import { colors } from "@/lib/colors";
+import { Story } from "../components/Story";
 
 interface StudyViewProps {
   activeChunk: JapaneseWord[];
@@ -34,6 +39,7 @@ interface StudyViewProps {
   collection: Collection;
   onStartLearning: () => void;
   onMarkAsLearned: () => void;
+  story?: StoryResponse | null;
 }
 
 export const StudyView = ({
@@ -49,10 +55,18 @@ export const StudyView = ({
   collection,
   onStartLearning,
   onMarkAsLearned,
+  story,
 }: StudyViewProps) => {
   const [gridCardSides, setGridCardSides] = useState<CardSide[]>(() =>
     Array(activeChunk.length).fill(0 as CardSide),
   );
+  const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
+
+  useEffect(() => {
+    if (studyMode === 'story') {
+      setCurrentSentenceIndex(0);
+    }
+  }, [studyMode]);
 
   // Early return if no words available
   if (activeChunk.length === 0) {
@@ -74,7 +88,7 @@ export const StudyView = ({
             <h2 className="text-xl font-semibold mb-2">
               Нет слов для изучения
             </h2>
-            <p className="text-gray-600">
+            <p className={colors.ui.text.secondary}>
               Выберите другой набор или добавьте новые слова
             </p>
           </div>
@@ -90,7 +104,7 @@ export const StudyView = ({
       case "jp":
         return 0;
       case "translate":
-        return 2;
+        return 0;
       case "mixed":
         return Math.random() > 0.5 ? 0 : 2;
       default:
@@ -99,19 +113,21 @@ export const StudyView = ({
   };
 
   const nextWord = () => {
-    setCurrentWordIndex((prev: number) => (prev + 1) % activeChunk.length);
+    const nextIndex = (currentWordIndex + 1) % activeChunk.length;
+    setCurrentWordIndex(nextIndex);
     setCurrentSide(getInitialSideForStudyMode(studyMode));
   };
 
   const prevWord = () => {
-    setCurrentWordIndex(
-      (prev: number) => (prev - 1 + activeChunk.length) % activeChunk.length,
-    );
+    const prevIndex = (currentWordIndex - 1 + activeChunk.length) % activeChunk.length;
+    setCurrentWordIndex(prevIndex);
     setCurrentSide(getInitialSideForStudyMode(studyMode));
   };
 
   const rotateSide = () => {
-    setCurrentSide((prev: CardSide) => ((prev + 1) % 3) as CardSide);
+    const isTwoSided = !currentWord || currentWord.word === currentWord.reading || currentWord.reading === null || currentWord.reading === "";
+    const maxSides = isTwoSided ? 2 : 3;
+    setCurrentSide((prev: CardSide) => ((prev + 1) % maxSides) as CardSide);
   };
 
   const handleStudyModeChange = (mode: StudyMode) => {
@@ -120,6 +136,9 @@ export const StudyView = ({
     setCurrentSide(getInitialSideForStudyMode(mode));
     if (mode === "grid") {
       setGridCardSides(Array(activeChunk.length).fill(0 as CardSide));
+    }
+    if (mode === "story") {
+      setCurrentSentenceIndex(0);
     }
   };
 
@@ -184,6 +203,16 @@ export const StudyView = ({
               >
                 <Shuffle className="h-3 w-3" />
               </Button>
+              {story && (
+                <Button
+                  variant={studyMode === "story" ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => handleStudyModeChange("story")}
+                  className="text-xs"
+                >
+                  <BookOpen className="h-3 w-3" />
+                </Button>
+              )}
             </div>
             {collection === Collection.NEW && (
               <Button
@@ -215,7 +244,16 @@ export const StudyView = ({
             )}
           </Toolbar>
 
-          {studyMode === "grid" ? (
+          {studyMode === "story" ? (
+            story && (
+              <Story
+                story={story}
+                showFullControls={true}
+                onSentenceClick={setCurrentSentenceIndex}
+                selectedSentenceIndex={currentSentenceIndex}
+              />
+            )
+          ) : studyMode === "grid" ? (
             <div className="grid grid-cols-4 gap-4">
               {activeChunk.map((word, index) => (
                 <div
@@ -278,12 +316,27 @@ export const StudyView = ({
             </div>
           )}
 
-          {studyMode != "grid" && (
+          {studyMode !== "grid" && studyMode !== "story" && (
             <div className="flex justify-center mt-8 space-x-2">
               {activeChunk.map((_, index) => (
                 <div
                   key={index}
                   className={`w-2 h-2 rounded-full transition-all duration-300 ${index === currentWordIndex ? `${colors.ui.pagination.active} scale-125` : `${colors.ui.pagination.inactive} ${colors.ui.pagination.hover}`}`}
+                />
+              ))}
+            </div>
+          )}
+
+          {studyMode === "story" && story && (
+            <div className="flex justify-center mt-8 space-x-2">
+              {story.story.map((_, index) => (
+                <div
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${index === currentSentenceIndex
+                    ? `${colors.ui.pagination.active} scale-125`
+                    : `${colors.ui.pagination.inactive} ${colors.ui.pagination.hover}`
+                    }`}
+                  onClick={() => setCurrentSentenceIndex(index)}
                 />
               ))}
             </div>

@@ -117,7 +117,12 @@ export const Card = ({ currentWord, currentSide, studyMode }: CardProps) => {
       case "translate":
         return translationCardData;
       case "mixed":
-        return Math.random() > 0.5 ? translationCardData : kanjiCardData;
+        // Используем стабильный случайный выбор на основе ID слова
+        const hash = currentWord.id.split('').reduce((a, b) => {
+          a = ((a << 5) - a) + b.charCodeAt(0);
+          return a & a;
+        }, 0);
+        return Math.abs(hash) % 2 === 0 ? translationCardData : kanjiCardData;
       case "grid":
         return kanjiCardData;
       default:
@@ -126,14 +131,37 @@ export const Card = ({ currentWord, currentSide, studyMode }: CardProps) => {
   };
 
   const mainCardContent = getMainCardData();
-  const nextCardContent =
-    mainCardContent === kanjiCardData ? hiraganaCardData : kanjiCardData;
-  const otherCardContent =
-    mainCardContent === kanjiCardData ? translationCardData : hiraganaCardData;
-
-  const cardSides = isTwoSided
-    ? [mainCardContent, otherCardContent]
-    : [mainCardContent, nextCardContent, otherCardContent];
+  
+  let cardSides: CardData[];
+  
+  if (studyMode === "translate") {
+    // В режиме перевода: сторона 0 - перевод, сторона 1 - японский текст
+    cardSides = isTwoSided
+      ? [translationCardData, kanjiCardData]
+      : [translationCardData, kanjiCardData, hiraganaCardData];
+  } else if (studyMode === "mixed") {
+    // В режиме микс: случайный выбор начальной стороны, но фиксированный порядок
+    const startWithTranslation = mainCardContent === translationCardData;
+    if (startWithTranslation) {
+      cardSides = isTwoSided
+        ? [translationCardData, kanjiCardData]
+        : [translationCardData, kanjiCardData, hiraganaCardData];
+    } else {
+      cardSides = isTwoSided
+        ? [kanjiCardData, translationCardData]
+        : [kanjiCardData, hiraganaCardData, translationCardData];
+    }
+  } else {
+    // Для других режимов используем старую логику
+    const nextCardContent =
+      mainCardContent === kanjiCardData ? hiraganaCardData : kanjiCardData;
+    const otherCardContent =
+      mainCardContent === kanjiCardData ? translationCardData : hiraganaCardData;
+    
+    cardSides = isTwoSided
+      ? [mainCardContent, otherCardContent]
+      : [mainCardContent, nextCardContent, otherCardContent];
+  }
 
   const hintText = "Нажмите для поворота";
 

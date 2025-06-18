@@ -5,7 +5,7 @@ use crate::set_repository::CardSetRepository;
 use anyhow::Result;
 use base64::{Engine as _, engine::general_purpose};
 use std::collections::HashSet;
-use tracing::{info, instrument};
+use tracing::{error, info, instrument};
 
 pub struct SetService {
     set_repository: CardSetRepository,
@@ -31,7 +31,7 @@ impl SetService {
         info!("Extracting words from text");
         let words = self.llm_service.extract_words_from_text(&text).await?;
         info!("Successfully extracted {} words from text", words.len());
-        Ok(words.into_iter().map(ExtractedWord::from).collect())
+        Ok(words.into_iter().collect())
     }
 
     #[instrument(skip(self, image_data))]
@@ -46,7 +46,7 @@ impl SetService {
             .extract_words_from_image(&image_base64)
             .await?;
         info!("Successfully extracted {} words from image", words.len());
-        Ok(words.into_iter().map(ExtractedWord::from).collect())
+        Ok(words.into_iter().collect())
     }
 
     #[instrument(skip(self, words), fields(user_login = %user_login))]
@@ -107,6 +107,19 @@ impl SetService {
 
         for word_data in unique_words {
             if !current_set.is_writabe() {
+                match self.llm_service.generate_story(current_set.words()).await {
+                    Ok((story, story_translate)) => {
+                        if let Err(e) = current_set.put_story(story, story_translate) {
+                            error!("Failed to put story to set: {:?}", e);
+                        } else {
+                            info!("Successfully generated and added story to set");
+                        }
+                    }
+                    Err(e) => {
+                        error!("Failed to generate story for set: {:?}", e);
+                    }
+                }
+
                 info!(
                     "Saving current set and creating new one for user {}",
                     user_login
@@ -116,6 +129,21 @@ impl SetService {
             }
 
             current_set.push(word_data.word, word_data.reading, word_data.translation)?;
+        }
+
+        if !current_set.words().is_empty() {
+            match self.llm_service.generate_story(current_set.words()).await {
+                Ok((story, story_translate)) => {
+                    if let Err(e) = current_set.put_story(story, story_translate) {
+                        error!("Failed to put story to final set: {:?}", e);
+                    } else {
+                        info!("Successfully generated and added story to final set");
+                    }
+                }
+                Err(e) => {
+                    error!("Failed to generate story for final set: {:?}", e);
+                }
+            }
         }
 
         info!("Saving final set for user {}", user_login);
@@ -141,10 +169,12 @@ impl SetService {
     pub async fn release_set(&self, user_login: &str, set_id: &str) -> Result<()> {
         info!("Releasing set {} for user {}", set_id, user_login);
         let card_set = self.set_repository.load(user_login, set_id).await?;
-        let words = card_set.release()?;
+        let set_release = card_set.release()?;
 
-        self.set_repository.remove(user_login, &set_id).await?;
-        self.release_repository.save(user_login, &words).await?;
+        self.set_repository.remove(user_login, set_id).await?;
+        self.release_repository
+            .save(user_login, &set_release.words, &set_release.story)
+            .await?;
 
         info!(
             "Successfully released set {} for user {}",
@@ -162,7 +192,7 @@ impl SetService {
         );
         let extracted_words = self
             .release_repository
-            .load_by_ids(user_login, &word_ids)
+            .load_word_by_ids(user_login, &word_ids)
             .await?
             .into_iter()
             .map(|word| ExtractedWord {

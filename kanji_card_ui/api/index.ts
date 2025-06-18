@@ -17,6 +17,7 @@ export type { SaveWordsRequest } from './models/SaveWordsRequest';
 export type { SetPreview } from './models/SetPreview';
 export type { SetResponse } from './models/SetResponse';
 export { SetState } from './models/SetState';
+export type { StoryResponse } from './models/StoryResponse';
 export type { WordOverview } from './models/WordOverview';
 export type { WordResponse } from './models/WordResponse';
 

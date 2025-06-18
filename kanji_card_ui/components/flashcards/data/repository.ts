@@ -23,6 +23,7 @@ export class WordRepository {
         this.mapWordResponseToJapaneseWord(w),
       ),
       state: this.mapSetStateToCollection(setResponse.state),
+      story: setResponse.story,
     };
   }
 

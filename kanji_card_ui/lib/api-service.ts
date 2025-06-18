@@ -66,7 +66,7 @@ class ApiService {
 
     public async listReleasedWords(search?: string) {
         return this.handleRequest(() =>
-            DefaultService.listReleasedSets(search)
+            DefaultService.listReleasedWords(search)
         );
     }
 
