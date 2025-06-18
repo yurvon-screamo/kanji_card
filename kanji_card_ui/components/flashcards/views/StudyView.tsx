@@ -85,16 +85,29 @@ export const StudyView = ({
 
   const currentWord = activeChunk[currentWordIndex];
 
+  const getInitialSideForStudyMode = (mode: StudyMode): CardSide => {
+    switch (mode) {
+      case "jp":
+        return 0;
+      case "translate":
+        return 2;
+      case "mixed":
+        return Math.random() > 0.5 ? 0 : 2;
+      default:
+        return 0;
+    }
+  };
+
   const nextWord = () => {
     setCurrentWordIndex((prev: number) => (prev + 1) % activeChunk.length);
-    setCurrentSide(0);
+    setCurrentSide(getInitialSideForStudyMode(studyMode));
   };
 
   const prevWord = () => {
     setCurrentWordIndex(
       (prev: number) => (prev - 1 + activeChunk.length) % activeChunk.length,
     );
-    setCurrentSide(0);
+    setCurrentSide(getInitialSideForStudyMode(studyMode));
   };
 
   const rotateSide = () => {
@@ -104,7 +117,7 @@ export const StudyView = ({
   const handleStudyModeChange = (mode: StudyMode) => {
     setStudyMode(mode);
     setCurrentWordIndex(0);
-    setCurrentSide(0);
+    setCurrentSide(getInitialSideForStudyMode(mode));
     if (mode === "grid") {
       setGridCardSides(Array(activeChunk.length).fill(0 as CardSide));
     }
@@ -247,6 +260,7 @@ export const StudyView = ({
                 }}
               >
                 <Card
+                  key={currentWordIndex}
                   currentWord={currentWord}
                   currentSide={currentSide}
                   studyMode={studyMode}

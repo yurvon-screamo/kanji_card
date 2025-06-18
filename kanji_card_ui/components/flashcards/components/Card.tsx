@@ -168,7 +168,7 @@ export const Card = ({ currentWord, currentSide, studyMode }: CardProps) => {
 
     return (
       <div
-        className="relative transition-transform duration-1400 ease-in-out"
+        className="relative transition-transform duration-500 ease-in-out"
         style={{
           transformStyle: "preserve-3d",
           transform: `rotateX(-10deg) rotateY(${getRotationAngle()}deg)`,
