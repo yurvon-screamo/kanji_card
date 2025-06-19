@@ -131,7 +131,7 @@ impl SetService {
             current_set.push(word_data.word, word_data.reading, word_data.translation)?;
         }
 
-        if !current_set.words().is_empty() {
+        if !current_set.is_writabe() {
             match self.llm_service.generate_story(current_set.words()).await {
                 Ok((story, story_translate)) => {
                     if let Err(e) = current_set.put_story(story, story_translate) {
