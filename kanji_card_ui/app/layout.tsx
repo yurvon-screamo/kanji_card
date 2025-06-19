@@ -25,7 +25,13 @@ const mapleMono = localFont({
 
 export const metadata: Metadata = {
   title: "Kanji Card",
-  description: "Japanese kanji learning app",
+  description: "Japanese kanji learning app with flashcards and spaced repetition",
+  icons: {
+    icon: '/logo.svg',
+    apple: '/logo.svg',
+    shortcut: '/logo.svg',
+  },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({

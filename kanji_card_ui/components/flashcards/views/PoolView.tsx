@@ -14,6 +14,7 @@ import {
 import { colors } from "@/lib/colors";
 import { Toolbar } from "../components/Toolbar";
 import { WordOverview, WordResponse } from "../../../api";
+import Image from "next/image"
 
 interface PoolViewProps {
   setViewMode: (mode: ViewMode) => void;
@@ -169,7 +170,16 @@ export const PoolView = ({
     <>
       <Toolbar>
         <div className="flex items-center space-x-2">
-          <h1 className="text-xl font-semibold">日本語</h1>
+          <div className="flex items-  space-x-4">
+            <Image
+              src="/logo.svg"
+              alt="Kanji Card"
+              width={32}
+              height={32}
+              className="rounded-md"
+            />
+            <h1 className="text-xl font-semibold">日本語</h1>
+          </div>
         </div>
       </Toolbar>
       <LayoutContainer>
