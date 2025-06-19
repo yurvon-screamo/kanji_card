@@ -42,9 +42,18 @@ export const CardSide = ({
             e.stopPropagation();
             onPlayAudio();
           }}
-          className={`p-2 mb-4 rounded-full ${hintColor} ${getAudioButtonHoverColor()} transition-colors`}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+          }}
+          onTouchEnd={(e) => {
+            e.stopPropagation();
+            e.preventDefault();
+            onPlayAudio();
+          }}
+          className={`p-3 mb-4 rounded-full ${hintColor} ${getAudioButtonHoverColor()} transition-colors touch-manipulation`}
+          style={{ touchAction: 'manipulation' }}
         >
-          <Volume2 className="w-4 h-4" />
+          <Volume2 className="w-5 h-5" />
         </button>
       )}
       <div

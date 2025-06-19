@@ -254,7 +254,7 @@ export const StudyView = ({
               />
             )
           ) : studyMode === "grid" ? (
-            <div className="grid grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
               {activeChunk.map((word, index) => (
                 <div
                   key={index}

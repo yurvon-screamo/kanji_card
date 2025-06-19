@@ -36,7 +36,7 @@ export const SetSelectionView = ({
           </div>
         </Toolbar>
 
-        <div className="grid grid-cols-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
           {sets.map((set, index) => (
             <CardFan
               key={set.id}

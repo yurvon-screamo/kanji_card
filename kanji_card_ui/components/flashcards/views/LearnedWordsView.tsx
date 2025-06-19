@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { WordRepository } from "../data/repository";
 import { JapaneseWord, CardSide } from "../types";
@@ -71,7 +71,13 @@ export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
     };
 
     const nextWord = () => {
-        setCurrentWordIndex((prev) => (prev + 1) % words.length);
+        const nextIndex = (currentWordIndex + 1) % words.length;
+        setCardSides(prevSides => {
+            const newSides = [...prevSides];
+            newSides[nextIndex] = 0;
+            return newSides;
+        });
+        setCurrentWordIndex(nextIndex);
     };
 
     const handleKnow = () => {
@@ -210,7 +216,7 @@ export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
                         </div>
                     )
                 ) : viewMode === "grid" ? (
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4">
                         {words.map((word, index) => (
                             <div
                                 key={word.id}
@@ -244,6 +250,7 @@ export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
                             }}
                         >
                             <Card
+                                key={currentWordIndex}
                                 currentWord={words[currentWordIndex]}
                                 currentSide={cardSides[currentWordIndex]}
                                 studyMode="jp"

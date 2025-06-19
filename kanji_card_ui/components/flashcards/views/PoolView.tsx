@@ -117,7 +117,7 @@ export const PoolView = ({
         </Toolbar>
         <LayoutContainer>
           <div className="w-full space-y-12 max-w-screen-lg mx-auto px-4 pt-20">
-            <div className="grid grid-cols-1 xl:grid-cols-2 gap-12 max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 max-w-7xl mx-auto">
               {Array.from({ length: 4 }).map((_, i) => (
                 <div
                   key={i}
@@ -174,7 +174,7 @@ export const PoolView = ({
       </Toolbar>
       <LayoutContainer>
         <div className="w-full space-y-12 max-w-screen-lg mx-auto px-4 pt-20">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-12 max-w-7xl mx-auto">
+          <div className="grid grid-cols-2 xl:grid-cols-2 gap-12 max-w-7xl mx-auto">
             <HorizontalCardDeck
               count={overview?.finished.total_words || 0}
               bgColor={colors.deck.learned.bg}
