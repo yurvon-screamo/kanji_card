@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ChevronLeft,
   ChevronRight,
@@ -61,6 +61,11 @@ export const StudyView = ({
     Array(activeChunk.length).fill(0 as CardSide),
   );
   const [currentSentenceIndex, setCurrentSentenceIndex] = useState(0);
+
+  // Touch handling for swipe gestures
+  const touchStartX = useRef<number | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const minSwipeDistance = 50;
 
   useEffect(() => {
     if (studyMode === 'story') {
@@ -153,6 +158,38 @@ export const StudyView = ({
       }
       return newSides;
     });
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (studyMode === "grid" || studyMode === "story") return;
+
+    const touch = e.touches[0];
+    touchStartX.current = touch.clientX;
+    touchStartY.current = touch.clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (studyMode === "grid" || studyMode === "story") return;
+    if (touchStartX.current === null || touchStartY.current === null) return;
+
+    const touch = e.changedTouches[0];
+    const deltaX = touch.clientX - touchStartX.current;
+    const deltaY = touch.clientY - touchStartY.current;
+
+    // Check if it's a horizontal swipe (more horizontal than vertical movement)
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+      if (deltaX > 0) {
+        // Swipe right - go to previous word
+        prevWord();
+      } else {
+        // Swipe left - go to next word
+        nextWord();
+      }
+    }
+
+    // Reset touch coordinates
+    touchStartX.current = null;
+    touchStartY.current = null;
   };
 
   return (
@@ -275,7 +312,11 @@ export const StudyView = ({
               ))}
             </div>
           ) : (
-            <div className="flex items-center justify-between w-full space-x-2">
+            <div
+              className="flex items-center justify-between w-full space-x-2"
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+            >
               <Button
                 variant="outline"
                 size="lg"
