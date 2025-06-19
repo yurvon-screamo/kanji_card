@@ -297,10 +297,7 @@ export const StudyView = ({
                   key={index}
                   className="cursor-pointer w-[150px] h-[210px]"
                   onClick={(e) => {
-                    // Проверяем, что клик не произошел по кнопке аудио
-                    if (!(e.target as HTMLElement).closest("button")) {
-                      handleGridCardClick(index);
-                    }
+                    handleGridCardClick(index);
                   }}
                 >
                   <Card

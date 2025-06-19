@@ -1,6 +1,7 @@
 import React from "react";
 import { Volume2 } from "lucide-react";
 import { getAudioButtonHoverColor } from "@/lib/colors";
+import { Button } from "@/components/ui/button";
 
 interface CardSideProps {
   primary: string;
@@ -13,6 +14,7 @@ interface CardSideProps {
   transformStyle: string;
   positioningStyle?: React.CSSProperties;
   onPlayAudio?: () => void;
+  isPlaying?: boolean;
 }
 
 export const CardSide = ({
@@ -26,6 +28,7 @@ export const CardSide = ({
   transformStyle,
   positioningStyle,
   onPlayAudio,
+  isPlaying = false,
 }: CardSideProps) => {
   return (
     <div
@@ -37,7 +40,9 @@ export const CardSide = ({
       }}
     >
       {onPlayAudio && (
-        <button
+        <Button
+          variant="ghost"
+          size="icon"
           onClick={(e) => {
             e.stopPropagation();
             onPlayAudio();
@@ -47,14 +52,18 @@ export const CardSide = ({
           }}
           onTouchEnd={(e) => {
             e.stopPropagation();
-            e.preventDefault();
             onPlayAudio();
           }}
-          className={`p-3 mb-4 rounded-full ${hintColor} ${getAudioButtonHoverColor()} transition-colors touch-manipulation`}
-          style={{ touchAction: 'manipulation' }}
+          disabled={isPlaying}
+          className={`mb-4 rounded-full ${hintColor} ${getAudioButtonHoverColor()} transition-colors touch-manipulation`}
+          style={{
+            WebkitTapHighlightColor: 'transparent',
+            touchAction: 'manipulation'
+          }}
+          aria-label="Воспроизвести произношение"
         >
           <Volume2 className="w-5 h-5" />
-        </button>
+        </Button>
       )}
       <div
         className={`${primaryTextSize} font-normal ${primaryColor} mb-6 select-none text-center px-4`}

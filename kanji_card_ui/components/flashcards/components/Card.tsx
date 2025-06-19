@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { CardSide } from "./CardSide";
 import { CardSide as CardSideType, JapaneseWord } from "../types";
 import { getCardColors } from "@/lib/colors";
@@ -18,11 +18,11 @@ interface CardData {
   textSize: string;
   gradientBgColor: string;
   onPlayAudio?: () => void;
+  isPlaying?: boolean;
 }
 
 export const Card = ({ currentWord, currentSide, studyMode }: CardProps) => {
-  const [japaneseVoice, setJapaneseVoice] =
-    useState<SpeechSynthesisVoice | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   const getAdaptiveTextSize = (
     text: string,
@@ -52,37 +52,20 @@ export const Card = ({ currentWord, currentSide, studyMode }: CardProps) => {
     return "text-base";
   };
 
-  useEffect(() => {
-    const loadVoices = () => {
-      const voices = window.speechSynthesis.getVoices();
-      const japaneseVoice =
-        voices.find(
-          (voice) => voice.lang === "ja-JP" && voice.name.includes("Google"),
-        ) || voices.find((voice) => voice.lang === "ja-JP");
-      setJapaneseVoice(japaneseVoice || null);
-    };
-
-    loadVoices();
-    window.speechSynthesis.onvoiceschanged = loadVoices;
-
-    return () => {
-      window.speechSynthesis.onvoiceschanged = null;
-    };
-  }, []);
 
   const playAudio = useCallback(() => {
-    if (!japaneseVoice || !currentWord) return;
+    if (!currentWord) return;
 
-    const utterance = new SpeechSynthesisUtterance(currentWord.word);
-    utterance.voice = japaneseVoice;
-    utterance.lang = "ja-JP";
-    utterance.rate = 0.9;
-    utterance.pitch = 1.0;
-    utterance.volume = 1.0;
-
-    window.speechSynthesis.cancel();
-    window.speechSynthesis.speak(utterance);
-  }, [currentWord, japaneseVoice]);
+    if ('speechSynthesis' in window) {
+      setIsPlaying(true);
+      const utterance = new SpeechSynthesisUtterance(currentWord.word);
+      utterance.lang = 'ja-JP';
+      utterance.rate = 0.8;
+      utterance.onend = () => setIsPlaying(false);
+      utterance.onerror = () => setIsPlaying(false);
+      speechSynthesis.speak(utterance);
+    }
+  }, [currentWord]);
 
   if (!currentWord) {
     return null;
@@ -95,6 +78,7 @@ export const Card = ({ currentWord, currentSide, studyMode }: CardProps) => {
     ...getCardColors("kanji"),
     textSize: getAdaptiveTextSize(currentWord.word, "kanji"),
     onPlayAudio: isTwoSided ? playAudio : undefined,
+    isPlaying: isTwoSided ? isPlaying : undefined,
   };
 
   const hiraganaCardData: CardData = {
@@ -102,6 +86,7 @@ export const Card = ({ currentWord, currentSide, studyMode }: CardProps) => {
     ...getCardColors("hiragana"),
     textSize: getAdaptiveTextSize(currentWord.reading, "hiragana"),
     onPlayAudio: playAudio,
+    isPlaying: isPlaying,
   };
 
   const translationCardData: CardData = {
@@ -131,9 +116,9 @@ export const Card = ({ currentWord, currentSide, studyMode }: CardProps) => {
   };
 
   const mainCardContent = getMainCardData();
-  
+
   let cardSides: CardData[];
-  
+
   if (studyMode === "translate") {
     // В режиме перевода: сторона 0 - перевод, сторона 1 - японский текст
     cardSides = isTwoSided
@@ -157,7 +142,7 @@ export const Card = ({ currentWord, currentSide, studyMode }: CardProps) => {
       mainCardContent === kanjiCardData ? hiraganaCardData : kanjiCardData;
     const otherCardContent =
       mainCardContent === kanjiCardData ? translationCardData : hiraganaCardData;
-    
+
     cardSides = isTwoSided
       ? [mainCardContent, otherCardContent]
       : [mainCardContent, nextCardContent, otherCardContent];
