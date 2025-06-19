@@ -296,7 +296,7 @@ export const StudyView = ({
                 <div
                   key={index}
                   className="cursor-pointer w-[150px] h-[210px]"
-                  onClick={(e) => {
+                  onClick={() => {
                     handleGridCardClick(index);
                   }}
                 >

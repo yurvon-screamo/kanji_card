@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useCallback } from "react";
 import { CardSide } from "./CardSide";
 import { CardSide as CardSideType, JapaneseWord } from "../types";
 import { getCardColors } from "@/lib/colors";
