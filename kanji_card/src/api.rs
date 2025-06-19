@@ -154,7 +154,7 @@ async fn save_words(
     );
     match state
         .set_service
-        .save_words(&claims.sub, request.words)
+        .save_words(&claims.sub, request.words, false)
         .await
     {
         Ok(_) => {

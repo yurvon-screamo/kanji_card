@@ -50,25 +50,34 @@ impl SetService {
     }
 
     #[instrument(skip(self, words), fields(user_login = %user_login))]
-    pub async fn save_words(&self, user_login: &str, words: Vec<ExtractedWord>) -> Result<()> {
+    pub async fn save_words(
+        &self,
+        user_login: &str,
+        words: Vec<ExtractedWord>,
+        skip_uniq: bool,
+    ) -> Result<()> {
         info!("Saving {} words for user {}", words.len(), user_login);
         if words.is_empty() {
             info!("No words to save for user {}", user_login);
             return Ok(());
         }
 
-        let all_sets = self.set_repository.list_all(user_login).await?;
-        let mut existing_words = HashSet::new();
-        for set in all_sets {
-            for card in set.words() {
-                existing_words.insert(card.word().to_string());
+        let unique_words: Vec<ExtractedWord> = match skip_uniq {
+            true => words,
+            false => {
+                let mut existing_words = HashSet::new();
+                let all_sets = self.set_repository.list_all(user_login).await?;
+                for set in all_sets {
+                    for card in set.words() {
+                        existing_words.insert(card.word().to_string());
+                    }
+                }
+                words
+                    .into_iter()
+                    .filter(|word| !existing_words.contains(&word.word))
+                    .collect()
             }
-        }
-
-        let unique_words: Vec<ExtractedWord> = words
-            .into_iter()
-            .filter(|word| !existing_words.contains(&word.word))
-            .collect();
+        };
 
         if unique_words.is_empty() {
             info!("No unique words to save for user {}", user_login);
@@ -202,7 +211,7 @@ impl SetService {
             })
             .collect();
 
-        self.save_words(user_login, extracted_words).await?;
+        self.save_words(user_login, extracted_words, true).await?;
         self.release_repository
             .remove_by_ids(user_login, &word_ids)
             .await?;
