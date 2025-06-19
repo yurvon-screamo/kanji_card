@@ -334,6 +334,28 @@ export const StudyView = ({
                     rotateSide();
                   }
                 }}
+                onTouchStart={(e) => {
+                  // Предотвращаем всплытие события касания от кнопки аудио
+                  if ((e.target as HTMLElement).closest("button")) {
+                    e.stopPropagation();
+                  }
+                }}
+                onTouchEnd={(e) => {
+                  // Проверяем, что касание не произошло по кнопке аудио
+                  if (!(e.target as HTMLElement).closest("button")) {
+                    // Дополнительно проверяем, что это не свайп
+                    if (touchStartX.current !== null && touchStartY.current !== null) {
+                      const touch = e.changedTouches[0];
+                      const deltaX = Math.abs(touch.clientX - touchStartX.current);
+                      const deltaY = Math.abs(touch.clientY - touchStartY.current);
+                      
+                      // Если движение минимальное, считаем это тапом для переворота карточки
+                      if (deltaX < 10 && deltaY < 10) {
+                        rotateSide();
+                      }
+                    }
+                  }
+                }}
               >
                 <Card
                   key={currentWordIndex}
