@@ -168,12 +168,12 @@ export const PoolView = ({
   return (
     <>
       <Toolbar>
-        <div className="flex items-center space-x-4">
+        <div className="flex items-center space-x-2">
           <h1 className="text-xl font-semibold">日本語</h1>
         </div>
       </Toolbar>
       <LayoutContainer>
-        <div className="w-full space-y-12 max-w-screen-lg mx-auto px-4 pt-20">
+        <div className="w-full space-y-2 max-w-screen-lg mx-auto px-4">
           <div className="grid grid-cols-2 xl:grid-cols-2 gap-12 max-w-7xl mx-auto">
             <HorizontalCardDeck
               count={overview?.finished.total_words || 0}

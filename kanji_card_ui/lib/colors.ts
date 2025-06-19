@@ -33,22 +33,22 @@ export const colors = {
   // Deck colors - subtle status indication with grays
   deck: {
     learned: {
-      bg: "bg-emerald-50 dark:bg-gray-700",
+      bg: "bg-emerald-50 dark:bg-gray-800",
       border: "border-emerald-100 dark:border-gray-500",
       text: "text-emerald-700 dark:text-emerald-300",
     },
     inProgress: {
-      bg: "bg-amber-50 dark:bg-gray-700",
+      bg: "bg-amber-50 dark:bg-gray-800",
       border: "border-amber-100 dark:border-gray-500",
       text: "text-amber-700 dark:text-amber-300",
     },
     unlearned: {
-      bg: "bg-slate-50 dark:bg-gray-700",
+      bg: "bg-slate-50 dark:bg-gray-800",
       border: "border-slate-200 dark:border-gray-500",
       text: "text-slate-600 dark:text-gray-300",
     },
     add: {
-      bg: "bg-stone-50 dark:bg-gray-700",
+      bg: "bg-stone-50 dark:bg-gray-800",
       border: "border-stone-200 dark:border-gray-500",
       text: "text-stone-500 dark:text-gray-400",
     },
@@ -61,7 +61,7 @@ export const colors = {
       border: "border-b border-slate-200 dark:border-gray-600",
     },
     background: {
-      main: "bg-slate-50 dark:bg-gray-800",
+      main: "bg-slate-50 dark:bg-gray-700",
     },
     text: {
       default: "text-slate-800 dark:text-gray-200",
@@ -84,7 +84,7 @@ export const colors = {
       modeToggle: {
         activeBg: "bg-slate-200 dark:bg-gray-600",
         activeText: "text-slate-800 dark:text-gray-200",
-        inactiveBg: "bg-slate-100 dark:bg-gray-700",
+        inactiveBg: "bg-slate-100 dark:bg-gray-800",
         inactiveText: "text-slate-600 dark:text-gray-400",
         inactiveHoverBg: "hover:bg-slate-150 dark:hover:bg-gray-650",
       },
