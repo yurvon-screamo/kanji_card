@@ -9,13 +9,6 @@ A modern web application for learning Japanese kanji characters through interact
 - Progress tracking
 - Spaced repetition learning algorithm
 
-## Tech Stack
-
-- Frontend: React with TypeScript
-- Styling: Tailwind CSS
-- State Management: React Context API
-- Build Tool: Vite
-
 ## Getting Started
 
 ### Option 1: Using Docker (Recommended)
