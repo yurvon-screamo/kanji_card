@@ -23,16 +23,31 @@ export function createFuriganaFromReading(originalText: string, reading: string)
     return originalText;
   }
 
-  const cleanReading = reading.replace("。", "");
-  const cleanOriginalText = originalText.replace("。", "");
-
   try {
-    const furiganaText = fit(cleanOriginalText, cleanReading);
-    if (furiganaText) {
-      return furiganaText.replace(/([^\[]+)\[([^\]]+)\]/g, '<ruby>$1<rt>$2</rt></ruby>') + "。";
+
+    const cleanReading = reading.replace("。", "").split(" ");
+    const cleanOriginalText = originalText.replace("。", "").split(" ");
+
+    let furi = cleanReading.map((element, index) => {
+      const originalElement = cleanOriginalText[index];
+
+      try {
+        const furiganaText = fit(originalElement, element);
+        if (furiganaText) {
+          return furiganaText
+        }
+      } catch (error) {
+        console.error('Error creating furigana:', error);
+      }
+
+      return element
+    }).join(" ") + "。";
+
+    if (furi && furi.length > 0) {
+      return furi.replace(/([^\[]+)\[([^\]]+)\]/g, '<ruby>$1<rt>$2</rt></ruby>')
     }
-  } catch (error) {
-    console.error('Error creating furigana:', error);
+  } catch (e) {
+    console.error('Error creating furigana:', e);
   }
 
   return `<ruby>${originalText}<rt>${reading}</rt></ruby>`;
