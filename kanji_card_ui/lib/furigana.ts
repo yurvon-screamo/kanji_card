@@ -24,11 +24,10 @@ export function createFuriganaFromReading(originalText: string, reading: string)
   }
 
   try {
-
     const cleanReading = reading.replace("。", "").split(" ");
     const cleanOriginalText = originalText.replace("。", "").split(" ");
 
-    let furi = cleanReading.map((element, index) => {
+    const furi = cleanReading.map((element, index) => {
       const originalElement = cleanOriginalText[index];
 
       try {
