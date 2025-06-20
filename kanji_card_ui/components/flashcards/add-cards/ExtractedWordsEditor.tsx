@@ -34,7 +34,7 @@ export const ExtractedWordsEditor = ({
     };
 
     const handleAddWord = () => {
-        setWords([...words, { word: "", reading: null, translation: "" }]);
+        setWords([...words, { word: "", translation: "" }]);
     };
 
     const handleSave = async () => {
@@ -78,14 +78,6 @@ export const ExtractedWordsEditor = ({
                                         value={word.word}
                                         onChange={(e, data) =>
                                             handleWordChange(index, "word", data.value)
-                                        }
-                                    />
-                                </Field>
-                                <Field label="Чтение">
-                                    <Input
-                                        value={word.reading || ""}
-                                        onChange={(e, data) =>
-                                            handleWordChange(index, "reading", data.value)
                                         }
                                     />
                                 </Field>

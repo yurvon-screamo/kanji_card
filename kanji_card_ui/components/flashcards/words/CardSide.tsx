@@ -48,11 +48,22 @@ export const CardSide = ({
             onPlayAudio();
           }}
           onTouchStart={(e: React.TouchEvent) => {
-            e.stopPropagation();
+            // Не блокируем событие, позволяем ему всплыть для обработки свайпов
           }}
           onTouchEnd={(e: React.TouchEvent) => {
-            e.stopPropagation();
-            onPlayAudio();
+            // Проверяем, что это был тап по кнопке, а не свайп
+            const touch = e.changedTouches[0];
+            const rect = e.currentTarget.getBoundingClientRect();
+            const isInsideButton = 
+              touch.clientX >= rect.left &&
+              touch.clientX <= rect.right &&
+              touch.clientY >= rect.top &&
+              touch.clientY <= rect.bottom;
+            
+            if (isInsideButton) {
+              e.stopPropagation();
+              onPlayAudio();
+            }
           }}
           disabled={isPlaying}
           className={`mb-4 rounded-full ${hintColor} ${getAudioButtonHoverColor()} transition-colors touch-manipulation`}
