@@ -90,30 +90,24 @@ export const SingleCardStudyMode = ({
               onRotateSide();
             }
           }}
-          onTouchStart={(e) => {
-            // Сохраняем начальную позицию касания для всех событий
-            const touch = e.touches[0];
-            touchStartX.current = touch.clientX;
-            touchStartY.current = touch.clientY;
-          }}
           onTouchEnd={(e) => {
-            if (touchStartX.current === null || touchStartY.current === null) return;
+            // Простая проверка: если касание закончилось не на кнопке, поворачиваем карточку
+            if (!(e.target as HTMLElement).closest("button")) {
+              // Дополнительная проверка: убеждаемся, что это не был свайп
+              if (touchStartX.current !== null && touchStartY.current !== null) {
+                const touch = e.changedTouches[0];
+                const deltaX = Math.abs(touch.clientX - touchStartX.current);
+                const deltaY = Math.abs(touch.clientY - touchStartY.current);
 
-            const touch = e.changedTouches[0];
-            const deltaX = Math.abs(touch.clientX - touchStartX.current);
-            const deltaY = Math.abs(touch.clientY - touchStartY.current);
-
-            // Проверяем, что это не свайп (движение минимальное)
-            if (deltaX < 10 && deltaY < 10) {
-              // Проверяем, что касание не произошло по кнопке аудио
-              if (!(e.target as HTMLElement).closest("button")) {
+                // Если движение было минимальным, считаем это тапом
+                if (deltaX < 30 && deltaY < 30) {
+                  onRotateSide();
+                }
+              } else {
+                // Если координаты не сохранены, все равно пытаемся повернуть
                 onRotateSide();
               }
             }
-
-            // Сбрасываем координаты
-            touchStartX.current = null;
-            touchStartY.current = null;
           }}
         >
           <Card

@@ -47,21 +47,14 @@ export const CardSide = ({
             e.stopPropagation();
             onPlayAudio();
           }}
-          onTouchStart={() => { }}
+          onTouchStart={(e: React.TouchEvent) => {
+            // Блокируем всплытие для предотвращения поворота карточки
+            e.stopPropagation();
+          }}
           onTouchEnd={(e: React.TouchEvent) => {
-            // Проверяем, что это был тап по кнопке, а не свайп
-            const touch = e.changedTouches[0];
-            const rect = e.currentTarget.getBoundingClientRect();
-            const isInsideButton =
-              touch.clientX >= rect.left &&
-              touch.clientX <= rect.right &&
-              touch.clientY >= rect.top &&
-              touch.clientY <= rect.bottom;
-
-            if (isInsideButton) {
-              e.stopPropagation();
-              onPlayAudio();
-            }
+            // Блокируем всплытие и воспроизводим звук
+            e.stopPropagation();
+            onPlayAudio();
           }}
           disabled={isPlaying}
           className={`mb-4 rounded-full ${hintColor} ${getAudioButtonHoverColor()} transition-colors touch-manipulation`}
