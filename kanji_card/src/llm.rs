@@ -267,7 +267,7 @@ Analyze the image and extract Japanese text:"#;
             .collect();
 
         let prompt = format!(
-            r#"You are a Japanese language expert and storyteller. Create a coherent short story using the provided Japanese words.
+            r#"You are a Japanese language expert and storyteller. Create a coherent short story using the provided Japanese words. Use grammar N5 level ONLY.
 
 IMPORTANT RULES:
 1. Use ALL the provided words in the story
