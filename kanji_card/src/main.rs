@@ -35,11 +35,7 @@ use tracing_subscriber::EnvFilter;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::{
-    domain::{CardSet, Story},
-    release_repository::ReleaseRepository,
-    web_ui::static_handler,
-};
+use crate::{release_repository::ReleaseRepository, web_ui::static_handler};
 
 #[derive(Debug, Deserialize)]
 struct ServerConfig {
@@ -103,41 +99,6 @@ async fn main() -> Result<()> {
         release_repository.clone(),
         llm_service,
     );
-
-    let users = user_repository.list_all_users().await?;
-    for user in users {
-        dbg!(&user);
-        let stories = release_repository
-            .list_all_stories(&user)
-            .await?
-            .into_iter()
-            .filter_map(|x| {
-                let mut set = CardSet::new();
-                let _ = set.put_story(x.story(), x.story_translate());
-                let _ = set.as_current();
-                set.release().map(|x| x.story).ok()
-            })
-            .flatten()
-            .collect::<Vec<_>>();
-
-        let mut story_ids = vec![];
-        for story in stories.into_iter() {
-            dbg!(&story);
-            story_ids.push(story.id.to_owned());
-            release_repository.save(&user, &[], &Some(story)).await?;
-        }
-
-        release_repository
-            .remove_story_by_ids(&user, &story_ids)
-            .await?;
-
-        let mut sets = set_repository.list_all(&user).await?;
-        for mut set in sets.into_iter() {
-            set.recreate_story();
-            dbg!(&set);
-            set_repository.save(&user, &set).await?;
-        }
-    }
 
     let open_api_router = OpenApiRouter::new()
         .nest(

@@ -5,6 +5,7 @@
 export type StoryResponse = {
     id: string;
     story: Array<string>;
+    story_reading: Array<string>;
     story_translate: Array<string>;
 };
 

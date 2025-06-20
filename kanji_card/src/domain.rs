@@ -91,24 +91,6 @@ impl CardSet {
         self.words.len() < MAX_SET_LEN && self.state == SetState::Tobe
     }
 
-    pub fn recreate_story(&mut self) {
-        if self.story.is_none() {
-            return;
-        }
-
-        let mut reading = vec![];
-        for s in self.story.as_ref().unwrap().story() {
-            reading.push(to_reading(s).unwrap_or(s.to_owned()));
-        }
-
-        self.story = Some(Story {
-            id: Ulid::new().to_string(),
-            story_reading: reading,
-            story: self.story.as_ref().unwrap().story().to_owned(),
-            story_transalte: self.story.as_ref().unwrap().story_translate().to_owned(),
-        });
-    }
-
     pub fn put_story(&mut self, story: &[String], story_transalte: &[String]) -> Result<()> {
         if self.story.is_some() {
             return Err(anyhow!("Story already exists"));

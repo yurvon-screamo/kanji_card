@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Button } from "@fluentui/react-components";
 import { Languages, Volume2 } from "lucide-react";
 import { StoryResponse } from "../../../api";
-import { addFurigana, rubyStyles } from "@/lib/furigana";
+import { rubyStyles, createFuriganaFromReading } from "@/lib/furigana";
 import { colors } from "@/lib/theme";
 
 interface StoryProps {
@@ -12,46 +12,20 @@ interface StoryProps {
   selectedSentenceIndex?: number;
 }
 
-const FuriganaText = React.memo(({
-  text,
+const StoryText = React.memo(({
+  originalText,
+  readingText,
   className,
-  showFurigana,
-  globalCache,
-  onCacheUpdate
+  showFurigana
 }: {
-  text: string;
+  originalText: string;
+  readingText: string;
   className?: string;
   showFurigana: boolean;
-  globalCache: { [key: string]: string };
-  onCacheUpdate: (key: string, value: string) => void;
 }) => {
-  const [displayText, setDisplayText] = useState(text);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (showFurigana) {
-      // Проверяем глобальный кэш перед загрузкой
-      if (globalCache[text]) {
-        setDisplayText(globalCache[text]);
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-      addFurigana(text, globalCache).then(result => {
-        setDisplayText(result);
-        onCacheUpdate(text, result);
-        setIsLoading(false);
-      });
-    } else {
-      setDisplayText(text);
-      setIsLoading(false);
-    }
-  }, [text, showFurigana, globalCache, onCacheUpdate]);
-
-  if (isLoading) {
-    return <div className={className}>読み込み中...</div>;
-  }
+  const displayText = showFurigana 
+    ? createFuriganaFromReading(originalText, readingText)
+    : originalText;
 
   return (
     <div
@@ -63,7 +37,7 @@ const FuriganaText = React.memo(({
   );
 });
 
-FuriganaText.displayName = 'FuriganaText';
+StoryText.displayName = 'StoryText';
 
 export const Story = ({
   story,
@@ -76,12 +50,7 @@ export const Story = ({
   const [showFurigana, setShowFurigana] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [sentenceTranslations, setSentenceTranslations] = useState<{ [key: number]: boolean }>({});
-  const [globalFuriganaCache, setGlobalFuriganaCache] = useState<{ [key: string]: string }>({});
 
-  // Функция для обновления глобального кэша фуриганы
-  const updateFuriganaCache = (key: string, value: string) => {
-    setGlobalFuriganaCache(prev => ({ ...prev, [key]: value }));
-  };
 
   // Text-to-speech functionality
   const speakText = (text: string, lang: string = 'ja-JP') => {
@@ -208,12 +177,11 @@ export const Story = ({
                     </Button>
                   )}
                 </div>
-                <FuriganaText
-                  text={sentence}
+                <StoryText
+                  originalText={sentence}
+                  readingText={story.story_reading[index]}
                   className={`text-lg leading-relaxed ${colors.ui.text.default} font-medium`}
                   showFurigana={showFurigana}
-                  globalCache={globalFuriganaCache}
-                  onCacheUpdate={updateFuriganaCache}
                 />
                 {(showTranslation || sentenceTranslations[index]) && story.story_translate[index] && (
                   <p className={`text-base ${colors.ui.text.secondary} italic border-l-4 border-blue-200 dark:border-blue-600 pl-4`}>

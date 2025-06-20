@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export type ExtractedWord = {
-    reading?: string | null;
     translation: string;
     word: string;
 };

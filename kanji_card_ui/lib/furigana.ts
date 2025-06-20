@@ -1,11 +1,5 @@
-import Kuroshiro from "kuroshiro";
-import KuromojiAnalyzer from "kuroshiro-analyzer-kuromoji";
+import { fit } from 'furigana';
 
-// Глобальные переменные для kuroshiro
-let kuroshiroInstance: Kuroshiro | null = null;
-let isKuroshiroLoading = false;
-
-// CSS стили для ruby элементов (фуригана)
 export const rubyStyles = `
   ruby {
     ruby-align: center;
@@ -15,77 +9,31 @@ export const rubyStyles = `
     font-size: 0.6em;
     line-height: 1;
     text-align: center;
-    color: #666;
-    font-weight: normal;
-  }
-  rp {
-    display: none;
   }
 `;
 
-// Инициализация kuroshiro
-const initKuroshiro = async () => {
-  if (kuroshiroInstance) return kuroshiroInstance;
-  if (isKuroshiroLoading) {
-    // Ждем завершения текущей инициализации
-    while (isKuroshiroLoading) {
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    return kuroshiroInstance;
+export function createFuriganaFromReading(originalText: string, reading: string): string {
+  if (!originalText || !reading || originalText === reading) {
+    return originalText;
   }
 
-  isKuroshiroLoading = true;
-  try {
-    const kuroshiro = new Kuroshiro();
-    // Используем локальные файлы словаря, скопированные в public директорию
-    const analyzer = new KuromojiAnalyzer({
-      dictPath: "/dict/"
-    });
-    await kuroshiro.init(analyzer);
-    kuroshiroInstance = kuroshiro;
-    return kuroshiroInstance;
-  } catch (error) {
-    console.error('Failed to initialize kuroshiro:', error);
-    kuroshiroInstance = null;
-    return null;
-  } finally {
-    isKuroshiroLoading = false;
-  }
-};
-
-// Функция для добавления фуриганы к японскому тексту
-export const addFurigana = async (text: string, cache: { [key: string]: string }): Promise<string> => {
-  // Проверяем кэш
-  if (cache[text]) {
-    return cache[text];
+  // Check if the text contains kanji
+  const hasKanji = /[\u4e00-\u9faf]/.test(originalText);
+  if (!hasKanji) {
+    return originalText;
   }
 
-  if (!kuroshiroInstance) {
-    const instance = await initKuroshiro();
-    if (!instance) {
-      return text; // Возвращаем оригинальный текст если kuroshiro не готов
-    }
-  }
+  const cleanReading = reading.replace("。", "");
+  const cleanOriginalText = originalText.replace("。", "");
 
   try {
-    const result = await kuroshiroInstance!.convert(text, {
-      mode: 'furigana',
-      to: 'hiragana'
-    });
-
-    // Кэшируем результат
-    cache[text] = result;
-    return result;
+    const furiganaText = fit(cleanOriginalText, cleanReading);
+    if (furiganaText) {
+      return furiganaText.replace(/([^\[]+)\[([^\]]+)\]/g, '<ruby>$1<rt>$2</rt></ruby>') + "。";
+    }
   } catch (error) {
-    console.error('Error converting to furigana:', error);
-    return text;
+    console.error('Error creating furigana:', error);
   }
-};
 
-// Проверка готовности kuroshiro
-export const isKuroshiroReady = async (): Promise<boolean> => {
-  if (kuroshiroInstance) return true;
-
-  const instance = await initKuroshiro();
-  return !!instance;
+  return `<ruby>${originalText}<rt>${reading}</rt></ruby>`;
 };
