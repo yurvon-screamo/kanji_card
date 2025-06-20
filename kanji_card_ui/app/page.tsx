@@ -7,7 +7,6 @@ import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useRouter } from 'next/navigation';
 
 function HomePageContent() {
-
   const router = useRouter();
 
   const handleViewModeChange = (mode: string, collection?: string) => {
