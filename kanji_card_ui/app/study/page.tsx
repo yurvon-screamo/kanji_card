@@ -33,6 +33,9 @@ function StudyPageContent() {
     const setId = searchParams.get('setId');
     const collection = searchParams.get('collection') as Collection;
 
+    console.log(setId);
+    console.log(collection);
+    console.log(selectedSet);
     if (setId && collection && !selectedSet) {
       // Load the specific set for study
       const loadSetForStudy = async () => {
