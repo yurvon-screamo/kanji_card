@@ -3,6 +3,7 @@ use axum::{
     response::{IntoResponse, Response},
 };
 use rust_embed::Embed;
+use tracing::info;
 
 #[derive(Embed)]
 #[folder = "../kanji_card_ui/dist"]
@@ -45,10 +46,10 @@ pub async fn static_handler(uri: Uri) -> Response {
         return (StatusCode::NOT_FOUND, "API routes are handled separately").into_response();
     }
 
-    if !path.is_empty() && !path.ends_with('/') {
-        if let Some(_) = StaticAsset::get(path.as_str()) {
-            return StaticFile(path).into_response();
-        }
+    if !path.is_empty() && !path.ends_with('/') && StaticAsset::get(path.as_str()).is_some() {
+        return StaticFile(path).into_response();
+    } else {
+        info!("Static file not found: {}", path);
     }
 
     StaticFile("index.html").into_response()
