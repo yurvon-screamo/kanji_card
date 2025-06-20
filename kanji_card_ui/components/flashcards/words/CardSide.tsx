@@ -47,19 +47,17 @@ export const CardSide = ({
             e.stopPropagation();
             onPlayAudio();
           }}
-          onTouchStart={(e: React.TouchEvent) => {
-            // Не блокируем событие, позволяем ему всплыть для обработки свайпов
-          }}
+          onTouchStart={() => { }}
           onTouchEnd={(e: React.TouchEvent) => {
             // Проверяем, что это был тап по кнопке, а не свайп
             const touch = e.changedTouches[0];
             const rect = e.currentTarget.getBoundingClientRect();
-            const isInsideButton = 
+            const isInsideButton =
               touch.clientX >= rect.left &&
               touch.clientX <= rect.right &&
               touch.clientY >= rect.top &&
               touch.clientY <= rect.bottom;
-            
+
             if (isInsideButton) {
               e.stopPropagation();
               onPlayAudio();
