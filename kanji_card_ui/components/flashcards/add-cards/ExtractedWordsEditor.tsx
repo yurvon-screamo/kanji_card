@@ -76,7 +76,7 @@ export const ExtractedWordsEditor = ({
                                 <Field label="Кандзи">
                                     <Input
                                         value={word.word}
-                                        onChange={(e, data) =>
+                                        onChange={(_, data) =>
                                             handleWordChange(index, "word", data.value)
                                         }
                                     />

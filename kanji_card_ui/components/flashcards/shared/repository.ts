@@ -85,7 +85,6 @@ export class WordRepository {
   private mapApiExtractedWordToExtractedWord(word: ApiExtractedWord): ExtractedWord {
     return {
       word: word.word,
-      reading: word.reading || null,
       translation: word.translation
     };
   }

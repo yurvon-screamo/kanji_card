@@ -10,7 +10,7 @@ export const ManualInput = () => {
     if (showEditor) {
         return (
             <ExtractedWordsEditor
-                initialWords={[{ word: "", reading: null, translation: "" }]}
+                initialWords={[{ word: "", translation: "" }]}
                 onSave={() => setShowEditor(false)}
                 onCancel={() => setShowEditor(false)}
             />
