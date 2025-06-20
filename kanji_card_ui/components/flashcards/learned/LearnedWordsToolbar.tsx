@@ -1,8 +1,7 @@
 import React from "react";
 import { Input, Button } from "@fluentui/react-components";
-import { ArrowLeft, Search, Eye, BookOpen, GraduationCap } from "lucide-react";
+import { ArrowLeft, Eye, BookOpen, GraduationCap } from "lucide-react";
 import { Toolbar } from "../../ui/Toolbar";
-import { colors } from "@/lib/theme";
 
 type ViewMode = "grid" | "test" | "stories";
 
