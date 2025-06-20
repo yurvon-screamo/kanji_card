@@ -28,6 +28,19 @@ export class AuthService {
         });
     }
     /**
+     * @returns any Logout successful
+     * @throws ApiError
+     */
+    public static logout(): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/auth/api/auth/logout',
+            errors: {
+                500: `Internal server error`,
+            },
+        });
+    }
+    /**
      * @param requestBody
      * @returns any User created successfully
      * @throws ApiError

@@ -167,6 +167,19 @@ pub async fn register(
         .unwrap())
 }
 
+pub async fn logout(
+    jwt_config: Arc<JwtConfig>,
+) -> Result<Response, Response> {
+    let mut response = Response::builder()
+        .status(StatusCode::OK)
+        .body(Body::empty())
+        .unwrap();
+
+    clear_auth_cookie(&mut response);
+
+    Ok(response)
+}
+
 #[instrument(skip(jwt_config, request, next))]
 pub async fn auth_middleware(
     State(jwt_config): State<JwtConfig>,
@@ -237,6 +250,18 @@ pub fn set_auth_cookie(host: &str, response: &mut Response, token: &str, config:
     // }
 
     let cookie = cookie_builder.build();
+
+    response.headers_mut().insert(
+        SET_COOKIE,
+        HeaderValue::from_str(&cookie.to_string()).unwrap(),
+    );
+}
+
+pub fn clear_auth_cookie(response: &mut Response) {
+    let cookie = CookieBuilder::new(TOKEN_COOKIE_NAME, "")
+        .path("/")
+        .max_age(CookieDuration::seconds(0))
+        .build();
 
     response.headers_mut().insert(
         SET_COOKIE,

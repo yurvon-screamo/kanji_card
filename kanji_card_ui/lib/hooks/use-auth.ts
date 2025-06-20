@@ -56,9 +56,22 @@ export function useAuth() {
         checkAuth();
     }, [pathname, router]);
 
+    const logout = async () => {
+        try {
+            await apiService.logout();
+        } catch (error) {
+            console.error('Logout error:', error);
+        } finally {
+            setIsAuthenticated(false);
+            setUser(null);
+            router.replace('/login');
+        }
+    };
+
     return {
         isAuthenticated,
         isLoading,
         user,
+        logout,
     };
 }

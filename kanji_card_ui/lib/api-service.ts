@@ -44,6 +44,12 @@ class ApiService {
         );
     }
 
+    public async logout() {
+        return this.handleRequest(() =>
+            AuthService.logout()
+        );
+    }
+
     public async checkAuth() {
         return this.handleRequest(() =>
             DefaultService.getOverview()
@@ -123,4 +129,4 @@ class ApiService {
     }
 }
 
-export const apiService = ApiService.getInstance(); 
+export const apiService = ApiService.getInstance();

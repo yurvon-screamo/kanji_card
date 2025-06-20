@@ -18,6 +18,7 @@ pub fn jwt_api_router(user_repo: UserRepository, jwt_config: JwtConfig) -> OpenA
     OpenApiRouter::new()
         .routes(routes!(login))
         .routes(routes!(register))
+        .routes(routes!(logout))
         .with_state(AuthApiState {
             repository: Arc::new(user_repo),
             jwt_config: Arc::new(jwt_config),
@@ -72,6 +73,34 @@ async fn login(
                 credentials.login,
                 e.status()
             );
+            response
+        }
+    }
+}
+
+#[utoipa::path(
+    post,
+    path = "/api/auth/logout",
+    responses(
+        (status = 200, description = "Logout successful"),
+        (status = 500, description = "Internal server error")
+    ),
+    tag = "auth"
+)]
+#[instrument(skip(state))]
+async fn logout(
+    State(state): State<AuthApiState>,
+) -> impl IntoResponse {
+    info!("Logout request");
+    let response = crate::auth::logout(state.jwt_config).await;
+
+    match &response {
+        Ok(_) => {
+            info!("Successful logout");
+            response
+        }
+        Err(e) => {
+            error!("Failed logout: {}", e.status());
             response
         }
     }

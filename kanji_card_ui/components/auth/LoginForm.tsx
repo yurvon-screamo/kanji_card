@@ -34,7 +34,6 @@ export const LoginForm = () => {
                         id="login"
                         value={login}
                         onChange={(e) => setLogin(e.target.value)}
-                        error={!!error}
                         required
                     />
                 </Field>
@@ -44,7 +43,6 @@ export const LoginForm = () => {
                         id="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        error={!!error}
                         required
                     />
                 </Field>

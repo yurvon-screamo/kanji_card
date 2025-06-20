@@ -1,5 +1,5 @@
 import React, { useRef } from "react";
-  import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button, ProgressBar } from "@fluentui/react-components";
 import { colors } from "@/lib/theme";
 import { CardSide, JapaneseWord, StudyMode } from "../shared";
@@ -71,7 +71,7 @@ export const SingleCardStudyMode = ({
         onTouchEnd={handleTouchEnd}
       >
         <Button
-          appearance="outline"
+          appearance="subtle"
           size="large"
           onClick={onPrevWord}
           className="rounded-full shadow-md"
@@ -122,7 +122,7 @@ export const SingleCardStudyMode = ({
         </div>
 
         <Button
-          appearance="outline"
+          appearance="subtle"
           size="large"
           onClick={onNextWord}
           className="rounded-full shadow-md"

@@ -30,45 +30,44 @@ export const LearnedWordsToolbar = ({
             Назад
           </Button>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-          <div style={{ display: 'flex', gap: '0.5rem' }}>
-            <Button
-              appearance={viewMode === "grid" ? "primary" : "outline"}
-              size="small"
-              onClick={() => onViewModeChange("grid")}
-              className="text-xs"
-            >
-              <Eye className="h-3 w-3" />
-            </Button>
-            <Button
-              appearance={viewMode === "test" ? "primary" : "outline"}
-              size="small"
-              onClick={() => onViewModeChange("test")}
-              className="text-xs"
-            >
-              <GraduationCap className="h-3 w-3" />
-            </Button>
-            <Button
-              appearance={viewMode === "stories" ? "primary" : "outline"}
-              size="small"
-              onClick={() => onViewModeChange("stories")}
-              className="text-xs"
-            >
-              <BookOpen className="h-3 w-3" />
-            </Button>
-          </div>
-          <div className="relative max-w-md">
-            <Search className={`absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 ${colors.ui.icon.default}`} />
-            <Input
-              type="text"
-              placeholder="Поиск..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-8"
-            />
-          </div>
+
+        <div style={{ display: 'flex', justifyContent: 'center', gap: '0.5rem' }}
+          className="pr-10"
+        >
+
+          <Button
+            appearance={viewMode === "grid" ? "primary" : "outline"}
+            size="small"
+            onClick={() => onViewModeChange("grid")}
+            className="text-xs"
+          >
+            <Eye className="h-3 w-3" />
+          </Button>
+          <Button
+            appearance={viewMode === "test" ? "primary" : "outline"}
+            size="small"
+            onClick={() => onViewModeChange("test")}
+            className="text-xs"
+          >
+            <GraduationCap className="h-3 w-3" />
+          </Button>
+          <Button
+            appearance={viewMode === "stories" ? "primary" : "outline"}
+            size="small"
+            onClick={() => onViewModeChange("stories")}
+            className="text-xs "
+          >
+            <BookOpen className="h-3 w-3" />
+          </Button>
+
+          <Input
+            type="text"
+            placeholder="Поиск..."
+            value={searchQuery}
+            onChange={(e) => onSearchChange(e.target.value)}
+          />
         </div>
       </div>
-    </Toolbar>
+    </Toolbar >
   );
 };
