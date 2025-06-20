@@ -2,7 +2,7 @@
 
 import { RegisterForm } from '@/components/auth/RegisterForm';
 import Link from 'next/link';
-import { colors } from '@/lib/colors';
+import { colors } from '@/lib/theme';
 import { useAuth } from '@/lib/hooks/use-auth';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -28,4 +28,4 @@ export default function RegisterPage() {
             </p>
         </div>
     );
-} 
+}

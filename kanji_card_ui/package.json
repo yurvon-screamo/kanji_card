@@ -10,9 +10,9 @@
     "swagger": "npx openapi-typescript-codegen --input ../kanji_card/openapi.json --output api --client axios"
   },
   "dependencies": {
-    "@radix-ui/react-slot": "^1.2.3",
+    "@fluentui/react-components": "^9.66.2",
+    "@fluentui/react-icons": "^2.0.304",
     "axios": "^1.10.0",
-    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "kuromoji": "^0.1.2",
     "lucide-react": "^0.515.0",

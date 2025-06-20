@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { colors } from "@/lib/colors";
+import { colors } from "@/lib/theme";
 import { ThemeProvider } from "next-themes";
+import { Providers } from "@/components/ui/providers";
 
 const mapleMono = localFont({
   src: "../fonts/MapleMono[wght].ttf",
@@ -50,7 +51,7 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
+          <Providers>{children}</Providers>
         </ThemeProvider>
       </body>
     </html>

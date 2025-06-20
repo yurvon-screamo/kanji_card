@@ -2,10 +2,8 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
+import { Input, Button, Card, Text, Field } from "@fluentui/react-components";
 import { apiService } from '@/lib/api-service';
-import { colors } from '@/lib/colors';
 
 export const LoginForm = () => {
     const [login, setLogin] = useState('');
@@ -26,13 +24,12 @@ export const LoginForm = () => {
     };
 
     return (
-        <div className={`w-full max-w-md mx-auto p-6 ${colors.ui.toolbar.bg} rounded-lg shadow-md`}>
-            <h2 className={`text-2xl font-bold mb-6 text-center ${colors.ui.text.default}`}>Вход</h2>
-            <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                    <label htmlFor="login" className={`block text-sm font-medium ${colors.ui.text.secondary} mb-1`}>
-                        Логин
-                    </label>
+        <Card style={{ width: '100%', maxWidth: '28rem', margin: '0 auto', padding: '1.5rem' }}>
+            <Text size={600} weight="bold" align="center" block style={{ marginBottom: '1.5rem' }}>
+                Вход
+            </Text>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <Field label="Логин" required>
                     <Input
                         id="login"
                         value={login}
@@ -40,11 +37,8 @@ export const LoginForm = () => {
                         error={!!error}
                         required
                     />
-                </div>
-                <div>
-                    <label htmlFor="password" className={`block text-sm font-medium ${colors.ui.text.secondary} mb-1`}>
-                        Пароль
-                    </label>
+                </Field>
+                <Field label="Пароль" required>
                     <Input
                         type="password"
                         id="password"
@@ -53,14 +47,16 @@ export const LoginForm = () => {
                         error={!!error}
                         required
                     />
-                </div>
+                </Field>
                 {error && (
-                    <div className="text-red-500 text-sm">{error}</div>
+                    <Text size={200} style={{ color: 'var(--colorPaletteRedForeground1)' }}>
+                        {error}
+                    </Text>
                 )}
-                <Button type="submit" className="w-full">
+                <Button type="submit" appearance="primary" style={{ width: '100%' }}>
                     Войти
                 </Button>
             </form>
-        </div>
+        </Card>
     );
-}; 
+};

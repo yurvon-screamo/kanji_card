@@ -2,47 +2,42 @@
 
 import { Suspense } from 'react';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { PoolView } from '@/components/flashcards/pool/PoolView';
+import { AddCardsView } from '@/components/flashcards/add-cards';
 import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
 import { useRouter } from 'next/navigation';
 
-function HomePageContent() {
-
+function AddCardsPageContent() {
   const router = useRouter();
 
-  const handleViewModeChange = (mode: string, collection?: string) => {
+  const handleViewModeChange = (mode: string) => {
     // Navigate based on the mode
     switch (mode) {
+      case 'pool':
+        router.push('/');
+        break;
       case 'set-selection':
-        const url = collection ? `/sets?collection=${collection}` : '/sets';
-        router.push(url);
+        router.push('/sets');
         break;
       case 'study':
         router.push('/study');
         break;
-      case 'add-cards':
-        router.push('/add-cards');
-        break;
-      case 'learned':
-        router.push('/learned');
-        break;
       default:
-        break;
+        router.push('/');
     }
   };
 
   return (
-    <PoolView
+    <AddCardsView
       setViewMode={handleViewModeChange}
     />
   );
 }
 
-export default function Page() {
+export default function AddCardsPage() {
   return (
     <ProtectedRoute>
       <Suspense fallback={<LoadingSpinner />}>
-        <HomePageContent />
+        <AddCardsPageContent />
       </Suspense>
     </ProtectedRoute>
   );
