@@ -47,15 +47,6 @@ export const CardSide = ({
             e.stopPropagation();
             onPlayAudio();
           }}
-          onTouchStart={(e: React.TouchEvent) => {
-            // Блокируем всплытие для предотвращения поворота карточки
-            e.stopPropagation();
-          }}
-          onTouchEnd={(e: React.TouchEvent) => {
-            // Блокируем всплытие и воспроизводим звук
-            e.stopPropagation();
-            onPlayAudio();
-          }}
           disabled={isPlaying}
           className={`mb-4 rounded-full ${hintColor} ${getAudioButtonHoverColor()} transition-colors touch-manipulation`}
           style={{

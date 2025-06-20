@@ -19,22 +19,8 @@ export const LearnedWordsGridMode = ({
         <div
           key={word.id}
           className="cursor-pointer w-[150px] h-[210px]"
-          onClick={(e) => {
-            if (!(e.target as HTMLElement).closest("button")) {
-              onCardClick(index);
-            }
-          }}
-          onTouchStart={(e) => {
-            // Предотвращаем всплытие события касания от кнопки аудио
-            if ((e.target as HTMLElement).closest("button")) {
-              e.stopPropagation();
-            }
-          }}
-          onTouchEnd={(e) => {
-            // Проверяем, что касание не произошло по кнопке аудио
-            if (!(e.target as HTMLElement).closest("button")) {
-              onCardClick(index);
-            }
+          onClick={() => {
+            onCardClick(index);
           }}
         >
           <Card

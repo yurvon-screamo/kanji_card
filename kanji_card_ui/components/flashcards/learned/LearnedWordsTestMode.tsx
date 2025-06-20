@@ -35,22 +35,8 @@ export const LearnedWordsTestMode = ({
     <div className="flex flex-col items-center space-y-4">
       <div
         className="w-[300px] h-[420px] cursor-pointer flex justify-center"
-        onClick={(e) => {
-          if (!(e.target as HTMLElement).closest("button")) {
-            onCardClick();
-          }
-        }}
-        onTouchStart={(e) => {
-          // Предотвращаем всплытие события касания от кнопки аудио
-          if ((e.target as HTMLElement).closest("button")) {
-            e.stopPropagation();
-          }
-        }}
-        onTouchEnd={(e) => {
-          // Проверяем, что касание не произошло по кнопке аудио
-          if (!(e.target as HTMLElement).closest("button")) {
-            onCardClick();
-          }
+        onClick={() => {
+          onCardClick();
         }}
       >
         <Card

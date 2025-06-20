@@ -1,4 +1,4 @@
-import React, { useRef } from "react";
+import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button, ProgressBar } from "@fluentui/react-components";
 import { colors } from "@/lib/theme";
@@ -24,51 +24,13 @@ export const SingleCardStudyMode = ({
   onPrevWord,
   onRotateSide,
 }: SingleCardStudyModeProps) => {
-  // Touch handling for swipe gestures
-  const touchStartX = useRef<number | null>(null);
-  const touchStartY = useRef<number | null>(null);
-  const minSwipeDistance = 50;
-
   const currentWord = activeChunk[currentWordIndex];
-
-  // Filter studyMode to only include values accepted by Card component
   const cardStudyMode = studyMode === "story" ? "mixed" : studyMode as "jp" | "translate" | "mixed" | "grid";
-
-  const handleTouchStart = (e: React.TouchEvent) => {
-    const touch = e.touches[0];
-    touchStartX.current = touch.clientX;
-    touchStartY.current = touch.clientY;
-  };
-
-  const handleTouchEnd = (e: React.TouchEvent) => {
-    if (touchStartX.current === null || touchStartY.current === null) return;
-
-    const touch = e.changedTouches[0];
-    const deltaX = touch.clientX - touchStartX.current;
-    const deltaY = touch.clientY - touchStartY.current;
-
-    // Check if it's a horizontal swipe (more horizontal than vertical movement)
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
-      if (deltaX > 0) {
-        // Swipe right - go to previous word
-        onPrevWord();
-      } else {
-        // Swipe left - go to next word
-        onNextWord();
-      }
-    }
-
-    // Reset touch coordinates
-    touchStartX.current = null;
-    touchStartY.current = null;
-  };
 
   return (
     <>
       <div
         className="flex items-center justify-between w-full space-x-2"
-        onTouchStart={handleTouchStart}
-        onTouchEnd={handleTouchEnd}
       >
         <Button
           appearance="subtle"
@@ -84,30 +46,8 @@ export const SingleCardStudyMode = ({
             height: 320,
             perspective: "1200px",
           }}
-          onClick={(e) => {
-            // Проверяем, что клик не произошел по кнопке аудио
-            if (!(e.target as HTMLElement).closest("button")) {
-              onRotateSide();
-            }
-          }}
-          onTouchEnd={(e) => {
-            // Простая проверка: если касание закончилось не на кнопке, поворачиваем карточку
-            if (!(e.target as HTMLElement).closest("button")) {
-              // Дополнительная проверка: убеждаемся, что это не был свайп
-              if (touchStartX.current !== null && touchStartY.current !== null) {
-                const touch = e.changedTouches[0];
-                const deltaX = Math.abs(touch.clientX - touchStartX.current);
-                const deltaY = Math.abs(touch.clientY - touchStartY.current);
-
-                // Если движение было минимальным, считаем это тапом
-                if (deltaX < 30 && deltaY < 30) {
-                  onRotateSide();
-                }
-              } else {
-                // Если координаты не сохранены, все равно пытаемся повернуть
-                onRotateSide();
-              }
-            }
+          onClick={() => {
+            onRotateSide();
           }}
         >
           <Card
