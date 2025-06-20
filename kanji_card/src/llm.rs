@@ -55,7 +55,6 @@ struct ResponseMessage {
 #[derive(Debug, Deserialize, Serialize, ToSchema)]
 pub struct ExtractedWord {
     pub word: String,
-    pub reading: Option<String>,
     pub translation: String,
 }
 
@@ -96,26 +95,15 @@ impl LlmService {
 
 IMPORTANT RULES:
 1. Extract ONLY Japanese words (hiragana, katakana, kanji, or mixed)
-2. For words containing kanji, provide the reading in hiragana
-3. For words that are only hiragana/katakana, set reading to null
-4. Provide accurate Russian translations
-5. Ignore punctuation marks, numbers, and non-Japanese text
-6. Each word should be extracted separately (don't combine phrases)
-7. Include particles (は, が, を, に, etc.) as separate words if they appear alone
-8. For demonstrative pronouns (これ, それ, あれ, etc.), provide specific translations
-9. Skip duplicates - if the same word appears multiple times, include it only once
-
-EXAMPLES:
-- これ → reading: null, translation: "это"
-- どこか → reading: null, translation: "где-то, где-нибудь"
-- 日本語 → reading: "にほんご", translation: "японский язык"
-- 大きい → reading: "おおきい", translation: "большой"
-- コンピュータ → reading: null, translation: "компьютер"
-- アメリカ → reading: null, translation: "Америка"
-- ありがとう → reading: null, translation: "спасибо"
+3. Provide accurate Russian translations
+4. Ignore punctuation marks, numbers, and non-Japanese text
+5. Each word should be extracted separately (don't combine phrases)
+6. Include particles (は, が, を, に, etc.) as separate words if they appear alone
+7. For demonstrative pronouns (これ, それ, あれ, etc.), provide specific translations
+8. Skip duplicates - if the same word appears multiple times, include it only once
 
 Return ONLY valid JSON in this exact format:
-{{"words": [{{"word": "japanese_word", "reading": "hiragana_reading_or_null", "translation": "russian_translation"}}]}}
+{{"words": [{{"word": "japanese_word", "translation": "russian_translation"}}]}}
 
 Text to analyze:
 {}"#,
@@ -147,26 +135,15 @@ Text to analyze:
 
 IMPORTANT RULES:
 1. Extract ONLY Japanese words (hiragana, katakana, kanji, or mixed)
-2. For words containing kanji, provide the reading in hiragana
-3. For words that are only hiragana/katakana, set reading to null
-4. Provide accurate Russian translations
-5. Ignore punctuation marks, numbers, and non-Japanese text
-6. Each word should be extracted separately (don't combine phrases)
-7. Include particles (は, が, を, に, etc.) as separate words if they appear alone
-8. For demonstrative pronouns (これ, それ, あれ, etc.), provide specific translations
-9. Skip duplicates - if the same word appears multiple times, include it only once
-
-EXAMPLES:
-- これ → reading: null, translation: "это"
-- どこか → reading: null, translation: "где-то, где-нибудь"
-- 日本語 → reading: "にほんご", translation: "японский язык"
-- 大きい → reading: "おおきい", translation: "большой"
-- コンピュータ → reading: null, translation: "компьютер"
-- アメリカ → reading: null, translation: "Америка"
-- ありがとう → reading: null, translation: "спасибо"
+2. Provide accurate Russian translations
+3. Ignore punctuation marks, numbers, and non-Japanese text
+4. Each word should be extracted separately (don't combine phrases)
+5. Include particles (は, が, を, に, etc.) as separate words if they appear alone
+6. For demonstrative pronouns (これ, それ, あれ, etc.), provide specific translations
+7. Skip duplicates - if the same word appears multiple times, include it only once
 
 Return ONLY valid JSON in this exact format:
-{"words": [{"word": "japanese_word", "reading": "hiragana_reading_or_null", "translation": "russian_translation"}]}
+{"words": [{"word": "japanese_word", "translation": "russian_translation"}]}
 
 Analyze the image and extract Japanese text:"#;
 

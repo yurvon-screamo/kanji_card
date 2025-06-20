@@ -58,6 +58,7 @@ struct StoryResponse {
     id: String,
     story: Vec<String>,
     story_translate: Vec<String>,
+    story_reading: Vec<String>,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -123,6 +124,7 @@ async fn get_set(
                     id: s.id().to_string(),
                     story: s.story().to_vec(),
                     story_translate: s.story_translate().to_vec(),
+                    story_reading: s.story_reading().to_vec(),
                 }),
             };
             Ok(axum::Json(response))
@@ -166,6 +168,7 @@ async fn list_tobe_sets(
                         id: s.id().to_string(),
                         story: s.story().to_vec(),
                         story_translate: s.story_translate().to_vec(),
+                        story_reading: s.story_reading().to_vec(),
                     }),
                 })
                 .collect();
@@ -210,6 +213,7 @@ async fn list_current_sets(
                         id: s.id().to_string(),
                         story: s.story().to_vec(),
                         story_translate: s.story_translate().to_vec(),
+                        story_reading: s.story_reading().to_vec(),
                     }),
                 })
                 .collect();
@@ -291,8 +295,12 @@ async fn list_released_stories(
                 .iter()
                 .filter(|s| {
                     if let Some(search) = &search {
-                        s.story().iter().any(|line| line.to_lowercase().contains(search))
-                            || s.story_translate().iter().any(|line| line.to_lowercase().contains(search))
+                        s.story()
+                            .iter()
+                            .any(|line| line.to_lowercase().contains(search))
+                            || s.story_translate()
+                                .iter()
+                                .any(|line| line.to_lowercase().contains(search))
                     } else {
                         true
                     }
@@ -301,6 +309,7 @@ async fn list_released_stories(
                     id: s.id().to_string(),
                     story: s.story().to_vec(),
                     story_translate: s.story_translate().to_vec(),
+                    story_reading: s.story_reading().to_vec(),
                 })
                 .collect();
             Ok(axum::Json(response))

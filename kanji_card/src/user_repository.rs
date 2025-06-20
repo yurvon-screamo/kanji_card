@@ -42,4 +42,17 @@ impl UserRepository {
         let user = serde_json::from_str(&content)?;
         Ok(Some(user))
     }
+
+    pub async fn list_all_users(&self) -> Result<Vec<String>> {
+        let mut users = fs::read_dir(&self.base_path).await?;
+        let mut user_logins = vec![];
+        while let Some(entry) = users.next_entry().await? {
+            if let Some(file_name) = entry.file_name().to_str() {
+                if file_name.ends_with(".json") {
+                    user_logins.push(file_name.trim_end_matches(".json").to_string());
+                }
+            }
+        }
+        Ok(user_logins)
+    }
 }

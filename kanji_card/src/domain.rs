@@ -3,20 +3,21 @@ use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 use utoipa::ToSchema;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct CardSet {
     id: String,
     state: SetState,
     words: Vec<Card>,
-
     story: Option<Story>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Story {
-    id: String,
+    pub id: String,
     story: Vec<String>,
     story_transalte: Vec<String>,
+    #[serde(default)]
+    story_reading: Vec<String>,
 }
 
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize, ToSchema)]
@@ -25,7 +26,7 @@ pub enum SetState {
     Current,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct Card {
     id: String,
     word: String,
@@ -90,7 +91,25 @@ impl CardSet {
         self.words.len() < MAX_SET_LEN && self.state == SetState::Tobe
     }
 
-    pub fn put_story(&mut self, story: Vec<String>, story_transalte: Vec<String>) -> Result<()> {
+    pub fn recreate_story(&mut self) {
+        if self.story.is_none() {
+            return;
+        }
+
+        let mut reading = vec![];
+        for s in self.story.as_ref().unwrap().story() {
+            reading.push(to_reading(s).unwrap_or(s.to_owned()));
+        }
+
+        self.story = Some(Story {
+            id: Ulid::new().to_string(),
+            story_reading: reading,
+            story: self.story.as_ref().unwrap().story().to_owned(),
+            story_transalte: self.story.as_ref().unwrap().story_translate().to_owned(),
+        });
+    }
+
+    pub fn put_story(&mut self, story: &[String], story_transalte: &[String]) -> Result<()> {
         if self.story.is_some() {
             return Err(anyhow!("Story already exists"));
         }
@@ -99,38 +118,47 @@ impl CardSet {
             return Err(anyhow!("State is current"));
         }
 
+        let mut reading = vec![];
+        for s in story {
+            reading.push(to_reading(s).unwrap_or(s.to_owned()));
+        }
+
         self.story = Some(Story {
             id: Ulid::new().to_string(),
-            story,
-            story_transalte,
+            story: story.to_owned(),
+            story_reading: reading,
+            story_transalte: story_transalte.to_owned(),
         });
         Ok(())
     }
 
-    pub fn push(
-        &mut self,
-        word: String,
-        reading: Option<String>,
-        translation: String,
-    ) -> Result<()> {
+    pub fn push(&mut self, word: String, translation: String) -> Result<()> {
         if !self.is_writabe() {
             return Err(anyhow!("Set is not writable"));
         }
 
-        let reading = if Some(word.clone()) == reading {
-            None
-        } else {
-            reading
-        };
+        let word = word.trim().to_owned();
+        let translation = translation.trim().to_owned();
+
+        let reading = to_reading(&word);
 
         self.words.push(Card {
             id: Ulid::new().to_string(),
-            word,
             reading,
+            word,
             translation,
         });
 
         Ok(())
+    }
+}
+
+fn to_reading(word: &str) -> Option<String> {
+    let hiragana = kakasi::convert(word).hiragana;
+    if hiragana == word {
+        None
+    } else {
+        Some(hiragana)
     }
 }
 
@@ -163,5 +191,9 @@ impl Story {
 
     pub fn story_translate(&self) -> &[String] {
         &self.story_transalte
+    }
+
+    pub fn story_reading(&self) -> &[String] {
+        &self.story_reading
     }
 }

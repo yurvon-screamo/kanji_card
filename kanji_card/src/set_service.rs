@@ -118,7 +118,7 @@ impl SetService {
             if !current_set.is_writabe() {
                 match self.llm_service.generate_story(current_set.words()).await {
                     Ok((story, story_translate)) => {
-                        if let Err(e) = current_set.put_story(story, story_translate) {
+                        if let Err(e) = current_set.put_story(&story, &story_translate) {
                             error!("Failed to put story to set: {:?}", e);
                         } else {
                             info!("Successfully generated and added story to set");
@@ -137,13 +137,13 @@ impl SetService {
                 current_set = CardSet::new();
             }
 
-            current_set.push(word_data.word, word_data.reading, word_data.translation)?;
+            current_set.push(word_data.word, word_data.translation)?;
         }
 
         if !current_set.is_writabe() {
             match self.llm_service.generate_story(current_set.words()).await {
                 Ok((story, story_translate)) => {
-                    if let Err(e) = current_set.put_story(story, story_translate) {
+                    if let Err(e) = current_set.put_story(&story, &story_translate) {
                         error!("Failed to put story to final set: {:?}", e);
                     } else {
                         info!("Successfully generated and added story to final set");
@@ -206,14 +206,13 @@ impl SetService {
             .into_iter()
             .map(|word| ExtractedWord {
                 word: word.word().to_owned(),
-                reading: word.reading().map(|x| x.to_owned()),
                 translation: word.translation().to_owned(),
             })
             .collect();
 
         self.save_words(user_login, extracted_words, true).await?;
         self.release_repository
-            .remove_by_ids(user_login, &word_ids)
+            .remove_word_by_ids(user_login, &word_ids)
             .await?;
 
         info!("Successfully marked words as tobe for user {}", user_login);

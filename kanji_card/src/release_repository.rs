@@ -42,9 +42,29 @@ impl ReleaseRepository {
         Ok(())
     }
 
-    pub async fn remove_by_ids(&self, user_login: &str, ids: &[String]) -> anyhow::Result<()> {
+    pub async fn remove_word_by_ids(&self, user_login: &str, ids: &[String]) -> anyhow::Result<()> {
         for id in ids {
             self.remove_word(user_login, id).await?;
+        }
+        Ok(())
+    }
+
+    pub async fn remove_story(&self, user_login: &str, story_id: &str) -> anyhow::Result<()> {
+        let file_path = self
+            .get_story_user_path(user_login)
+            .join(format!("{}.json", story_id));
+
+        fs::remove_file(file_path).await?;
+        Ok(())
+    }
+
+    pub async fn remove_story_by_ids(
+        &self,
+        user_login: &str,
+        ids: &[String],
+    ) -> anyhow::Result<()> {
+        for id in ids {
+            self.remove_story(user_login, id).await?;
         }
         Ok(())
     }
