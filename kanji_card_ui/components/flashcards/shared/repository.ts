@@ -43,6 +43,11 @@ export class WordRepository {
     return response.map(x => this.mapWordResponseToJapaneseWord(x))
   }
 
+  public async getTestWords(): Promise<JapaneseWord[]> {
+    const response = await apiService.listTestReleasedWords();
+    return response.map(x => this.mapWordResponseToJapaneseWord(x))
+  }
+
   public async getInProgressSets(): Promise<Set[]> {
     const response = await apiService.listCurrentSets();
     return response.map(x => this.mapSetResponseToSet(x))

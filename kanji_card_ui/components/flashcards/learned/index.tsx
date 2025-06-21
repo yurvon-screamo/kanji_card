@@ -39,7 +39,14 @@ export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
                 } else {
                     // Загружаем слова
                     const repository = WordRepository.getInstance();
-                    const learnedWords = await repository.getLearnedWords(debouncedSearch || undefined);
+                    let learnedWords: JapaneseWord[];
+
+                    if (viewMode === "test") {
+                        learnedWords = await repository.getTestWords();
+                    } else {
+                        learnedWords = await repository.getLearnedWords(debouncedSearch || undefined);
+                    }
+
                     setWords(learnedWords);
                     setCardSides(Array(learnedWords.length).fill(0 as CardSide));
                 }

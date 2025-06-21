@@ -61,6 +61,19 @@ export class DefaultService {
         });
     }
     /**
+     * @returns WordResponse List of test released cards retrieved successfully in alternating order by release date
+     * @throws ApiError
+     */
+    public static listTestReleasedWords(): CancelablePromise<Array<WordResponse>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/query/sets/test-released',
+            errors: {
+                500: `Internal server error`,
+            },
+        });
+    }
+    /**
      * @returns SetResponse List of tobe sets retrieved successfully
      * @throws ApiError
      */

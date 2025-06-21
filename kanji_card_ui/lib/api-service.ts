@@ -76,6 +76,12 @@ class ApiService {
         );
     }
 
+    public async listTestReleasedWords() {
+        return this.handleRequest(() =>
+            DefaultService.listTestReleasedWords()
+        );
+    }
+
     public async getSet(setId: string) {
         return this.handleRequest(() =>
             DefaultService.getSet(setId)
