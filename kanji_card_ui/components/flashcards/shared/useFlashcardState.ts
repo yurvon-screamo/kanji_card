@@ -98,6 +98,20 @@ export function useFlashcardState() {
     await refreshWords();
   };
 
+  const handleShuffleWords = () => {
+    if (!selectedSet?.set?.words) return;
+    
+    const shuffledWords = [...selectedSet.set.words].sort(() => Math.random() - 0.5);
+    setSelectedSet({
+      ...selectedSet,
+      set: {
+        ...selectedSet.set,
+        words: shuffledWords
+      }
+    });
+    setCurrentWordIndex(0);
+  };
+
   const resetToPool = () => {
     setViewMode("pool");
     router.push("/");
@@ -136,6 +150,7 @@ export function useFlashcardState() {
     updateUrlParams,
     refreshWords,
     handleWordsUpdated,
+    handleShuffleWords,
     resetToPool,
   };
 }

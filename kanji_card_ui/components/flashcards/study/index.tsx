@@ -27,6 +27,7 @@ interface StudyViewProps {
   collection: Collection;
   onStartLearning: () => void;
   onMarkAsLearned: () => void;
+  onShuffleWords: () => void;
   story?: StoryResponse | null;
 }
 
@@ -43,6 +44,7 @@ export const StudyView = ({
   collection,
   onStartLearning,
   onMarkAsLearned,
+  onShuffleWords,
   story,
 }: StudyViewProps) => {
   if (activeChunk.length === 0) {
@@ -88,6 +90,12 @@ export const StudyView = ({
     setCurrentSide(getInitialSideForStudyMode(mode));
   };
 
+  const handleShuffleWords = () => {
+    onShuffleWords();
+    setCurrentWordIndex(0);
+    setCurrentSide(getInitialSideForStudyMode(studyMode));
+  };
+
   const renderStudyContent = () => {
     if (studyMode === "story" && story) {
       return <StoryStudyMode story={story} />;
@@ -123,6 +131,7 @@ export const StudyView = ({
             onStartLearning={onStartLearning}
             onMarkAsLearned={onMarkAsLearned}
             onWordsUpdated={onWordsUpdated}
+            onShuffleWords={handleShuffleWords}
           />
 
           {renderStudyContent()}

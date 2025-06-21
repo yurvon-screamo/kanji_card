@@ -50,6 +50,7 @@ pub async fn static_handler(uri: Uri) -> Response {
         true => match StaticAsset::get(&path) {
             Some(_) => return StaticFile(&path).into_response(),
             None => {
+                let path = path.trim_end_matches('/');
                 let path = format!("{}/index.html", path);
                 if StaticAsset::get(&path).is_some() {
                     return StaticFile(path).into_response();

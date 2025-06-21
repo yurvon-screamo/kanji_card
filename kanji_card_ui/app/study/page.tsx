@@ -23,6 +23,7 @@ function StudyPageContent() {
     handleStartLearning,
     handleMarkAsLearned,
     handleWordsUpdated,
+    handleShuffleWords,
   } = useFlashcardState();
 
   const searchParams = useSearchParams();
@@ -105,6 +106,7 @@ function StudyPageContent() {
       collection={selectedSet.type}
       onStartLearning={handleStartLearning}
       onMarkAsLearned={handleMarkAsLearned}
+      onShuffleWords={handleShuffleWords}
     />
   );
 }

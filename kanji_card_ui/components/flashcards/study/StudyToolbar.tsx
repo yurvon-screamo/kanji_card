@@ -1,6 +1,7 @@
 import React from "react";
-import { ArrowLeft, Shuffle, Check, Grid, BookOpen, Languages } from "lucide-react";
+import { ArrowLeft, Check, Grid, BookOpen, Languages, Dice3 } from "lucide-react";
 import { Button } from "@fluentui/react-components";
+import { ArrowShuffle24Regular } from "@fluentui/react-icons";
 import { Collection, StudyMode, ViewMode } from "../shared";
 import { StoryResponse } from "@/api";
 import { Toolbar } from "@/components/ui/Toolbar";
@@ -14,6 +15,7 @@ interface StudyToolbarProps {
   onStartLearning: () => void;
   onMarkAsLearned: () => void;
   onWordsUpdated: () => void;
+  onShuffleWords: () => void;
 }
 
 export const StudyToolbar = ({
@@ -25,6 +27,7 @@ export const StudyToolbar = ({
   onStartLearning,
   onMarkAsLearned,
   onWordsUpdated,
+  onShuffleWords,
 }: StudyToolbarProps) => {
   const handleStartLearning = () => {
     onStartLearning();
@@ -82,7 +85,7 @@ export const StudyToolbar = ({
           onClick={() => onStudyModeChange("mixed")}
           className="text-xs"
         >
-          <Shuffle className="h-3 w-3" />
+          <Dice3 className="h-3 w-3" />
         </Button>
         {story && (
           <Button
@@ -107,14 +110,26 @@ export const StudyToolbar = ({
         </Button>
       )}
       {collection === Collection.IN_PROGRESS && (
-        <Button
-          appearance="outline"
-          size="small"
-          onClick={handleMarkAsLearned}
-        >
-          <Check className="h-4 w-4 mr-1" />
-          Выучено
-        </Button>
+        <>
+
+          <Button
+            appearance="outline"
+            size="small"
+            onClick={onShuffleWords}
+            className="text-xs"
+            title="Перемешать слова"
+          >
+            <ArrowShuffle24Regular className="h-4 w-4" />
+          </Button>
+          <Button
+            appearance="outline"
+            size="small"
+            onClick={handleMarkAsLearned}
+          >
+            <Check className="h-4 w-4 mr-1" />
+            Выучено
+          </Button>
+        </>
       )}
     </Toolbar>
   );
