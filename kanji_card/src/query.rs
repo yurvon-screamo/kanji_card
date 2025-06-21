@@ -33,6 +33,7 @@ pub fn query_router(
         .routes(routes!(list_tobe_sets))
         .routes(routes!(list_current_sets))
         .routes(routes!(list_released_words))
+        .routes(routes!(list_test_released_words))
         .routes(routes!(list_released_stories))
         .routes(routes!(get_overview))
         .layer(middleware::from_fn_with_state(
@@ -398,4 +399,59 @@ async fn get_overview(
     }
 
     Ok(Json(overview))
+}
+
+#[utoipa::path(
+    get,
+    path = "/sets/test-released",
+    responses(
+        (status = 200, description = "List of test released cards retrieved successfully in alternating order by release date", body = Vec<WordResponse>),
+        (status = 500, description = "Internal server error")
+    )
+)]
+#[instrument(skip(state, claims))]
+async fn list_test_released_words(
+    State(state): State<QueryState>,
+    Extension(claims): Extension<Claims>,
+) -> Result<axum::Json<Vec<WordResponse>>, (StatusCode, String)> {
+    match state.release_repository.list_all_words(&claims.sub).await {
+        Ok(mut cards) => {
+            cards.sort_by(|a, b| {
+                match (a.release_timestamp(), b.release_timestamp()) {
+                    (Some(a_time), Some(b_time)) => b_time.cmp(&a_time), // newest first
+                    (Some(_), None) => std::cmp::Ordering::Less,
+                    (None, Some(_)) => std::cmp::Ordering::Greater,
+                    (None, None) => std::cmp::Ordering::Equal,
+                }
+            });
+
+            // Create alternating order: newest, oldest, second newest, second oldest, etc.
+            let mut result = Vec::new();
+            let mut front_idx = 0;
+            let mut back_idx = cards.len();
+            let mut take_from_front = true;
+
+            while front_idx < back_idx {
+                let word = if take_from_front {
+                    front_idx += 1;
+                    &cards[front_idx - 1]
+                } else {
+                    back_idx -= 1;
+                    &cards[back_idx]
+                };
+
+                result.push(WordResponse {
+                    id: word.id().to_string(),
+                    word: word.word().to_string(),
+                    reading: word.reading().map(|r| r.to_string()),
+                    translation: word.translation().to_string(),
+                });
+
+                take_from_front = !take_from_front;
+            }
+
+            Ok(axum::Json(result))
+        }
+        Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
+    }
 }

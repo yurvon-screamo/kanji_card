@@ -30,12 +30,14 @@ use set_service::SetService;
 use std::{net::Ipv4Addr, time::Duration};
 use tokio::fs;
 use tower_http::cors::CorsLayer;
-use tracing::info;
+use tracing::{info, warn};
 use tracing_subscriber::EnvFilter;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
 
-use crate::{release_repository::ReleaseRepository, web_ui::static_handler};
+use crate::{
+    release_repository::ReleaseRepository, user_repository::UserRepository, web_ui::static_handler,
+};
 
 #[derive(Debug, Deserialize)]
 struct ServerConfig {
@@ -100,6 +102,8 @@ async fn main() -> Result<()> {
         llm_service,
     );
 
+    migrate_release_timestamps(&user_repository, &release_repository).await?;
+
     let open_api_router = OpenApiRouter::new()
         .nest(
             "/api/set",
@@ -161,6 +165,60 @@ async fn main() -> Result<()> {
         settings.server.domain, settings.server.port
     );
     axum::serve(listener, app).await?;
+
+    Ok(())
+}
+
+async fn migrate_release_timestamps(
+    user_repository: &UserRepository,
+    release_repository: &ReleaseRepository,
+) -> Result<()> {
+    use chrono::{DateTime, Utc};
+    use std::fs;
+
+    for user in user_repository.list_all_users().await? {
+        info!("Starting migration of release timestamps...");
+
+        let word_ids = release_repository.list_word_ids(&user).await?;
+        info!("Found {} released words to migrate", word_ids.len());
+
+        let mut migrated_count = 0;
+
+        for word_id in word_ids {
+            let mut card = release_repository.load_word(&user, &word_id).await?;
+            if card.release_timestamp().is_none() {
+                // Получаем путь к файлу слова
+                let file_path = format!("data/release_word/{user}/{}.json", word_id);
+
+                if let Ok(metadata) = fs::metadata(&file_path) {
+                    if let Ok(modified_time) = metadata.modified() {
+                        // Конвертируем системное время в UTC DateTime
+                        let datetime: DateTime<Utc> = modified_time.into();
+
+                        // Устанавливаем timestamp
+                        card.set_release_timestamp(datetime);
+
+                        // Сохраняем обновленное слово
+                        release_repository.update_word(&user, &card).await?;
+
+                        migrated_count += 1;
+                        info!("Migrated word '{}' with timestamp {}", word_id, datetime);
+                    } else {
+                        warn!("Could not get modification time for word '{}'", word_id);
+                    }
+                } else {
+                    warn!(
+                        "Could not find file for word '{}' at path '{}'",
+                        word_id, file_path
+                    );
+                }
+            } else {
+                info!("Word '{}' already has release timestamp, skipping", word_id);
+            }
+        }
+
+        info!("Migration completed. Migrated {} words", migrated_count);
+    }
 
     Ok(())
 }

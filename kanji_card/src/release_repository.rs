@@ -196,4 +196,13 @@ impl ReleaseRepository {
 
         Err(anyhow!("Story not found"))
     }
+
+    pub async fn update_word(&self, user_login: &str, card: &Card) -> anyhow::Result<()> {
+        let word_json = serde_json::to_string_pretty(card)?;
+        let word_dir = self.get_word_user_path(user_login);
+        fs::create_dir_all(&word_dir).await?;
+        let word_file_path = word_dir.join(format!("{}.json", card.id()));
+        fs::write(word_file_path, word_json).await?;
+        Ok(())
+    }
 }

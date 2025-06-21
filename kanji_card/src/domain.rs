@@ -1,4 +1,5 @@
 use anyhow::{Result, anyhow};
+use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
 use utoipa::ToSchema;
@@ -32,6 +33,7 @@ pub struct Card {
     word: String,
     reading: Option<String>,
     translation: String,
+    release_timestamp: Option<DateTime<Utc>>,
 }
 
 pub struct SetRelease {
@@ -129,6 +131,7 @@ impl CardSet {
             reading,
             word,
             translation,
+            release_timestamp: None,
         });
 
         Ok(())
@@ -159,6 +162,14 @@ impl Card {
 
     pub fn translation(&self) -> &str {
         &self.translation
+    }
+
+    pub fn release_timestamp(&self) -> Option<chrono::DateTime<chrono::Utc>> {
+        self.release_timestamp
+    }
+
+    pub fn set_release_timestamp(&mut self, timestamp: chrono::DateTime<chrono::Utc>) {
+        self.release_timestamp = Some(timestamp);
     }
 }
 
