@@ -83,8 +83,13 @@ impl CardSet {
             return Err(anyhow!("State is not current"));
         }
 
+        let mut words = self.words;
+        for word in words.iter_mut() {
+            word.release_timestamp = Some(Utc::now());
+        }
+
         Ok(SetRelease {
-            words: self.words,
+            words,
             story: self.story,
         })
     }
@@ -166,10 +171,6 @@ impl Card {
 
     pub fn release_timestamp(&self) -> Option<chrono::DateTime<chrono::Utc>> {
         self.release_timestamp
-    }
-
-    pub fn set_release_timestamp(&mut self, timestamp: chrono::DateTime<chrono::Utc>) {
-        self.release_timestamp = Some(timestamp);
     }
 }
 
