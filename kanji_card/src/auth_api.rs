@@ -88,9 +88,7 @@ async fn login(
     tag = "auth"
 )]
 #[instrument(skip(state))]
-async fn logout(
-    State(state): State<AuthApiState>,
-) -> impl IntoResponse {
+async fn logout(State(state): State<AuthApiState>) -> impl IntoResponse {
     info!("Logout request");
     let response = crate::auth::logout(state.jwt_config).await;
 

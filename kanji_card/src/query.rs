@@ -425,30 +425,15 @@ async fn list_test_released_words(
                 }
             });
 
-            // Create alternating order: newest, oldest, second newest, second oldest, etc.
-            let mut result = Vec::new();
-            let mut front_idx = 0;
-            let mut back_idx = cards.len();
-            let mut take_from_front = true;
-
-            while front_idx < back_idx {
-                let word = if take_from_front {
-                    front_idx += 1;
-                    &cards[front_idx - 1]
-                } else {
-                    back_idx -= 1;
-                    &cards[back_idx]
-                };
-
-                result.push(WordResponse {
-                    id: word.id().to_string(),
-                    word: word.word().to_string(),
-                    reading: word.reading().map(|r| r.to_string()),
-                    translation: word.translation().to_string(),
-                });
-
-                take_from_front = !take_from_front;
-            }
+            let result = cards
+                .iter()
+                .map(|x| WordResponse {
+                    id: x.id().to_string(),
+                    word: x.word().to_string(),
+                    reading: x.reading().map(|r| r.to_string()),
+                    translation: x.translation().to_string(),
+                })
+                .collect();
 
             Ok(axum::Json(result))
         }

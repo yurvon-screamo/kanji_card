@@ -47,7 +47,7 @@ pub async fn login(
     password: &str,
 ) -> Result<Response, Response> {
     let user = user_repo
-        .get_user(&login)
+        .get_user(login)
         .await
         .map_err(|e| {
             error!("Error getting user: {}", e);
@@ -69,7 +69,7 @@ pub async fn login(
                 .into_response()
         })?;
 
-    let hashed_password = hash_password(&password, &login);
+    let hashed_password = hash_password(password, login);
     if user.password_hash != hashed_password {
         return Err((
             StatusCode::UNAUTHORIZED,
@@ -123,7 +123,7 @@ pub async fn register(
     password: &str,
 ) -> Result<Response, Response> {
     if user_repo
-        .get_user(&login)
+        .get_user(login)
         .await
         .map_err(|e| {
             error!("Error checking user existence: {}", e);
@@ -146,9 +146,9 @@ pub async fn register(
             .into_response());
     }
 
-    let hashed_password = hash_password(&password, &login);
+    let hashed_password = hash_password(password, login);
     user_repo
-        .save_user(&login, &hashed_password)
+        .save_user(login, &hashed_password)
         .await
         .map_err(|e| {
             error!("Error saving user: {}", e);
@@ -167,9 +167,7 @@ pub async fn register(
         .unwrap())
 }
 
-pub async fn logout(
-    jwt_config: Arc<JwtConfig>,
-) -> Result<Response, Response> {
+pub async fn logout(jwt_config: Arc<JwtConfig>) -> Result<Response, Response> {
     let mut response = Response::builder()
         .status(StatusCode::OK)
         .body(Body::empty())
