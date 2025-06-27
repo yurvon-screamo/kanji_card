@@ -1,5 +1,4 @@
 import React, { useState } from "react"
-import { Toolbar } from "../../ui/Toolbar"
 import { ViewMode } from "../shared"
 import { ArrowLeft } from "lucide-react"
 import { LayoutContainer } from "../../ui/LayoutContainer"

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { Button, Input, Textarea, Card, CardHeader, ToggleButton } from '@fluentui/react-components';
-import { ArrowLeft, Plus, FileText, MessageSquare } from 'lucide-react';
+import { Button, Textarea, Card, ToggleButton } from '@fluentui/react-components';
+import { Plus, FileText, MessageSquare } from 'lucide-react';
 import { DefaultService, CreateRuleFromDescriptionRequest, CreateRuleFromTextRequest } from '@/api';
 import { colors } from '@/lib/theme';
 import { cn } from '@/lib/utils';
@@ -8,11 +8,10 @@ import { cn } from '@/lib/utils';
 type RuleCreationMode = 'description' | 'text';
 
 interface AddRuleFormProps {
-  onBack: () => void;
   onRuleAdded: () => void;
 }
 
-export const AddRuleForm = ({ onBack, onRuleAdded }: AddRuleFormProps) => {
+export const AddRuleForm = ({ onRuleAdded }: AddRuleFormProps) => {
   const [mode, setMode] = useState<RuleCreationMode>('description');
   const [description, setDescription] = useState('');
   const [text, setText] = useState('');
@@ -93,8 +92,8 @@ export const AddRuleForm = ({ onBack, onRuleAdded }: AddRuleFormProps) => {
             <div>
               <div className={cn("text-sm mb-3 p-3 rounded-md", colors.ui.card.bg)}>
                 <p className={cn("text-sm", colors.ui.text.secondary)}>
-                  Опишите грамматическое правило, которое вы хотите изучить. Например: "правило использования частицы は",
-                  "конструкция て-формы", "вежливая форма глаголов" и т.д.
+                  Опишите грамматическое правило, которое вы хотите изучить. Например: &quot;правило использования частицы は&quot;,
+                  &quot;конструкция て-формы&quot;, &quot;вежливая форма глаголов&quot; и т.д.
                   ИИ создаст подробное объяснение с примерами и тестами.
                 </p>
               </div>

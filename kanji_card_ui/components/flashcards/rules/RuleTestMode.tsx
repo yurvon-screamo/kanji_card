@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 
 interface RuleTestModeProps {
   tests: RuleTestResponse[];
-  onBack: () => void;
   onComplete: () => void;
 }
 
@@ -19,7 +18,6 @@ interface TestResult {
 
 export const RuleTestMode = ({
   tests,
-  onBack,
   onComplete,
 }: RuleTestModeProps) => {
   const [currentTestIndex, setCurrentTestIndex] = useState(0);

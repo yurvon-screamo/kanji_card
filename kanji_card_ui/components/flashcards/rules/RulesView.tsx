@@ -91,9 +91,9 @@ export const RulesView = () => {
     const handleRuleUpdated = (updatedRule: RuleDetailResponse) => {
         setSelectedRule(updatedRule);
         // Обновляем правило в списке
-        setRules(prevRules => 
-            prevRules.map(rule => 
-                rule.id === updatedRule.id 
+        setRules(prevRules =>
+            prevRules.map(rule =>
+                rule.id === updatedRule.id
                     ? { ...rule, is_released: updatedRule.is_released, release_time: updatedRule.release_time }
                     : rule
             )
@@ -123,7 +123,6 @@ export const RulesView = () => {
                 return selectedRule ? (
                     <RuleDetailMode
                         rule={selectedRule}
-                        onBack={handleBack}
                         onStartTest={handleStartTest}
                         onRuleUpdated={handleRuleUpdated}
                     />
@@ -132,14 +131,12 @@ export const RulesView = () => {
                 return selectedRule ? (
                     <RuleTestMode
                         tests={selectedRule.tests}
-                        onBack={handleBack}
                         onComplete={handleTestComplete}
                     />
                 ) : null;
             case 'add':
                 return (
                     <AddRuleForm
-                        onBack={handleBack}
                         onRuleAdded={handleRuleAdded}
                     />
                 );
