@@ -1,4 +1,4 @@
-use crate::domain::{CardSet, SetState};
+use crate::domain::word::{CardSet, SetState};
 use anyhow::anyhow;
 use std::path::PathBuf;
 use tokio::fs;
@@ -6,11 +6,11 @@ use tokio::fs;
 const STORAGE_DIR: &str = "data/cardsets";
 
 #[derive(Clone)]
-pub struct CardSetRepository {
+pub struct WordRepository {
     storage_dir: PathBuf,
 }
 
-impl CardSetRepository {
+impl WordRepository {
     pub async fn new() -> anyhow::Result<Self> {
         let storage_dir = PathBuf::from(STORAGE_DIR);
         fs::create_dir_all(&storage_dir).await?;

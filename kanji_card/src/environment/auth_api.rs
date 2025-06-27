@@ -6,7 +6,10 @@ use tracing::{error, info, instrument};
 use utoipa::ToSchema;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
-use crate::{auth::JwtConfig, user_repository::UserRepository};
+use crate::{
+    environment::auth::{self, JwtConfig},
+    user_repository::UserRepository,
+};
 
 #[derive(Clone)]
 struct AuthApiState {
@@ -54,7 +57,7 @@ async fn login(
     Json(credentials): Json<LoginRequest>,
 ) -> impl IntoResponse {
     info!("Login attempt for user {}", credentials.login);
-    let response = crate::auth::login(
+    let response = auth::login(
         state.repository,
         state.jwt_config,
         &credentials.login,
@@ -90,7 +93,7 @@ async fn login(
 #[instrument(skip(state))]
 async fn logout(State(state): State<AuthApiState>) -> impl IntoResponse {
     info!("Logout request");
-    let response = crate::auth::logout(state.jwt_config).await;
+    let response = auth::logout(state.jwt_config).await;
 
     match &response {
         Ok(_) => {
@@ -122,7 +125,7 @@ async fn register(
 ) -> impl IntoResponse {
     info!("Registration attempt for user {}", credentials.login);
     let response =
-        crate::auth::register(state.repository, &credentials.login, &credentials.password).await;
+        auth::register(state.repository, &credentials.login, &credentials.password).await;
 
     match &response {
         Ok(_) => {

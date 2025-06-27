@@ -1,16 +1,15 @@
-mod api;
-mod auth;
-mod auth_api;
+mod application;
 mod domain;
+mod environment;
 mod llm;
-mod query;
-mod release_repository;
-mod set_repository;
-mod set_service;
+mod rule_repository;
 mod user_repository;
 mod web_ui;
+mod word_release_repository;
+mod word_repository;
 
 use anyhow::Result;
+use application::{rule_service::RuleService, set_service::SetService};
 use axum::{
     http::{
         Method,
@@ -25,8 +24,6 @@ use opentelemetry::global;
 use opentelemetry_otlp::{Protocol, WithExportConfig};
 use opentelemetry_sdk::{Resource, propagation::TraceContextPropagator, trace::SdkTracerProvider};
 use serde::Deserialize;
-use set_repository::CardSetRepository;
-use set_service::SetService;
 use std::{net::Ipv4Addr, time::Duration};
 use tokio::fs;
 use tower_http::cors::CorsLayer;
@@ -34,8 +31,13 @@ use tracing::info;
 use tracing_subscriber::EnvFilter;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
+use word_repository::WordRepository;
 
-use crate::{release_repository::ReleaseRepository, web_ui::static_handler};
+use crate::{
+    environment::{api, auth, auth_api, query},
+    web_ui::static_handler,
+    word_release_repository::WordReleaseRepository,
+};
 
 #[derive(Debug, Deserialize)]
 struct ServerConfig {
@@ -81,9 +83,10 @@ async fn main() -> Result<()> {
         .build()?
         .try_deserialize::<Settings>()?;
 
-    let set_repository = CardSetRepository::new().await?;
-    let release_repository = ReleaseRepository::new().await?;
+    let set_repository = WordRepository::new().await?;
+    let release_repository = WordReleaseRepository::new().await?;
     let user_repository = user_repository::UserRepository::new().await?;
+    let rule_repository = rule_repository::RuleRepository::new().await?;
     let jwt_config = auth::JwtConfig {
         secret: settings.jwt.secret_key.as_bytes().to_vec(),
         token_expiry: Duration::from_secs(settings.jwt.token_expiry),
@@ -97,13 +100,14 @@ async fn main() -> Result<()> {
     let set_service = SetService::new(
         set_repository.clone(),
         release_repository.clone(),
-        llm_service,
+        llm_service.clone(),
     );
+    let rule_service = RuleService::new(rule_repository.clone(), llm_service);
 
     let open_api_router = OpenApiRouter::new()
         .nest(
             "/api/set",
-            api::set_api_router(set_service, jwt_config.clone()),
+            api::set_api_router(set_service, rule_service, jwt_config.clone()),
         )
         .nest(
             "/api/auth",
@@ -111,7 +115,7 @@ async fn main() -> Result<()> {
         )
         .nest(
             "/api/query",
-            query::query_router(set_repository, release_repository, jwt_config.clone()),
+            query::query_router(set_repository, release_repository, rule_repository.clone(), jwt_config.clone()),
         );
 
     let (router, mut api) = open_api_router.split_for_parts();

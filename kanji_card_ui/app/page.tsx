@@ -25,6 +25,9 @@ function HomePageContent() {
       case 'learned':
         router.push('/learned');
         break;
+      case 'rules':
+        router.push('/rules');
+        break;
       default:
         break;
     }

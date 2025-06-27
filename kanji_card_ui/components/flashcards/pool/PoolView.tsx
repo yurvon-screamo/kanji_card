@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import { LayoutContainer } from "../../ui/LayoutContainer";
 import { HorizontalCardDeck } from "./components/HorizontalCardDeck";
 import { WordRepository } from "../shared/repository";
@@ -8,6 +8,7 @@ import { colors } from "../../../lib/theme";
 import { Toolbar } from "../../ui/Toolbar";
 import Image from "next/image";
 import { Button } from "@fluentui/react-components";
+import { BookOpen } from "lucide-react";
 
 interface PoolViewProps {
   setViewMode: (mode: ViewMode, collection?: Collection) => void;
@@ -20,6 +21,7 @@ export const PoolView = ({
   const [loading, setLoading] = useState(true);
   const [overview, setOverview] = useState<WordOverview | null>(null);
   const [error, setError] = useState<string | null>(null);
+
 
   useEffect(() => {
     setMounted(true);
@@ -119,8 +121,8 @@ export const PoolView = ({
   return (
     <>
       <Toolbar>
-        <div className="flex items-center space-x-2">
-          <div className="flex items-  space-x-4">
+        <div className="flex items-center justify-between w-full">
+          <div className="flex items-center space-x-4">
             <Image
               src="/logo.svg"
               alt="Kanji Card"
@@ -129,6 +131,18 @@ export const PoolView = ({
               className="rounded-md"
             />
             <h1 className="text-xl font-semibold">日本語</h1>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Button
+              appearance="outline"
+              size="small"
+              onClick={() => setViewMode('rules')}
+              className="text-xs"
+            >
+              <BookOpen className="h-3 w-3 mr-1" />
+              Правила
+            </Button>
           </div>
         </div>
       </Toolbar>

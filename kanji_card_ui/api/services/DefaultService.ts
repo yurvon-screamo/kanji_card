@@ -2,10 +2,18 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { CheckTestAnswerRequest } from '../models/CheckTestAnswerRequest';
+import type { CheckTestAnswerResponse } from '../models/CheckTestAnswerResponse';
+import type { CreateRuleFromDescriptionRequest } from '../models/CreateRuleFromDescriptionRequest';
+import type { CreateRuleFromTextRequest } from '../models/CreateRuleFromTextRequest';
+import type { CreateRuleResponse } from '../models/CreateRuleResponse';
 import type { ExtractedWord } from '../models/ExtractedWord';
 import type { ExtractWordsFromImageRequest } from '../models/ExtractWordsFromImageRequest';
 import type { ExtractWordsFromTextRequest } from '../models/ExtractWordsFromTextRequest';
 import type { MarkAsTobeRequest } from '../models/MarkAsTobeRequest';
+import type { ReleaseRuleRequest } from '../models/ReleaseRuleRequest';
+import type { RuleDetailResponse } from '../models/RuleDetailResponse';
+import type { RuleResponse } from '../models/RuleResponse';
 import type { SaveWordsRequest } from '../models/SaveWordsRequest';
 import type { SetResponse } from '../models/SetResponse';
 import type { StoryResponse } from '../models/StoryResponse';
@@ -24,6 +32,45 @@ export class DefaultService {
             method: 'GET',
             url: '/api/query/overview',
             errors: {
+                500: `Internal server error`,
+            },
+        });
+    }
+    /**
+     * @param search Search term for rules (case-insensitive)
+     * @returns RuleResponse List of rules retrieved successfully
+     * @throws ApiError
+     */
+    public static listRules(
+        search?: string,
+    ): CancelablePromise<Array<RuleResponse>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/query/rules',
+            query: {
+                'search': search,
+            },
+            errors: {
+                500: `Internal server error`,
+            },
+        });
+    }
+    /**
+     * @param id Rule ID
+     * @returns RuleDetailResponse Rule retrieved successfully
+     * @throws ApiError
+     */
+    public static getRule(
+        id: string,
+    ): CancelablePromise<RuleDetailResponse> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/query/rules/{id}',
+            path: {
+                'id': id,
+            },
+            errors: {
+                404: `Rule not found`,
                 500: `Internal server error`,
             },
         });
@@ -121,6 +168,80 @@ export class DefaultService {
                 'search': search,
             },
             errors: {
+                500: `Internal server error`,
+            },
+        });
+    }
+    /**
+     * @param requestBody
+     * @returns CheckTestAnswerResponse Test answer checked successfully
+     * @throws ApiError
+     */
+    public static checkTestAnswer(
+        requestBody: CheckTestAnswerRequest,
+    ): CancelablePromise<CheckTestAnswerResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/set/rules/check-test',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                404: `Rule or test not found`,
+                500: `Internal server error`,
+            },
+        });
+    }
+    /**
+     * @param requestBody
+     * @returns CreateRuleResponse Grammar rule created successfully
+     * @throws ApiError
+     */
+    public static createRuleFromDescription(
+        requestBody: CreateRuleFromDescriptionRequest,
+    ): CancelablePromise<CreateRuleResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/set/rules/create/description',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                500: `Internal server error`,
+            },
+        });
+    }
+    /**
+     * @param requestBody
+     * @returns CreateRuleResponse Grammar rule created successfully
+     * @throws ApiError
+     */
+    public static createRuleFromText(
+        requestBody: CreateRuleFromTextRequest,
+    ): CancelablePromise<CreateRuleResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/set/rules/create/text',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                500: `Internal server error`,
+            },
+        });
+    }
+    /**
+     * @param requestBody
+     * @returns any Rule released successfully
+     * @throws ApiError
+     */
+    public static releaseRule(
+        requestBody: ReleaseRuleRequest,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/set/rules/release',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                404: `Rule not found`,
                 500: `Internal server error`,
             },
         });
