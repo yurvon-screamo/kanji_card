@@ -24,7 +24,7 @@ export interface Set {
   story?: StoryResponse | null;
 }
 
-export type ViewMode = "study" | "set-selection" | "pool" | "add-cards" | "learned";
+export type ViewMode = "study" | "set-selection" | "pool" | "add-cards" | "learned" | "rules";
 export type CardSide = 0 | 1 | 2;
 export type StudyMode = "grid" | "jp" | "translate" | "mixed" | "story";
 

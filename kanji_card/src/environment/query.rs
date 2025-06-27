@@ -11,7 +11,7 @@ use utoipa::ToSchema;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    domain::{word::SetState, rule::JapanesePartOfSpeech},
+    domain::{rule::JapanesePartOfSpeech, word::SetState},
     environment::auth::{Claims, JwtConfig, auth_middleware},
     rule_repository::RuleRepository,
     word_release_repository::WordReleaseRepository,
@@ -104,8 +104,7 @@ struct RuleDetailResponse {
     id: String,
     title: String,
     description: String,
-    explanation: String,
-    examples: Vec<String>,
+    examples: Vec<RuleExampleResponse>,
     tests: Vec<RuleTestResponse>,
     is_released: bool,
     release_time: Option<String>,
@@ -113,10 +112,19 @@ struct RuleDetailResponse {
 }
 
 #[derive(Serialize, ToSchema)]
+struct RuleExampleResponse {
+    title: String,
+    content: String,
+    description: String,
+    content_translation: String,
+}
+
+#[derive(Serialize, ToSchema)]
 struct RuleTestResponse {
     id: String,
     description: String,
     question: String,
+    answer: String,
 }
 
 #[derive(Deserialize, Debug)]
@@ -512,13 +520,26 @@ async fn get_rule(
                 id: rule.id().to_string(),
                 title: rule.title().to_string(),
                 description: rule.description().to_string(),
-                explanation: rule.description().to_string(),
-                examples: rule.examples().iter().map(|e| e.content().to_string()).collect(),
-                tests: rule.tests().iter().map(|t| RuleTestResponse {
-                    id: t.test_id().to_string(),
-                    description: t.rus_description().to_string(),
-                    question: t.question_content().to_string(),
-                }).collect(),
+                examples: rule
+                    .examples()
+                    .iter()
+                    .map(|e| RuleExampleResponse {
+                        title: e.title().to_string(),
+                        content: e.content().to_string(),
+                        description: e.description().to_string(),
+                        content_translation: e.content_translation().to_string(),
+                    })
+                    .collect(),
+                tests: rule
+                    .tests()
+                    .iter()
+                    .map(|t| RuleTestResponse {
+                        id: t.test_id().to_string(),
+                        description: t.rus_description().to_string(),
+                        question: t.question_content().to_string(),
+                        answer: t.answer().to_string(),
+                    })
+                    .collect(),
                 is_released: rule.is_released(),
                 release_time: rule.release_timestamp().map(|t| t.to_string()),
                 part_of_speech: rule.part_of_speech().clone(),

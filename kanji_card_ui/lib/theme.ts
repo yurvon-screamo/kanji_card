@@ -74,6 +74,10 @@ export const fluentTheme = {
       default: "var(--colorNeutralStroke2)",
       dashed: "var(--colorNeutralStroke1)",
     },
+    card: {
+      bg: "var(--colorNeutralBackground1)",
+      border: "var(--colorNeutralStroke1)",
+    },
     button: {
       primary: {
         bg: "var(--colorBrandBackground)",

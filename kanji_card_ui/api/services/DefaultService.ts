@@ -11,6 +11,7 @@ import type { ExtractedWord } from '../models/ExtractedWord';
 import type { ExtractWordsFromImageRequest } from '../models/ExtractWordsFromImageRequest';
 import type { ExtractWordsFromTextRequest } from '../models/ExtractWordsFromTextRequest';
 import type { MarkAsTobeRequest } from '../models/MarkAsTobeRequest';
+import type { ReleaseRuleRequest } from '../models/ReleaseRuleRequest';
 import type { RuleDetailResponse } from '../models/RuleDetailResponse';
 import type { RuleResponse } from '../models/RuleResponse';
 import type { SaveWordsRequest } from '../models/SaveWordsRequest';
@@ -222,6 +223,25 @@ export class DefaultService {
             body: requestBody,
             mediaType: 'application/json',
             errors: {
+                500: `Internal server error`,
+            },
+        });
+    }
+    /**
+     * @param requestBody
+     * @returns any Rule released successfully
+     * @throws ApiError
+     */
+    public static releaseRule(
+        requestBody: ReleaseRuleRequest,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/set/rules/release',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                404: `Rule not found`,
                 500: `Internal server error`,
             },
         });

@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-export type RuleTestResponse = {
-    answer: string;
+export type RuleExampleResponse = {
+    content: string;
+    content_translation: string;
     description: string;
-    id: string;
-    question: string;
+    title: string;
 };
 

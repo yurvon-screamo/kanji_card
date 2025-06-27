@@ -1,6 +1,6 @@
 use crate::{
     application::{rule_service::RuleService, set_service::SetService},
-    domain::rule::{GrammarRule, JapanesePartOfSpeech},
+    domain::rule::JapanesePartOfSpeech,
     environment::auth,
     llm::ExtractedWord,
 };
@@ -38,6 +38,7 @@ pub fn set_api_router(
         .routes(routes!(create_rule_from_text))
         .routes(routes!(create_rule_from_description))
         .routes(routes!(check_test_answer))
+        .routes(routes!(release_rule))
         .layer(middleware::from_fn_with_state(
             jwt_config.clone(),
             auth_middleware,
@@ -46,6 +47,11 @@ pub fn set_api_router(
             set_service: Arc::new(set_service),
             rule_service: Arc::new(rule_service),
         })
+}
+
+#[derive(Serialize, Deserialize, ToSchema, Debug)]
+struct ReleaseRuleRequest {
+    rule_id: String,
 }
 
 #[derive(Serialize, Deserialize, ToSchema, Debug)]
@@ -150,13 +156,18 @@ struct CreateRuleResponse {
         (status = 500, description = "Internal server error")
     )
 )]
-#[instrument(skip(state, request))]
+#[instrument(skip(state, request, claims))]
 async fn create_rule_from_text(
     State(state): State<ApiState>,
+    Extension(claims): Extension<Claims>,
     Json(request): Json<CreateRuleFromTextRequest>,
 ) -> Result<axum::Json<CreateRuleResponse>, (StatusCode, String)> {
     info!("Creating grammar rule from text");
-    match state.rule_service.create_from_text(&request.text).await {
+    match state
+        .rule_service
+        .create_from_text(&claims.sub, &request.text)
+        .await
+    {
         Ok(rule) => {
             info!("Successfully created grammar rule: {}", rule.title());
             let response = CreateRuleResponse {
@@ -183,15 +194,16 @@ async fn create_rule_from_text(
         (status = 500, description = "Internal server error")
     )
 )]
-#[instrument(skip(state, request))]
+#[instrument(skip(state, request, claims))]
 async fn create_rule_from_description(
     State(state): State<ApiState>,
+    Extension(claims): Extension<Claims>,
     Json(request): Json<CreateRuleFromDescriptionRequest>,
 ) -> Result<axum::Json<CreateRuleResponse>, (StatusCode, String)> {
     info!("Creating grammar rule from description");
     match state
         .rule_service
-        .create_from_description(&request.description)
+        .create_from_description(&claims.sub, &request.description)
         .await
     {
         Ok(rule) => {
@@ -253,6 +265,39 @@ async fn check_test_answer(
             } else {
                 Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
             }
+        }
+    }
+}
+
+#[utoipa::path(
+    post,
+    path = "/rules/release",
+    request_body = ReleaseRuleRequest,
+    responses(
+        (status = 200, description = "Rule released successfully"),
+        (status = 404, description = "Rule not found"),
+        (status = 500, description = "Internal server error")
+    )
+)]
+#[instrument(skip(state, request, claims))]
+async fn release_rule(
+    State(state): State<ApiState>,
+    Extension(claims): Extension<Claims>,
+    Json(request): Json<ReleaseRuleRequest>,
+) -> Result<StatusCode, (StatusCode, String)> {
+    info!("Releasing rule: {}", request.rule_id);
+    match state
+        .rule_service
+        .release_rule(&claims.sub, &request.rule_id)
+        .await
+    {
+        Ok(_) => {
+            info!("Successfully released rule: {}", request.rule_id);
+            Ok(StatusCode::OK)
+        }
+        Err(e) => {
+            error!("Failed to release rule: {}", e);
+            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
         }
     }
 }

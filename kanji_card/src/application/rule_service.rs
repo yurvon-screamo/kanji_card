@@ -18,7 +18,11 @@ impl RuleService {
     }
 
     #[instrument(skip(self, japanese_text))]
-    pub async fn create_from_text(&self, japanese_text: &str) -> Result<GrammarRule> {
+    pub async fn create_from_text(
+        &self,
+        user_login: &str,
+        japanese_text: &str,
+    ) -> Result<GrammarRule> {
         info!("Creating grammar rule from Japanese text");
 
         let llm_response = self
@@ -50,6 +54,8 @@ impl RuleService {
             tests,
         );
 
+        self.rule_repository.save(user_login, &grammar_rule).await?;
+
         info!(
             "Successfully created grammar rule: {}",
             grammar_rule.title()
@@ -58,7 +64,11 @@ impl RuleService {
     }
 
     #[instrument(skip(self, rule_description))]
-    pub async fn create_from_description(&self, rule_description: &str) -> Result<GrammarRule> {
+    pub async fn create_from_description(
+        &self,
+        user_login: &str,
+        rule_description: &str,
+    ) -> Result<GrammarRule> {
         info!("Creating grammar rule from description");
 
         let llm_response = self
@@ -89,6 +99,8 @@ impl RuleService {
             examples,
             tests,
         );
+
+        self.rule_repository.save(user_login, &grammar_rule).await?;
 
         info!(
             "Successfully created grammar rule: {}",
@@ -132,5 +144,16 @@ impl RuleService {
 
         let rule = self.rule_repository.load(user_login, rule_id).await?;
         Ok(rule.check_test(test_id, answer))
+    }
+
+    #[instrument(skip(self))]
+    pub async fn release_rule(&self, user_login: &str, rule_id: &str) -> Result<()> {
+        info!("Releasing rule: {}", rule_id);
+
+        let mut rule = self.rule_repository.load(user_login, rule_id).await?;
+        rule.release();
+        self.rule_repository.save(user_login, &rule).await?;
+
+        Ok(())
     }
 }
