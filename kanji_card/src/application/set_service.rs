@@ -1,22 +1,22 @@
-use crate::domain::{CardSet, SetState};
+use crate::domain::word::{CardSet, SetState};
 use crate::llm::{ExtractedWord, LlmService};
-use crate::release_repository::ReleaseRepository;
-use crate::set_repository::CardSetRepository;
+use crate::word_release_repository::WordReleaseRepository;
+use crate::word_repository::WordRepository;
 use anyhow::Result;
 use base64::{Engine as _, engine::general_purpose};
 use std::collections::HashSet;
 use tracing::{error, info, instrument};
 
 pub struct SetService {
-    set_repository: CardSetRepository,
-    release_repository: ReleaseRepository,
+    set_repository: WordRepository,
+    release_repository: WordReleaseRepository,
     llm_service: LlmService,
 }
 
 impl SetService {
     pub fn new(
-        set_repository: CardSetRepository,
-        release_repository: ReleaseRepository,
+        set_repository: WordRepository,
+        release_repository: WordReleaseRepository,
         llm_service: LlmService,
     ) -> Self {
         Self {

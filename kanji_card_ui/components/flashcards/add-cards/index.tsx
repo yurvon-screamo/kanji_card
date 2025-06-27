@@ -25,31 +25,29 @@ export const AddCardsView = ({ setViewMode }: AddCardsViewProps) => {
 
     return (
         <LayoutContainer>
-            <Toolbar>
+            <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 p-4 mb-6">
                 <div className="flex space-x-2">
                     <Button appearance="subtle" onClick={() => setViewMode("pool")}>
                         <ArrowLeft className="h-4 w-4 mr-1" />
                         Все карточки
                     </Button>
+                    {inputModeOptions.map((option) => (
+                        <ToggleButton
+                            key={option.mode}
+                            checked={inputMode === option.mode}
+                            onClick={() => setInputMode(option.mode)}
+                            appearance={inputMode === option.mode ? "primary" : "secondary"}
+                        >
+                            {option.label}
+                        </ToggleButton>
+                    ))}
                 </div>
-            </Toolbar>
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '1rem' }}>
-                {inputModeOptions.map((option) => (
-                    <ToggleButton
-                        key={option.mode}
-                        checked={inputMode === option.mode}
-                        onClick={() => setInputMode(option.mode)}
-                        appearance={inputMode === option.mode ? "primary" : "secondary"}
-                    >
-                        {option.label}
-                    </ToggleButton>
-                ))}
-            </div>
 
-            <div className="mt-8 max-w-3xl mx-auto px-4">
-                {inputMode === "manual" && <ManualInput />}
-                {inputMode === "free" && <FreeTextInput />}
-                {inputMode === "image" && <ImageInput />}
+                <div className="mt-8 max-w-3xl mx-auto px-4">
+                    {inputMode === "manual" && <ManualInput />}
+                    {inputMode === "free" && <FreeTextInput />}
+                    {inputMode === "image" && <ImageInput />}
+                </div>
             </div>
         </LayoutContainer>
     )

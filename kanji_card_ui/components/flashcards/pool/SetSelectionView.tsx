@@ -23,7 +23,7 @@ export const SetSelectionView = ({
     <LayoutContainer>
       <div className="w-full space-y-12 max-w-screen-lg mx-auto px-4">
         <Toolbar>
-          <div className="flex space-x-2">
+            <div className="flex items-center justify-between h-16">
             <Button appearance="subtle" onClick={onBackToPool}>
               <ArrowLeft className="h-4 w-4 mr-1" />
               Все карточки

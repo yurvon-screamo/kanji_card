@@ -1,4 +1,4 @@
-use crate::domain::{Card, Story};
+use crate::domain::word::{Card, Story};
 use anyhow::anyhow;
 use std::path::PathBuf;
 use tokio::fs;
@@ -7,12 +7,12 @@ const WORD_STORAGE_DIR: &str = "data/release_word";
 const STORY_STORAGE_DIR: &str = "data/release_story";
 
 #[derive(Clone)]
-pub struct ReleaseRepository {
+pub struct WordReleaseRepository {
     word_storage_dir: PathBuf,
     story_storage_dir: PathBuf,
 }
 
-impl ReleaseRepository {
+impl WordReleaseRepository {
     pub async fn new() -> anyhow::Result<Self> {
         let word_storage_dir = PathBuf::from(WORD_STORAGE_DIR);
         let story_storage_dir = PathBuf::from(STORY_STORAGE_DIR);

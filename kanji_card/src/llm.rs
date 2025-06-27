@@ -69,6 +69,31 @@ struct StoryResponse {
     story_translate: Vec<String>,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct GrammarRuleResponse {
+    pub title: String,
+    pub description: String,
+    pub part_of_speech: String,
+    pub examples: Vec<GrammarExampleResponse>,
+    pub tests: Vec<GrammarTestResponse>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GrammarExampleResponse {
+    pub title: String,
+    pub content: String,
+    pub description: String,
+    pub content_translation: String,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct GrammarTestResponse {
+    pub rus_description: String,
+    pub question_content: String,
+    pub answer: String,
+}
+
+#[derive(Clone)]
 pub struct LlmService {
     client: reqwest::Client,
     base_url: String,
@@ -257,7 +282,7 @@ Analyze the image and extract Japanese text:"#;
     #[instrument(skip(self, words))]
     pub async fn generate_story(
         &self,
-        words: &[crate::domain::Card],
+        words: &[crate::domain::word::Card],
     ) -> Result<(Vec<String>, Vec<String>)> {
         info!("Generating story from {} words", words.len());
 
@@ -393,5 +418,167 @@ Create the story:"#,
             story_response.story.len()
         );
         Ok((story_response.story, story_response.story_translate))
+    }
+
+    #[instrument(skip(self, japanese_text))]
+    pub async fn extract_grammar_rule_from_text(
+        &self,
+        japanese_text: &str,
+    ) -> Result<GrammarRuleResponse> {
+        info!("Extracting grammar rule from Japanese text");
+        let prompt = format!(
+            r#"You are a Japanese language expert. Analyze the following Japanese text and identify the main grammar rule being used. Create a comprehensive grammar rule explanation.
+
+IMPORTANT RULES:
+1. Identify the primary grammar pattern/rule in the text
+2. Provide a clear title for the rule
+3. Give a detailed description in Russian
+4. Determine the correct part of speech from: Meishi, Daimeishi, Doushi, Keiyoushi, Keiyoudoushi, Fukushi, Rentaishi, Setsuzokushi, Joshi, Jodoushi, Kandoushi
+5. Create 3-5 examples with Japanese content, Russian translation, and explanations
+6. Create 3-5 test questions with Russian descriptions, Japanese questions, and correct answers
+
+Return ONLY valid JSON in this exact format:
+{{"title": "rule_title", "description": "detailed_description_in_russian", "part_of_speech": "part_of_speech_enum", "examples": [{{"title": "example_title", "content": "japanese_example", "description": "explanation_in_russian", "content_translation": "russian_translation"}}], "tests": [{{"rus_description": "test_description_in_russian", "question_content": "japanese_question", "answer": "correct_answer"}}]}}
+
+Text to analyze:
+{}"#,
+            japanese_text
+        );
+
+        self.send_grammar_request(prompt).await
+    }
+
+    #[instrument(skip(self, rule_description))]
+    pub async fn generate_grammar_rule_from_description(
+        &self,
+        rule_description: &str,
+    ) -> Result<GrammarRuleResponse> {
+        info!("Generating grammar rule from description");
+        let prompt = format!(
+            r#"You are a Japanese language expert. Based on the following description, create a comprehensive Japanese grammar rule explanation.
+
+IMPORTANT RULES:
+1. Create a clear title for the rule based on the description
+2. Provide a detailed description in Russian
+3. Determine the correct part of speech from: Meishi, Daimeishi, Doushi, Keiyoushi, Keiyoudoushi, Fukushi, Rentaishi, Setsuzokushi, Joshi, Jodoushi, Kandoushi
+4. Create 2-3 examples with Japanese content, Russian translation, and explanations
+5. Create 3-5 test questions with Russian descriptions, Japanese questions, and correct answers
+6. Make sure all content is accurate and educational
+
+Return ONLY valid JSON in this exact format:
+{{"title": "rule_title", "description": "detailed_description_in_russian", "part_of_speech": "part_of_speech_enum", "examples": [{{"title": "example_title", "content": "japanese_example", "description": "explanation_in_russian", "content_translation": "russian_translation"}}], "tests": [{{"rus_description": "test_description_in_russian", "question_content": "japanese_question", "answer": "correct_answer"}}]}}
+
+Rule description:
+{}"#,
+            rule_description
+        );
+
+        self.send_grammar_request(prompt).await
+    }
+
+    #[instrument(skip(self, prompt))]
+    async fn send_grammar_request(&self, prompt: String) -> Result<GrammarRuleResponse> {
+        let request = OpenRouterRequest {
+            model: self.model.clone(),
+            messages: vec![Message {
+                role: "user".to_string(),
+                content: vec![Content::Text {
+                    content_type: "text".to_string(),
+                    text: prompt,
+                }],
+            }],
+            max_tokens: 4000,
+            temperature: 0.3,
+        };
+
+        let url = format!("{}/chat/completions", self.base_url);
+        info!("Sending grammar rule request to OpenRouter API at {}", url);
+
+        let response = match self
+            .client
+            .post(&url)
+            .header("Authorization", format!("Bearer {}", self.api_key))
+            .header("Content-Type", "application/json")
+            .json(&request)
+            .send()
+            .await
+        {
+            Ok(resp) => resp,
+            Err(e) => {
+                error!(
+                    error = %e,
+                    error_type = ?e.status(),
+                    "Failed to send grammar rule request to OpenRouter API"
+                );
+                return Err(anyhow!(
+                    "Failed to send grammar rule request to OpenRouter API: {}",
+                    e
+                ));
+            }
+        };
+
+        let status = response.status();
+        if !status.is_success() {
+            let error_text = response.text().await?;
+            error!(
+                status = %status,
+                error_text = %error_text,
+                "OpenRouter API returned error response for grammar rule"
+            );
+            return Err(anyhow!(
+                "OpenRouter API error for grammar rule: {}",
+                error_text
+            ));
+        }
+
+        let openrouter_response: OpenRouterResponse = match response.json().await {
+            Ok(resp) => resp,
+            Err(e) => {
+                error!(
+                    error = %e,
+                    "Failed to parse OpenRouter API response as JSON for grammar rule"
+                );
+                return Err(anyhow!(
+                    "Failed to parse OpenRouter API response for grammar rule: {}",
+                    e
+                ));
+            }
+        };
+
+        let content = openrouter_response
+            .choices
+            .first()
+            .ok_or_else(|| {
+                error!("No choices in OpenRouter API response for grammar rule");
+                anyhow!("No choices in response for grammar rule")
+            })?
+            .message
+            .content
+            .trim();
+
+        let content = content
+            .trim_start_matches("```json")
+            .trim_start_matches("```")
+            .trim_end_matches("```")
+            .trim();
+
+        let grammar_response: GrammarRuleResponse = serde_json::from_str(content).map_err(|e| {
+            error!(
+                error = %e,
+                content = %content,
+                "Failed to parse LLM grammar rule response as JSON"
+            );
+            anyhow!(
+                "Failed to parse LLM grammar rule response as JSON: {}. Content: {}",
+                e,
+                content
+            )
+        })?;
+
+        info!(
+            "Successfully generated grammar rule: {}",
+            grammar_response.title
+        );
+        Ok(grammar_response)
     }
 }
