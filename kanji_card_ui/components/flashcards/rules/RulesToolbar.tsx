@@ -1,6 +1,6 @@
 import React from "react";
 import { Input, Button } from "@fluentui/react-components";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Toolbar } from "../../ui/Toolbar";
 
 type ViewMode = "grid" | "detail" | "test" | "add";

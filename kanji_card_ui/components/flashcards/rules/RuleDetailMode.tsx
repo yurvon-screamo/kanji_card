@@ -8,14 +8,12 @@ import { getPartOfSpeechLabel } from "@/lib/partOfSpeechUtils";
 
 interface RuleDetailModeProps {
   rule: RuleDetailResponse;
-  onBack: () => void;
   onStartTest: () => void;
   onRuleUpdated?: (updatedRule: RuleDetailResponse) => void;
 }
 
 export const RuleDetailMode = ({
   rule,
-  onBack,
   onStartTest,
   onRuleUpdated,
 }: RuleDetailModeProps) => {
@@ -24,19 +22,19 @@ export const RuleDetailMode = ({
 
   const handleReleaseRule = async () => {
     if (rule.is_released || isReleasing) return;
-    
+
     setIsReleasing(true);
     try {
       const request: ReleaseRuleRequest = { rule_id: rule.id };
       await DefaultService.releaseRule(request);
-      
+
       // Обновляем правило локально
       const updatedRule: RuleDetailResponse = {
         ...rule,
         is_released: true,
         release_time: new Date().toISOString(),
       };
-      
+
       if (onRuleUpdated) {
         onRuleUpdated(updatedRule);
       }
