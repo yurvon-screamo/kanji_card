@@ -72,7 +72,7 @@ struct StoryResponse {
 #[derive(Debug, Deserialize)]
 pub struct GrammarRuleResponse {
     pub title: String,
-    pub description: String,
+    pub conspect: String,
     pub part_of_speech: String,
     pub examples: Vec<GrammarExampleResponse>,
     pub tests: Vec<GrammarTestResponse>,
@@ -432,7 +432,7 @@ Create the story:"#,
 IMPORTANT RULES:
 1. Identify the primary grammar pattern/rule in the text
 2. Provide a clear title for the rule
-3. Give a detailed description in Russian
+3. Give a detailed conspect in Russian
 4. Determine the correct part of speech from: Meishi, Daimeishi, Doushi, Keiyoushi, Keiyoudoushi, Fukushi, Rentaishi, Setsuzokushi, Joshi, Jodoushi, Kandoushi
 5. Create 4 examples with Japanese content, Russian translation, and explanations
 6. Create 5 simple test questions that SPECIFICALLY test the identified grammar rule. Each test MUST focus on the main grammar pattern and should be one of these types:
@@ -457,7 +457,7 @@ EXAMPLES OF GOOD TESTS:
 - For adjective conjugation: "この本は___です。Fill the blank with 'interesting' in polite form" (tests adjective usage)
 
 Return ONLY valid JSON in this exact format:
-{{"title": "rule_title", "description": "detailed_description_in_russian", "part_of_speech": "part_of_speech_enum", "examples": [{{"title": "example_title", "content": "japanese_example", "description": "explanation_in_russian", "content_translation": "russian_translation"}}], "tests": [{{"rus_description": "test_description_in_russian", "question_content": "japanese_question", "answer": "correct_answer"}}]}}
+{{"title": "rule_title", "conspect": "detailed_conspect_in_russian", "part_of_speech": "part_of_speech_enum", "examples": [{{"title": "example_title", "content": "japanese_example", "description": "explanation_in_russian", "content_translation": "russian_translation"}}], "tests": [{{"rus_description": "test_description_in_russian", "question_content": "japanese_question", "answer": "correct_answer"}}]}}
 
 Text to analyze:
 {}"#,
@@ -478,7 +478,7 @@ Text to analyze:
 
 IMPORTANT RULES:
 1. Create a clear title for the rule based on the description
-2. Provide a detailed description in Russian
+2. Provide a detailed conspect in Russian
 3. Determine the correct part of speech from: Meishi, Daimeishi, Doushi, Keiyoushi, Keiyoudoushi, Fukushi, Rentaishi, Setsuzokushi, Joshi, Jodoushi, Kandoushi
 4. Create 4 examples with Japanese content, Russian translation, and explanations
 5. Create 5 simple test questions that SPECIFICALLY test the grammar rule from the description. Each test MUST focus on the main grammar pattern and should be one of these types:
@@ -504,7 +504,7 @@ EXAMPLES OF GOOD TESTS:
 - For adjective conjugation: "この本は___です。Fill the blank with 'interesting' in polite form" (tests adjective usage)
 
 Return ONLY valid JSON in this exact format:
-{{"title": "rule_title", "description": "detailed_description_in_russian", "part_of_speech": "part_of_speech_enum", "examples": [{{"title": "example_title", "content": "japanese_example", "description": "explanation_in_russian", "content_translation": "russian_translation"}}], "tests": [{{"rus_description": "test_description_in_russian", "question_content": "japanese_question", "answer": "correct_answer"}}]}}
+{{"title": "rule_title", "conspect": "detailed_conspect_in_russian", "part_of_speech": "part_of_speech_enum", "examples": [{{"title": "example_title", "content": "japanese_example", "description": "explanation_in_russian", "content_translation": "russian_translation"}}], "tests": [{{"rus_description": "test_description_in_russian", "question_content": "japanese_question", "answer": "correct_answer"}}]}}
 
 Rule description:
 {}"#,
