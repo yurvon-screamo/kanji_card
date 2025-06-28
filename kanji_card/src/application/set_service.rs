@@ -3,7 +3,6 @@ use crate::llm::{ExtractedWord, LlmService, StoryResponse, WordsResponse};
 use crate::word_release_repository::WordReleaseRepository;
 use crate::word_repository::WordRepository;
 use anyhow::Result;
-use base64::{Engine as _, engine::general_purpose};
 use std::collections::HashSet;
 use tracing::{error, info, instrument};
 
@@ -49,11 +48,8 @@ impl SetService {
             text
         );
 
-        let messages = vec![LlmService::create_user_message(vec![
-            LlmService::create_text_content(prompt),
-        ])];
+        let response: WordsResponse = self.llm_service.send_request(&prompt, 0.1).await?;
 
-        let response: WordsResponse = self.llm_service.send_request(messages, 4000, 0.1).await?;
         info!(
             "Successfully extracted {} words from text",
             response.words.len()
@@ -67,7 +63,6 @@ impl SetService {
         image_data: Vec<u8>,
     ) -> Result<Vec<ExtractedWord>> {
         info!("Extracting words from image");
-        let image_base64 = general_purpose::STANDARD.encode(&image_data);
         let prompt = r#"Ты эксперт по японскому языку. Извлеки все японские слова из этого изображения и предоставь точные переводы.
 
 ВАЖНЫЕ ПРАВИЛА:
@@ -84,12 +79,11 @@ impl SetService {
 
 Проанализируй изображение и извлеки все японские слова"#;
 
-        let messages = vec![LlmService::create_user_message(vec![
-            LlmService::create_text_content(prompt.to_string()),
-            LlmService::create_image_content(&image_base64),
-        ])];
+        let response: WordsResponse = self
+            .llm_service
+            .send_image_request(prompt, &image_data, 0.1)
+            .await?;
 
-        let response: WordsResponse = self.llm_service.send_request(messages, 4000, 0.1).await?;
         info!(
             "Successfully extracted {} words from image",
             response.words.len()
@@ -301,11 +295,8 @@ impl SetService {
             words_list.join("\n")
         );
 
-        let messages = vec![LlmService::create_user_message(vec![
-            LlmService::create_text_content(prompt),
-        ])];
+        let response: StoryResponse = self.llm_service.send_reasoning_request(&prompt).await?;
 
-        let response: StoryResponse = self.llm_service.send_request(messages, 2000, 0.7).await?;
         info!(
             "Successfully generated story with {} sentences",
             response.story.len()

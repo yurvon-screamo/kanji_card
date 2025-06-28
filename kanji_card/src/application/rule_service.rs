@@ -216,13 +216,10 @@ impl RuleService {
             japanese_text
         );
 
-        let messages = vec![LlmService::create_user_message(vec![
-            LlmService::create_text_content(prompt),
-        ])];
-
         let response: GrammarRuleResponse =
-            self.llm_service.send_request(messages, 3000, 0.3).await?;
+            self.llm_service.send_reasoning_request(&prompt).await?;
         info!("Successfully extracted grammar rule: {}", response.title);
+
         Ok(response)
     }
 
@@ -280,13 +277,10 @@ impl RuleService {
             rule_description
         );
 
-        let messages = vec![LlmService::create_user_message(vec![
-            LlmService::create_text_content(prompt),
-        ])];
-
         let response: GrammarRuleResponse =
-            self.llm_service.send_request(messages, 3000, 0.3).await?;
+            self.llm_service.send_reasoning_request(&prompt).await?;
         info!("Successfully generated grammar rule: {}", response.title);
+
         Ok(response)
     }
 }

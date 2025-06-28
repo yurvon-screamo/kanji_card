@@ -49,7 +49,9 @@ struct ServerConfig {
 struct OpenRouterConfig {
     base_url: String,
     api_key: String,
-    model: String,
+    text_model: String,
+    image_model: String,
+    reasoning_model: String,
 }
 
 #[derive(Debug, Deserialize)]
@@ -95,7 +97,9 @@ async fn main() -> Result<()> {
     let llm_service = LlmService::new(
         settings.openrouter.base_url.clone(),
         settings.openrouter.api_key.clone(),
-        settings.openrouter.model.clone(),
+        settings.openrouter.text_model.clone(),
+        settings.openrouter.image_model.clone(),
+        settings.openrouter.reasoning_model.clone(),
     );
     let set_service = SetService::new(
         set_repository.clone(),
