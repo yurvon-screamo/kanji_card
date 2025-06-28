@@ -25,10 +25,7 @@ impl RuleService {
     ) -> Result<GrammarRule> {
         info!("Creating grammar rule from Japanese text");
 
-        let llm_response = self
-            .llm_service
-            .extract_grammar_rule_from_text(japanese_text)
-            .await?;
+        let llm_response = self.extract_grammar_rule_from_text(japanese_text).await?;
 
         let part_of_speech = self.parse_part_of_speech(&llm_response.part_of_speech)?;
 
@@ -71,10 +68,7 @@ impl RuleService {
     ) -> Result<GrammarRule> {
         info!("Creating grammar rule from description");
 
-        let llm_response = self
-            .llm_service
-            .generate_grammar_rule_from_description(rule_description)
-            .await?;
+        let llm_response = self.generate_grammar_rule_from_description(rule_description).await?;
 
         let part_of_speech = self.parse_part_of_speech(&llm_response.part_of_speech)?;
 
@@ -164,5 +158,117 @@ impl RuleService {
         self.rule_repository.remove(user_login, rule_id).await?;
 
         Ok(())
+    }
+
+    #[instrument(skip(self, japanese_text))]
+    async fn extract_grammar_rule_from_text(
+        &self,
+        japanese_text: &str,
+    ) -> Result<GrammarRuleResponse> {
+        info!("Extracting grammar rule from Japanese text");
+
+        let prompt = format!(
+            r#"Ты эксперт по японскому языку и грамматике. Проанализируй предоставленный японский текст и извлеки из него грамматическое правило.
+
+ВАЖНЫЕ ПРАВИЛА:
+1. Определи основное грамматическое правило или конструкцию в тексте
+2. Создай подробный конспект правила на русском языке
+3. Определи часть речи (используй только: Meishi, Daimeishi, Doushi, Keiyoushi, Keiyoudoushi, Fukushi, Rentaishi, Setsuzokushi, Joshi, Jodoushi, Kandoushi)
+4. Создай 3-5 примеров использования правила
+5. Создай 3-5 тестовых вопросов для проверки понимания
+
+Текст для анализа:
+{}
+
+Возвращай ТОЛЬКО валидный JSON в точно таком формате:
+{{
+  "title": "Название правила",
+  "conspect": "Подробный конспект правила на русском языке",
+  "part_of_speech": "Часть речи",
+  "examples": [
+    {{
+      "title": "Заголовок примера",
+      "content": "Японский текст примера",
+      "description": "Объяснение примера на русском",
+      "content_translation": "Перевод примера на русский"
+    }}
+  ],
+  "tests": [
+    {{
+      "rus_description": "Описание задания на русском",
+      "question_content": "Вопрос на японском",
+      "answer": "Правильный ответ"
+    }}
+  ]
+}}
+
+Извлеки грамматическое правило:"#,
+            japanese_text
+        );
+
+        let messages = vec![LlmService::create_user_message(vec![
+            LlmService::create_text_content(prompt)
+        ])];
+
+        let response: GrammarRuleResponse = self.llm_service.send_request(messages, 3000, 0.3).await?;
+        info!("Successfully extracted grammar rule: {}", response.title);
+        Ok(response)
+    }
+
+    #[instrument(skip(self, rule_description))]
+    async fn generate_grammar_rule_from_description(
+        &self,
+        rule_description: &str,
+    ) -> Result<GrammarRuleResponse> {
+        info!("Generating grammar rule from description");
+
+        let prompt = format!(
+            r#"Ты эксперт по японскому языку и грамматике. На основе предоставленного описания создай подробное грамматическое правило.
+
+ВАЖНЫЕ ПРАВИЛА:
+1. Создай полное грамматическое правило на основе описания
+2. Напиши подробный конспект правила на русском языке
+3. Определи часть речи (используй только: Meishi, Daimeishi, Doushi, Keiyoushi, Keiyoudoushi, Fukushi, Rentaishi, Setsuzokushi, Joshi, Jodoushi, Kandoushi)
+4. Создай 3-5 примеров использования правила
+5. Создай 3-5 тестовых вопросов для проверки понимания
+6. Все примеры должны быть на японском языке с переводом
+7. Правило должно быть точным и полезным для изучающих японский язык
+
+Описание правила:
+{}
+
+Возвращай ТОЛЬКО валидный JSON в точно таком формате:
+{{
+  "title": "Название правила",
+  "conspect": "Подробный конспект правила на русском языке",
+  "part_of_speech": "Часть речи",
+  "examples": [
+    {{
+      "title": "Заголовок примера",
+      "content": "Японский текст примера",
+      "description": "Объяснение примера на русском",
+      "content_translation": "Перевод примера на русский"
+    }}
+  ],
+  "tests": [
+    {{
+      "rus_description": "Описание задания на русском",
+      "question_content": "Вопрос на японском",
+      "answer": "Правильный ответ"
+    }}
+  ]
+}}
+
+Создай грамматическое правило:"#,
+            rule_description
+        );
+
+        let messages = vec![LlmService::create_user_message(vec![
+            LlmService::create_text_content(prompt)
+        ])];
+
+        let response: GrammarRuleResponse = self.llm_service.send_request(messages, 3000, 0.3).await?;
+        info!("Successfully generated grammar rule: {}", response.title);
+        Ok(response)
     }
 }

@@ -1,5 +1,5 @@
 use crate::domain::word::{CardSet, SetState};
-use crate::llm::{ExtractedWord, LlmService};
+use crate::llm::{ExtractedWord, LlmService, StoryResponse, WordsResponse};
 use crate::word_release_repository::WordReleaseRepository;
 use crate::word_repository::WordRepository;
 use anyhow::Result;
@@ -29,9 +29,36 @@ impl SetService {
     #[instrument(skip(self, text))]
     pub async fn extract_words_from_text(&self, text: String) -> Result<Vec<ExtractedWord>> {
         info!("Extracting words from text");
-        let words = self.llm_service.extract_words_from_text(&text).await?;
-        info!("Successfully extracted {} words from text", words.len());
-        Ok(words.into_iter().collect())
+        let prompt = format!(
+            r#"Ты эксперт по японскому языку. Извлеки все японские слова из следующего текста и предоставь точные переводы.
+
+ВАЖНЫЕ ПРАВИЛА:
+1. Извлекай ТОЛЬКО японские слова (хирагана, катакана, кандзи или смешанные)
+2. Предоставляй точные русские переводы
+3. Игнорируй знаки препинания, числа и не-японский текст
+4. Каждое слово должно извлекаться отдельно (не объединяй фразы)
+5. Включай частицы (は, が, を, に и т.д.) как отдельные слова, если они встречаются отдельно
+6. Для указательных местоимений (これ, それ, あれ и т.д.) предоставляй конкретные переводы
+7. Пропускай дубликаты - если одно и то же слово встречается несколько раз, включи его только один раз
+
+Возвращай ТОЛЬКО валидный JSON в точно таком формате:
+{{"words": [{{"word": "japanese_word", "translation": "russian_translation"}}]}}
+
+Текст для анализа:
+{}"#,
+            text
+        );
+
+        let messages = vec![LlmService::create_user_message(vec![
+            LlmService::create_text_content(prompt),
+        ])];
+
+        let response: WordsResponse = self.llm_service.send_request(messages, 4000, 0.1).await?;
+        info!(
+            "Successfully extracted {} words from text",
+            response.words.len()
+        );
+        Ok(response.words)
     }
 
     #[instrument(skip(self, image_data))]
@@ -41,12 +68,33 @@ impl SetService {
     ) -> Result<Vec<ExtractedWord>> {
         info!("Extracting words from image");
         let image_base64 = general_purpose::STANDARD.encode(&image_data);
-        let words = self
-            .llm_service
-            .extract_words_from_image(&image_base64)
-            .await?;
-        info!("Successfully extracted {} words from image", words.len());
-        Ok(words.into_iter().collect())
+        let prompt = r#"Ты эксперт по японскому языку. Извлеки все японские слова из этого изображения и предоставь точные переводы.
+
+ВАЖНЫЕ ПРАВИЛА:
+1. Извлекай ТОЛЬКО японские слова (хирагана, катакана, кандзи или смешанные)
+2. Предоставляй точные русские переводы
+3. Игнорируй знаки препинания, числа и не-японский текст
+4. Каждое слово должно извлекаться отдельно (не объединяй фразы)
+5. Включай частицы (は, が, を, に и т.д.) как отдельные слова, если они встречаются отдельно
+6. Для указательных местоимений (これ, それ, あれ и т.д.) предоставляй конкретные переводы
+7. Пропускай дубликаты - если одно и то же слово встречается несколько раз, включи его только один раз
+
+Возвращай ТОЛЬКО валидный JSON в точно таком формате:
+{"words": [{"word": "japanese_word", "translation": "russian_translation"}]}
+
+Проанализируй изображение и извлеки все японские слова:"#;
+
+        let messages = vec![LlmService::create_user_message(vec![
+            LlmService::create_text_content(prompt.to_string()),
+            LlmService::create_image_content(&image_base64),
+        ])];
+
+        let response: WordsResponse = self.llm_service.send_request(messages, 4000, 0.1).await?;
+        info!(
+            "Successfully extracted {} words from image",
+            response.words.len()
+        );
+        Ok(response.words)
     }
 
     #[instrument(skip(self, words), fields(user_login = %user_login))]
@@ -116,7 +164,7 @@ impl SetService {
 
         for word_data in unique_words {
             if !current_set.is_writabe() {
-                match self.llm_service.generate_story(current_set.words()).await {
+                match self.generate_story_for_words(current_set.words()).await {
                     Ok((story, story_translate)) => {
                         if let Err(e) = current_set.put_story(&story, &story_translate) {
                             error!("Failed to put story to set: {:?}", e);
@@ -141,7 +189,7 @@ impl SetService {
         }
 
         if !current_set.is_writabe() {
-            match self.llm_service.generate_story(current_set.words()).await {
+            match self.generate_story_for_words(current_set.words()).await {
                 Ok((story, story_translate)) => {
                     if let Err(e) = current_set.put_story(&story, &story_translate) {
                         error!("Failed to put story to final set: {:?}", e);
@@ -217,5 +265,51 @@ impl SetService {
 
         info!("Successfully marked words as tobe for user {}", user_login);
         Ok(())
+    }
+
+    #[instrument(skip(self, words))]
+    async fn generate_story_for_words(
+        &self,
+        words: &[crate::domain::word::Card],
+    ) -> Result<(Vec<String>, Vec<String>)> {
+        info!("Generating story from {} words", words.len());
+
+        let words_list: Vec<String> = words
+            .iter()
+            .map(|c| format!("{} - {}", c.word(), c.translation()))
+            .collect();
+
+        let prompt = format!(
+            r#"Ты эксперт по японскому языку и рассказчик. Создай связную короткую историю, используя предоставленные японские слова. Используй ТОЛЬКО грамматику уровня N5.
+
+ВАЖНЫЕ ПРАВИЛА:
+1. Используй ВСЕ предоставленные слова в истории
+2. Ты также можешь использовать базовые японские слова (частицы, обычные глаголы, прилагательные), чтобы сделать историю связной
+3. Делай историю простой и понятной для изучающих японский язык
+4. История должна быть длиной 3-5 предложений
+5. Каждое предложение должно быть на отдельной строке
+6. Предоставь точный русский перевод для каждого предложения
+7. История должна быть логичной и интересной
+
+Слова для использования:
+{}
+
+Возвращай ТОЛЬКО валидный JSON в точно таком формате:
+{{"story": ["sentence1_in_japanese", "sentence2_in_japanese", "sentence3_in_japanese"], "story_translate": ["sentence1_in_russian", "sentence2_in_russian", "sentence3_in_russian"]}}
+
+Создай историю:"#,
+            words_list.join("\n")
+        );
+
+        let messages = vec![LlmService::create_user_message(vec![
+            LlmService::create_text_content(prompt),
+        ])];
+
+        let response: StoryResponse = self.llm_service.send_request(messages, 2000, 0.7).await?;
+        info!(
+            "Successfully generated story with {} sentences",
+            response.story.len()
+        );
+        Ok((response.story, response.story_translate))
     }
 }
