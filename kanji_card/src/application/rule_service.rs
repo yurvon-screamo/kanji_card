@@ -162,7 +162,7 @@ impl RuleService {
         Ok(())
     }
 
-    #[instrument(skip(self, japanese_text))]
+    #[instrument(skip(self))]
     async fn extract_grammar_rule_from_text(
         &self,
         japanese_text: &str,
@@ -223,7 +223,7 @@ impl RuleService {
         Ok(response)
     }
 
-    #[instrument(skip(self, rule_description))]
+    #[instrument(skip(self))]
     async fn generate_grammar_rule_from_description(
         &self,
         rule_description: &str,
