@@ -82,7 +82,7 @@ impl SetService {
 Возвращай ТОЛЬКО валидный JSON в точно таком формате:
 {"words": [{"word": "japanese_word", "translation": "russian_translation"}]}
 
-Проанализируй изображение и извлеки все японские слова:"#;
+Проанализируй изображение и извлеки все японские слова"#;
 
         let messages = vec![LlmService::create_user_message(vec![
             LlmService::create_text_content(prompt.to_string()),
@@ -297,7 +297,7 @@ impl SetService {
 Возвращай ТОЛЬКО валидный JSON в точно таком формате:
 {{"story": ["sentence1_in_japanese", "sentence2_in_japanese", "sentence3_in_japanese"], "story_translate": ["sentence1_in_russian", "sentence2_in_russian", "sentence3_in_russian"]}}
 
-Создай историю:"#,
+Создай историю"#,
             words_list.join("\n")
         );
 
