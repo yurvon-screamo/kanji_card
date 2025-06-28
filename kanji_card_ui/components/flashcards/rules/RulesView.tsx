@@ -100,6 +100,16 @@ export const RulesView = () => {
         );
     };
 
+    const handleRuleDeleted = () => {
+        // Удаляем правило из списка
+        if (selectedRule) {
+            setRules(prevRules => prevRules.filter(rule => rule.id !== selectedRule.id));
+        }
+        // Возвращаемся к списку правил
+        setViewMode('grid');
+        setSelectedRule(null);
+    };
+
     // Загрузка данных при монтировании
     useEffect(() => {
         loadRules();
@@ -125,6 +135,7 @@ export const RulesView = () => {
                         rule={selectedRule}
                         onStartTest={handleStartTest}
                         onRuleUpdated={handleRuleUpdated}
+                        onRuleDeleted={handleRuleDeleted}
                     />
                 ) : null;
             case 'test':

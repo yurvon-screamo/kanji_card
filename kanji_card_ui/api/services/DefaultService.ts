@@ -12,6 +12,7 @@ import type { ExtractWordsFromImageRequest } from '../models/ExtractWordsFromIma
 import type { ExtractWordsFromTextRequest } from '../models/ExtractWordsFromTextRequest';
 import type { MarkAsTobeRequest } from '../models/MarkAsTobeRequest';
 import type { ReleaseRuleRequest } from '../models/ReleaseRuleRequest';
+import type { RemoveRuleRequest } from '../models/RemoveRuleRequest';
 import type { RuleDetailResponse } from '../models/RuleDetailResponse';
 import type { RuleResponse } from '../models/RuleResponse';
 import type { SaveWordsRequest } from '../models/SaveWordsRequest';
@@ -240,6 +241,26 @@ export class DefaultService {
             url: '/api/set/rules/release',
             body: requestBody,
             mediaType: 'application/json',
+            errors: {
+                404: `Rule not found`,
+                500: `Internal server error`,
+            },
+        });
+    }
+    /**
+     * @param id Rule ID
+     * @returns any Rule removed successfully
+     * @throws ApiError
+     */
+    public static removeRule(
+        id: string,
+    ): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'DELETE',
+            url: '/api/set/rules/{id}',
+            path: {
+                'id': id,
+            },
             errors: {
                 404: `Rule not found`,
                 500: `Internal server error`,

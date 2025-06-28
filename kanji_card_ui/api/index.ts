@@ -20,6 +20,7 @@ export type { LoginRequest } from './models/LoginRequest';
 export type { MarkAsTobeRequest } from './models/MarkAsTobeRequest';
 export type { RegisterRequest } from './models/RegisterRequest';
 export type { ReleaseRuleRequest } from './models/ReleaseRuleRequest';
+export type { RemoveRuleRequest } from './models/RemoveRuleRequest';
 export type { RuleDetailResponse } from './models/RuleDetailResponse';
 export type { RuleExampleResponse } from './models/RuleExampleResponse';
 export type { RuleResponse } from './models/RuleResponse';

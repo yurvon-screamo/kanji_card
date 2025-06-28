@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { RuleDetailResponse, DefaultService, ReleaseRuleRequest } from "@/api";
 import { Button, Card, CardHeader } from "@fluentui/react-components";
-import { Play, BookOpen, Eye, EyeOff, CheckCircle } from "lucide-react";
+import { Play, BookOpen, Eye, EyeOff, CheckCircle, Trash2 } from "lucide-react";
 import { colors } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { getPartOfSpeechLabel } from "@/lib/partOfSpeechUtils";
@@ -11,15 +11,18 @@ interface RuleDetailModeProps {
   rule: RuleDetailResponse;
   onStartTest: () => void;
   onRuleUpdated?: (updatedRule: RuleDetailResponse) => void;
+  onRuleDeleted?: () => void;
 }
 
 export const RuleDetailMode = ({
   rule,
   onStartTest,
   onRuleUpdated,
+  onRuleDeleted,
 }: RuleDetailModeProps) => {
   const [showTranslations, setShowTranslations] = useState<{ [key: number]: boolean }>({});
   const [isReleasing, setIsReleasing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleReleaseRule = async () => {
     if (rule.is_released || isReleasing) return;
@@ -43,6 +46,26 @@ export const RuleDetailMode = ({
       console.error('Ошибка при отметке правила как изученного:', error);
     } finally {
       setIsReleasing(false);
+    }
+  };
+
+  const handleDeleteRule = async () => {
+    if (isDeleting) return;
+
+    const confirmed = window.confirm('Вы уверены, что хотите удалить это правило? Это действие нельзя отменить.');
+    if (!confirmed) return;
+
+    setIsDeleting(true);
+    try {
+      await DefaultService.removeRule(rule.id);
+
+      if (onRuleDeleted) {
+        onRuleDeleted();
+      }
+    } catch (error) {
+      console.error('Ошибка при удалении правила:', error);
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -77,27 +100,36 @@ export const RuleDetailMode = ({
                 )}>
                   {getPartOfSpeechLabel(rule.part_of_speech)}
                 </span>
-                <div className="ml-auto flex items-center space-x-4">
-                  {!rule.is_released && (
-                    <Button
-                      appearance="secondary"
-                      onClick={handleReleaseRule}
-                      disabled={isReleasing}
-                    >
-                      <CheckCircle className="h-4 w-4 mr-2" />
-                      {isReleasing ? "Отмечаю..." : "Выучено"}
-                    </Button>
-                  )}
-                  {rule.tests.length > 0 && (
-                    <Button
-                      appearance="primary"
-                      onClick={onStartTest}
-                    >
-                      <Play className="h-4 w-4 mr-2" />
-                      Начать тест ({rule.tests.length})
-                    </Button>
-                  )}
-                </div>
+                <Button
+                  appearance="subtle"
+                  onClick={handleDeleteRule}
+                  disabled={isDeleting}
+                  className="px-3 py-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {isDeleting ? "Удаляю..." : "Удалить"}
+                </Button>
+                {!rule.is_released && (
+                  <Button
+                    className="px-3 py-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    appearance="subtle"
+                    onClick={handleReleaseRule}
+                    disabled={isReleasing}
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    {isReleasing ? "Отмечаю..." : "Выучено"}
+                  </Button>
+                )}
+                {rule.tests.length > 0 && (
+                  <Button
+                    className="px-3 py-1"
+                    appearance="primary"
+                    onClick={onStartTest}
+                  >
+                    <Play className="h-4 w-4 mr-2" />
+                    Начать тест ({rule.tests.length})
+                  </Button>
+                )}
               </div>
             </div>
           }
@@ -110,7 +142,7 @@ export const RuleDetailMode = ({
           header={
             <div className="space-y-3">
               <h2 className={cn("text-lg font-semibold", colors.ui.text.primary)}>
-                Описание
+                Конспект
               </h2>
               <div className={cn("text-base leading-relaxed prose prose-sm max-w-none", colors.ui.text.secondary)}>
                 <ReactMarkdown
