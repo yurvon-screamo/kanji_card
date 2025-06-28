@@ -158,7 +158,13 @@ export const RuleTestMode = ({
               <textarea
                 value={userAnswer}
                 onChange={(e) => setUserAnswer(e.target.value)}
-                placeholder="Введите ваш ответ..."
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey && !showResult && userAnswer.trim()) {
+                    e.preventDefault();
+                    handleSubmit();
+                  }
+                }}
+                placeholder="Введите ваш ответ... (Enter для отправки)"
                 className={cn(
                   "w-full min-w-0 p-3 border rounded-lg resize-none",
                   "focus:outline-none focus:ring-2 focus:ring-blue-500",

@@ -43,7 +43,7 @@ export const AddCardsView = ({ setViewMode }: AddCardsViewProps) => {
                     ))}
                 </div>
             </Toolbar>
-            
+
             <div className="pt-16">
                 <LayoutContainer>
                     <div className="max-w-3xl mx-auto px-4 py-8">
