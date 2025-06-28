@@ -172,7 +172,7 @@ impl LlmService {
         T: for<'de> Deserialize<'de>,
     {
         let messages = vec![create_user_message(vec![create_text_content(prompt)])];
-        let max_completion_tokens: u32 = 30000;
+        let max_completion_tokens: u32 = 13000;
         self.invoke_reasoning(&self.reasoning_model, messages, max_completion_tokens)
             .await
     }
