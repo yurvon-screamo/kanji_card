@@ -48,7 +48,7 @@ impl RuleService {
 
         let grammar_rule = GrammarRule::new(
             llm_response.title,
-            llm_response.description,
+            llm_response.conspect,
             part_of_speech,
             examples,
             tests,
@@ -94,7 +94,7 @@ impl RuleService {
 
         let grammar_rule = GrammarRule::new(
             llm_response.title,
-            llm_response.description,
+            llm_response.conspect,
             part_of_speech,
             examples,
             tests,
