@@ -116,21 +116,21 @@ impl LlmService {
     pub async fn extract_words_from_text(&self, text: &str) -> Result<Vec<ExtractedWord>> {
         info!("Extracting words from text");
         let prompt = format!(
-            r#"You are a Japanese language expert. Extract all Japanese words from the following text and provide accurate translations.
+            r#"Ты эксперт по японскому языку. Извлеки все японские слова из следующего текста и предоставь точные переводы.
 
-IMPORTANT RULES:
-1. Extract ONLY Japanese words (hiragana, katakana, kanji, or mixed)
-3. Provide accurate Russian translations
-4. Ignore punctuation marks, numbers, and non-Japanese text
-5. Each word should be extracted separately (don't combine phrases)
-6. Include particles (は, が, を, に, etc.) as separate words if they appear alone
-7. For demonstrative pronouns (これ, それ, あれ, etc.), provide specific translations
-8. Skip duplicates - if the same word appears multiple times, include it only once
+ВАЖНЫЕ ПРАВИЛА:
+1. Извлекай ТОЛЬКО японские слова (хирагана, катакана, кандзи или смешанные)
+2. Предоставляй точные русские переводы
+3. Игнорируй знаки препинания, числа и не-японский текст
+4. Каждое слово должно извлекаться отдельно (не объединяй фразы)
+5. Включай частицы (は, が, を, に и т.д.) как отдельные слова, если они встречаются отдельно
+6. Для указательных местоимений (これ, それ, あれ и т.д.) предоставляй конкретные переводы
+7. Пропускай дубликаты - если одно и то же слово встречается несколько раз, включи его только один раз
 
-Return ONLY valid JSON in this exact format:
+Возвращай ТОЛЬКО валидный JSON в точно таком формате:
 {{"words": [{{"word": "japanese_word", "translation": "russian_translation"}}]}}
 
-Text to analyze:
+Текст для анализа:
 {}"#,
             text
         );
@@ -156,21 +156,21 @@ Text to analyze:
     #[instrument(skip(self, image_base64))]
     pub async fn extract_words_from_image(&self, image_base64: &str) -> Result<Vec<ExtractedWord>> {
         info!("Extracting words from image");
-        let prompt = r#"You are a Japanese language expert. Extract all Japanese words from this image and provide accurate translations.
+        let prompt = r#"Ты эксперт по японскому языку. Извлеки все японские слова из этого изображения и предоставь точные переводы.
 
-IMPORTANT RULES:
-1. Extract ONLY Japanese words (hiragana, katakana, kanji, or mixed)
-2. Provide accurate Russian translations
-3. Ignore punctuation marks, numbers, and non-Japanese text
-4. Each word should be extracted separately (don't combine phrases)
-5. Include particles (は, が, を, に, etc.) as separate words if they appear alone
-6. For demonstrative pronouns (これ, それ, あれ, etc.), provide specific translations
-7. Skip duplicates - if the same word appears multiple times, include it only once
+ВАЖНЫЕ ПРАВИЛА:
+1. Извлекай ТОЛЬКО японские слова (хирагана, катакана, кандзи или смешанные)
+2. Предоставляй точные русские переводы
+3. Игнорируй знаки препинания, числа и не-японский текст
+4. Каждое слово должно извлекаться отдельно (не объединяй фразы)
+5. Включай частицы (は, が, を, に и т.д.) как отдельные слова, если они встречаются отдельно
+6. Для указательных местоимений (これ, それ, あれ и т.д.) предоставляй конкретные переводы
+7. Пропускай дубликаты - если одно и то же слово встречается несколько раз, включи его только один раз
 
-Return ONLY valid JSON in this exact format:
+Возвращай ТОЛЬКО валидный JSON в точно таком формате:
 {"words": [{"word": "japanese_word", "translation": "russian_translation"}]}
 
-Analyze the image and extract Japanese text:"#;
+Проанализируй изображение и извлеки все японские слова:"#;
 
         let image_url = format!("data:image/jpeg;base64,{}", image_base64);
 
@@ -292,24 +292,24 @@ Analyze the image and extract Japanese text:"#;
             .collect();
 
         let prompt = format!(
-            r#"You are a Japanese language expert and storyteller. Create a coherent short story using the provided Japanese words. Use grammar N5 level ONLY.
+            r#"Ты эксперт по японскому языку и рассказчик. Создай связную короткую историю, используя предоставленные японские слова. Используй ТОЛЬКО грамматику уровня N5.
 
-IMPORTANT RULES:
-1. Use ALL the provided words in the story
-2. You may also use basic Japanese words (particles, common verbs, adjectives) to make the story coherent
-3. Keep the story simple and understandable for Japanese learners
-4. The story should be 3-5 sentences long
-5. Each sentence should be on a separate line
-6. Provide accurate Russian translation for each sentence
-7. The story should be logical and interesting
+ВАЖНЫЕ ПРАВИЛА:
+1. Используй ВСЕ предоставленные слова в истории
+2. Ты также можешь использовать базовые японские слова (частицы, обычные глаголы, прилагательные), чтобы сделать историю связной
+3. Делай историю простой и понятной для изучающих японский язык
+4. История должна быть длиной 3-5 предложений
+5. Каждое предложение должно быть на отдельной строке
+6. Предоставь точный русский перевод для каждого предложения
+7. История должна быть логичной и интересной
 
-Words to use:
+Слова для использования:
 {}
 
-Return ONLY valid JSON in this exact format:
+Возвращай ТОЛЬКО валидный JSON в точно таком формате:
 {{"story": ["sentence1_in_japanese", "sentence2_in_japanese", "sentence3_in_japanese"], "story_translate": ["sentence1_in_russian", "sentence2_in_russian", "sentence3_in_russian"]}}
 
-Create the story:"#,
+Создай историю:"#,
             words_list.join("\n")
         );
 
@@ -427,39 +427,47 @@ Create the story:"#,
     ) -> Result<GrammarRuleResponse> {
         info!("Extracting grammar rule from Japanese text");
         let prompt = format!(
-            r#"You are a Japanese language expert. Analyze the following Japanese text and identify the main grammar rule being used. Create a comprehensive grammar rule explanation. Use words N5 level ONLY.
+            r#"Ты эксперт по японскому языку. Проанализируй следующий японский текст и определи основное грамматическое правило, которое используется. Создай подробное объяснение грамматического правила. Используй слова ТОЛЬКО уровня N5.
 
-IMPORTANT RULES:
-1. Identify the primary grammar pattern/rule in the text
-2. Provide a clear title for the rule
-3. Give a detailed conspect in Russian
-4. Determine the correct part of speech from: Meishi, Daimeishi, Doushi, Keiyoushi, Keiyoudoushi, Fukushi, Rentaishi, Setsuzokushi, Joshi, Jodoushi, Kandoushi
-5. Create 4 examples with Japanese content, Russian translation, and explanations
-6. Create 5 simple test questions that SPECIFICALLY test the identified grammar rule. Each test MUST focus on the main grammar pattern and should be one of these types:
-   - Fill in the blank: provide a sentence with one missing word/particle that tests the grammar rule (answer is 1-2 words)
-   - Multiple choice: provide options within the question like "Choose: A) は B) が C) を" where the choice tests the grammar rule
-   - Complete the ending: provide sentence start, ask to complete with the specific grammar form being taught
-   - Single word answer: ask for specific word/form in Japanese that demonstrates the grammar rule (1-2 words max)
-   - Each test question MUST directly test understanding of the main grammar rule, not vocabulary or unrelated grammar
-   - NO full sentence translations or compositions
+ВАЖНЫЕ ПРАВИЛА:
+1. Определи основной грамматический паттерн/правило в тексте
+2. Предоставь четкое название для правила
+3. Дай подробный конспект на русском языке, который ДОЛЖЕН включать:
+   - Четкое определение грамматического правила
+   - Пошаговое объяснение того, как работает правило и его структура
+   - Конкретные паттерны образования с конкретными примерами
+   - Когда и как использовать это грамматическое правило
+   - Общие контексты использования и ситуации
+   - Любые исключения или особые случаи
+   - Сравнение с похожими грамматическими паттернами, если это уместно
+   - Требуемые формы склонения/спряжения с похожими грамматическими паттернами, если это уместно
+4. Определи правильную часть речи из: Meishi, Daimeishi, Doushi, Keiyoushi, Keiyoudoushi, Fukushi, Rentaishi, Setsuzokushi, Joshi, Jodoushi, Kandoushi
+5. Создай 4 примера с японским содержанием, русским переводом и объяснениями
+6. Создай 5 простых тестовых вопросов, которые КОНКРЕТНО тестируют определенное грамматическое правило. Каждый тест ДОЛЖЕН фокусироваться на основном грамматическом паттерне и должен быть одного из этих типов:
+   - Заполни пропуск: предоставь предложение с одним пропущенным словом/частицей, которое тестирует грамматическое правило (ответ 1-2 слова)
+   - Множественный выбор: предоставь варианты в вопросе типа "Выбери: A) は B) が C) を", где выбор тестирует грамматическое правило
+   - Завершить окончание: предоставь начало предложения, попроси завершить конкретной грамматической формой, которая изучается
+   - Ответ одним словом: попроси конкретное слово/форму на японском, которое демонстрирует грамматическое правило (максимум 1-2 слова)
+   - Каждый тестовый вопрос ДОЛЖЕН напрямую тестировать понимание основного грамматического правила, а не словарный запас или несвязанную грамматику
+   - НИКАКИХ полных переводов предложений или сочинений
 
-CRITICAL: All test questions must test ONLY the specific grammar rule identified in the title. Do NOT create tests about:
-- General vocabulary knowledge
-- Unrelated grammar patterns
-- Reading comprehension
-- Cultural knowledge
+КРИТИЧНО: Все тестовые вопросы должны тестировать ТОЛЬКО конкретное грамматическое правило, определенное в заголовке. НЕ создавай тесты о:
+- Общих знаниях словарного запаса
+- Несвязанных грамматических паттернах
+- Понимании прочитанного
+- Культурных знаниях
 
-Each test must require the student to demonstrate understanding of the specific grammar rule being taught.
+Каждый тест должен требовать от студента демонстрации понимания конкретного изучаемого грамматического правила.
 
-EXAMPLES OF GOOD TESTS:
-- For particle は: "私___学生です。Choose: A) は B) が C) を" (tests は as topic marker)
-- For past tense: "昨日映画を見___。Complete with past form" (tests past tense formation)
-- For adjective conjugation: "この本は___です。Fill the blank with 'interesting' in polite form" (tests adjective usage)
+ПРИМЕРЫ ХОРОШИХ ТЕСТОВ:
+- Для частицы は: "私___学生です。Выбери: A) は B) が C) を" (тестирует は как маркер темы)
+- Для прошедшего времени: "昨日映画を見___。Завершить формой прошедшего времени" (тестирует образование прошедшего времени)
+- Для спряжения прилагательных: "この本は___です。Заполни пропуск словом 'интересный' в вежливой форме" (тестирует использование прилагательных)
 
-Return ONLY valid JSON in this exact format:
+Возвращай ТОЛЬКО валидный JSON в точно таком формате:
 {{"title": "rule_title", "conspect": "detailed_conspect_in_russian", "part_of_speech": "part_of_speech_enum", "examples": [{{"title": "example_title", "content": "japanese_example", "description": "explanation_in_russian", "content_translation": "russian_translation"}}], "tests": [{{"rus_description": "test_description_in_russian", "question_content": "japanese_question", "answer": "correct_answer"}}]}}
 
-Text to analyze:
+Текст для анализа:
 {}"#,
             japanese_text
         );
@@ -474,39 +482,47 @@ Text to analyze:
     ) -> Result<GrammarRuleResponse> {
         info!("Generating grammar rule from description");
         let prompt = format!(
-            r#"You are a Japanese language expert. Based on the following description, create a comprehensive Japanese grammar rule explanation. Use words N5 level ONLY.
+            r#"Ты эксперт по японскому языку. На основе следующего описания создай подробное объяснение японского грамматического правила. Используй слова ТОЛЬКО уровня N5.
 
-IMPORTANT RULES:
-1. Create a clear title for the rule based on the description
-2. Provide a detailed conspect in Russian
-3. Determine the correct part of speech from: Meishi, Daimeishi, Doushi, Keiyoushi, Keiyoudoushi, Fukushi, Rentaishi, Setsuzokushi, Joshi, Jodoushi, Kandoushi
-4. Create 4 examples with Japanese content, Russian translation, and explanations
-5. Create 5 simple test questions that SPECIFICALLY test the grammar rule from the description. Each test MUST focus on the main grammar pattern and should be one of these types:
-   - Fill in the blank: provide a sentence with one missing word/particle that tests the grammar rule (answer is 1-2 words)
-   - Multiple choice: provide options within the question like "Choose: A) は B) が C) を" where the choice tests the grammar rule
-   - Complete the ending: provide sentence start, ask to complete with the specific grammar form being taught
-   - Single word answer: ask for specific word/form in Japanese that demonstrates the grammar rule (1-2 words max)
-   - Each test question MUST directly test understanding of the main grammar rule, not vocabulary or unrelated grammar
-   - NO full sentence translations or compositions
-6. Make sure all content is accurate and educational
+ВАЖНЫЕ ПРАВИЛА:
+1. Создай четкое название для правила на основе описания
+2. Предоставь подробный конспект на русском языке, который ДОЛЖЕН включать:
+   - Четкое определение грамматического правила
+   - Пошаговое объяснение того, как работает правило и его структура
+   - Конкретные паттерны образования с конкретными примерами
+   - Когда и как использовать это грамматическое правило
+   - Общие контексты использования и ситуации
+   - Любые исключения или особые случаи
+   - Сравнение с похожими грамматическими паттернами, если это уместно
+   - Требуемые формы склонения/спряжения с похожими грамматическими паттернами, если это уместно
+3. Определи правильную часть речи из: Meishi, Daimeishi, Doushi, Keiyoushi, Keiyoudoushi, Fukushi, Rentaishi, Setsuzokushi, Joshi, Jodoushi, Kandoushi
+4. Создай 4 примера с японским содержанием, русским переводом и объяснениями
+5. Создай 5 простых тестовых вопросов, которые КОНКРЕТНО тестируют грамматическое правило из описания. Каждый тест ДОЛЖЕН фокусироваться на основном грамматическом паттерне и должен быть одного из этих типов:
+   - Заполни пропуск: предоставь предложение с одним пропущенным словом/частицей, которое тестирует грамматическое правило (ответ 1-2 слова)
+   - Множественный выбор: предоставь варианты в вопросе типа "Выбери: A) は B) が C) を", где выбор тестирует грамматическое правило
+   - Завершить окончание: предоставь начало предложения, попроси завершить конкретной грамматической формой, которая изучается
+   - Ответ одним словом: попроси конкретное слово/форму на японском, которое демонстрирует грамматическое правило (максимум 1-2 слова)
+   - Каждый тестовый вопрос ДОЛЖЕН напрямую тестировать понимание основного грамматического правила, а не словарный запас или несвязанную грамматику
+   - НИКАКИХ полных переводов предложений или сочинений
+6. Убедись, что весь контент точен и образователен
 
-CRITICAL: All test questions must test ONLY the specific grammar rule from the description. Do NOT create tests about:
-- General vocabulary knowledge
-- Unrelated grammar patterns
-- Reading comprehension
-- Cultural knowledge
+КРИТИЧНО: Все тестовые вопросы должны тестировать ТОЛЬКО конкретное грамматическое правило из описания. НЕ создавай тесты о:
+- Общих знаниях словарного запаса
+- Несвязанных грамматических паттернах
+- Понимании прочитанного
+- Культурных знаниях
 
-Each test must require the student to demonstrate understanding of the specific grammar rule being taught.
+Каждый тест должен требовать от студента демонстрации понимания конкретного изучаемого грамматического правила.
 
-EXAMPLES OF GOOD TESTS:
-- For particle は: "私___学生です。Choose: A) は B) が C) を" (tests は as topic marker)
-- For past tense: "昨日映画を見___。Complete with past form" (tests past tense formation)
-- For adjective conjugation: "この本は___です。Fill the blank with 'interesting' in polite form" (tests adjective usage)
+ПРИМЕРЫ ХОРОШИХ ТЕСТОВ:
+- Для частицы は: "私___学生です。Выбери: A) は B) が C) を" (тестирует は как маркер темы)
+- Для прошедшего времени: "昨日映画を見___。Завершить формой прошедшего времени" (тестирует образование прошедшего времени)
+- Для спряжения прилагательных: "この本は___です。Заполни пропуск словом 'интересный' в вежливой форме" (тестирует использование прилагательных)
 
-Return ONLY valid JSON in this exact format:
+Возвращай ТОЛЬКО валидный JSON в точно таком формате:
 {{"title": "rule_title", "conspect": "detailed_conspect_in_russian", "part_of_speech": "part_of_speech_enum", "examples": [{{"title": "example_title", "content": "japanese_example", "description": "explanation_in_russian", "content_translation": "russian_translation"}}], "tests": [{{"rus_description": "test_description_in_russian", "question_content": "japanese_question", "answer": "correct_answer"}}]}}
 
-Rule description:
+Описание правила:
 {}"#,
             rule_description
         );
