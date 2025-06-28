@@ -104,14 +104,20 @@ export const RuleDetailMode = ({
                   appearance="subtle"
                   onClick={handleDeleteRule}
                   disabled={isDeleting}
-                  className="px-3 py-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className={cn(
+                    "px-3 py-1",
+                    "text-red-600 hover:text-red-700 hover:bg-red-50"
+                  )}
                 >
                   <Trash2 className="h-4 w-4 mr-2" />
                   {isDeleting ? "Удаляю..." : "Удалить"}
                 </Button>
                 {!rule.is_released && (
                   <Button
-                    className="px-3 py-1 text-red-600 hover:text-red-700 hover:bg-red-50"
+                    className={cn(
+                      "px-3 py-1",
+                      "text-green-600 hover:text-green-700 hover:bg-green-50"
+                    )}
                     appearance="subtle"
                     onClick={handleReleaseRule}
                     disabled={isReleasing}
@@ -194,6 +200,49 @@ export const RuleDetailMode = ({
                       )}>
                         {children}
                       </code>
+                    ),
+                    table: ({ children }) => (
+                      <div className="overflow-x-auto mb-4">
+                        <table className={cn(
+                          "min-w-full border-collapse",
+                          "border border-gray-300"
+                        )}>
+                          {children}
+                        </table>
+                      </div>
+                    ),
+                    thead: ({ children }) => (
+                      <thead className="bg-gray-50">
+                        {children}
+                      </thead>
+                    ),
+                    tbody: ({ children }) => (
+                      <tbody className="bg-white">
+                        {children}
+                      </tbody>
+                    ),
+                    tr: ({ children }) => (
+                      <tr className="border-b border-gray-200">
+                        {children}
+                      </tr>
+                    ),
+                    th: ({ children }) => (
+                      <th className={cn(
+                        "px-4 py-2 text-left font-semibold",
+                        "border-r border-gray-300 last:border-r-0",
+                        colors.ui.text.primary
+                      )}>
+                        {children}
+                      </th>
+                    ),
+                    td: ({ children }) => (
+                      <td className={cn(
+                        "px-4 py-2",
+                        "border-r border-gray-300 last:border-r-0",
+                        colors.ui.text.secondary
+                      )}>
+                        {children}
+                      </td>
                     ),
                   }}
                 >

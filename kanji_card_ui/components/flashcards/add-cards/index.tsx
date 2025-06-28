@@ -2,6 +2,7 @@ import React, { useState } from "react"
 import { ViewMode } from "../shared"
 import { ArrowLeft } from "lucide-react"
 import { LayoutContainer } from "../../ui/LayoutContainer"
+import { Toolbar } from "../../ui/Toolbar"
 import { ManualInput } from "./ManualInput"
 import { FreeTextInput } from "./FreeTextInput"
 import { ImageInput } from "./ImageInput"
@@ -23,8 +24,8 @@ export const AddCardsView = ({ setViewMode }: AddCardsViewProps) => {
     ]
 
     return (
-        <LayoutContainer>
-            <div className="bg-white/80 backdrop-blur-sm border-b border-gray-200/50 p-4 mb-6">
+        <>
+            <Toolbar>
                 <div className="flex space-x-2">
                     <Button appearance="subtle" onClick={() => setViewMode("pool")}>
                         <ArrowLeft className="h-4 w-4 mr-1" />
@@ -41,13 +42,17 @@ export const AddCardsView = ({ setViewMode }: AddCardsViewProps) => {
                         </ToggleButton>
                     ))}
                 </div>
-
-                <div className="mt-8 max-w-3xl mx-auto px-4">
-                    {inputMode === "manual" && <ManualInput />}
-                    {inputMode === "free" && <FreeTextInput />}
-                    {inputMode === "image" && <ImageInput />}
-                </div>
+            </Toolbar>
+            
+            <div className="pt-16">
+                <LayoutContainer>
+                    <div className="max-w-3xl mx-auto px-4 py-8">
+                        {inputMode === "manual" && <ManualInput />}
+                        {inputMode === "free" && <FreeTextInput />}
+                        {inputMode === "image" && <ImageInput />}
+                    </div>
+                </LayoutContainer>
             </div>
-        </LayoutContainer>
+        </>
     )
 }
