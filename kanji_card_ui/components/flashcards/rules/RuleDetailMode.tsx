@@ -5,6 +5,7 @@ import { Play, BookOpen, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { colors } from "@/lib/theme";
 import { cn } from "@/lib/utils";
 import { getPartOfSpeechLabel } from "@/lib/partOfSpeechUtils";
+import ReactMarkdown from "react-markdown";
 
 interface RuleDetailModeProps {
   rule: RuleDetailResponse;
@@ -111,9 +112,62 @@ export const RuleDetailMode = ({
               <h2 className={cn("text-lg font-semibold", colors.ui.text.primary)}>
                 Описание
               </h2>
-              <p className={cn("text-base leading-relaxed", colors.ui.text.secondary)}>
-                {rule.description}
-              </p>
+              <div className={cn("text-base leading-relaxed prose prose-sm max-w-none", colors.ui.text.secondary)}>
+                <ReactMarkdown
+                  components={{
+                    h2: ({ children }) => (
+                      <h2 className={cn("text-lg font-semibold mt-4 mb-2", colors.ui.text.primary)}>
+                        {children}
+                      </h2>
+                    ),
+                    h3: ({ children }) => (
+                      <h3 className={cn("text-base font-semibold mt-3 mb-2", colors.ui.text.primary)}>
+                        {children}
+                      </h3>
+                    ),
+                    p: ({ children }) => (
+                      <p className={cn("mb-3 leading-relaxed", colors.ui.text.secondary)}>
+                        {children}
+                      </p>
+                    ),
+                    ul: ({ children }) => (
+                      <ul className={cn("list-disc list-inside mb-3 space-y-1", colors.ui.text.secondary)}>
+                        {children}
+                      </ul>
+                    ),
+                    ol: ({ children }) => (
+                      <ol className={cn("list-decimal list-inside mb-3 space-y-1", colors.ui.text.secondary)}>
+                        {children}
+                      </ol>
+                    ),
+                    li: ({ children }) => (
+                      <li className={cn("leading-relaxed", colors.ui.text.secondary)}>
+                        {children}
+                      </li>
+                    ),
+                    strong: ({ children }) => (
+                      <strong className={cn("font-semibold", colors.ui.text.primary)}>
+                        {children}
+                      </strong>
+                    ),
+                    em: ({ children }) => (
+                      <em className={cn("italic", colors.ui.text.secondary)}>
+                        {children}
+                      </em>
+                    ),
+                    code: ({ children }) => (
+                      <code className={cn(
+                        "px-1 py-0.5 rounded text-sm font-mono",
+                        "bg-gray-100 text-gray-800"
+                      )}>
+                        {children}
+                      </code>
+                    ),
+                  }}
+                >
+                  {rule.description}
+                </ReactMarkdown>
+              </div>
             </div>
           }
         />

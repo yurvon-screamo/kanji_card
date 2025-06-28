@@ -432,7 +432,7 @@ impl LlmService {
 ВАЖНЫЕ ПРАВИЛА:
 1. Определи основной грамматический паттерн/правило в тексте
 2. Предоставь четкое название для правила
-3. Дай подробный конспект на русском языке, который ДОЛЖЕН включать:
+3. Дай подробный конспект на русском языке в формате Markdown, который ДОЛЖЕН включать:
    - Четкое определение грамматического правила
    - Пошаговое объяснение того, как работает правило и его структура
    - Конкретные паттерны образования с конкретными примерами
@@ -441,6 +441,7 @@ impl LlmService {
    - Любые исключения или особые случаи
    - Сравнение с похожими грамматическими паттернами, если это уместно
    - Требуемые формы склонения/спряжения с похожими грамматическими паттернами, если это уместно
+   - Используй заголовки (##, ###), списки, выделение текста (**жирный**, *курсив*, `тег`) и другие элементы Markdown для структурирования
 4. Определи правильную часть речи из: Meishi, Daimeishi, Doushi, Keiyoushi, Keiyoudoushi, Fukushi, Rentaishi, Setsuzokushi, Joshi, Jodoushi, Kandoushi
 5. Создай 4 примера с японским содержанием, русским переводом и объяснениями
 6. Создай 5 простых тестовых вопросов, которые КОНКРЕТНО тестируют определенное грамматическое правило. Каждый тест ДОЛЖЕН фокусироваться на основном грамматическом паттерне и должен быть одного из этих типов:
@@ -465,7 +466,7 @@ impl LlmService {
 - Для спряжения прилагательных: "この本は___です。Заполни пропуск словом 'интересный' в вежливой форме" (тестирует использование прилагательных)
 
 Возвращай ТОЛЬКО валидный JSON в точно таком формате:
-{{"title": "rule_title", "conspect": "detailed_conspect_in_russian", "part_of_speech": "part_of_speech_enum", "examples": [{{"title": "example_title", "content": "japanese_example", "description": "explanation_in_russian", "content_translation": "russian_translation"}}], "tests": [{{"rus_description": "test_description_in_russian", "question_content": "japanese_question", "answer": "correct_answer"}}]}}
+{{"title": "rule_title", "conspect": "detailed_conspect_in_russian_md", "part_of_speech": "part_of_speech_enum", "examples": [{{"title": "example_title", "content": "japanese_example", "description": "explanation_in_russian", "content_translation": "russian_translation"}}], "tests": [{{"rus_description": "test_description_in_russian", "question_content": "japanese_question", "answer": "correct_answer"}}]}}
 
 Текст для анализа:
 {}"#,
@@ -486,7 +487,7 @@ impl LlmService {
 
 ВАЖНЫЕ ПРАВИЛА:
 1. Создай четкое название для правила на основе описания
-2. Предоставь подробный конспект на русском языке, который ДОЛЖЕН включать:
+2. Предоставь подробный конспект на русском языке в формате Markdown, который ДОЛЖЕН включать:
    - Четкое определение грамматического правила
    - Пошаговое объяснение того, как работает правило и его структура
    - Конкретные паттерны образования с конкретными примерами
@@ -495,6 +496,7 @@ impl LlmService {
    - Любые исключения или особые случаи
    - Сравнение с похожими грамматическими паттернами, если это уместно
    - Требуемые формы склонения/спряжения с похожими грамматическими паттернами, если это уместно
+   - Используй заголовки (##, ###), списки, выделение текста (**жирный**, *курсив*) и другие элементы Markdown для структурирования
 3. Определи правильную часть речи из: Meishi, Daimeishi, Doushi, Keiyoushi, Keiyoudoushi, Fukushi, Rentaishi, Setsuzokushi, Joshi, Jodoushi, Kandoushi
 4. Создай 4 примера с японским содержанием, русским переводом и объяснениями
 5. Создай 5 простых тестовых вопросов, которые КОНКРЕТНО тестируют грамматическое правило из описания. Каждый тест ДОЛЖЕН фокусироваться на основном грамматическом паттерне и должен быть одного из этих типов:
@@ -520,7 +522,7 @@ impl LlmService {
 - Для спряжения прилагательных: "この本は___です。Заполни пропуск словом 'интересный' в вежливой форме" (тестирует использование прилагательных)
 
 Возвращай ТОЛЬКО валидный JSON в точно таком формате:
-{{"title": "rule_title", "conspect": "detailed_conspect_in_russian", "part_of_speech": "part_of_speech_enum", "examples": [{{"title": "example_title", "content": "japanese_example", "description": "explanation_in_russian", "content_translation": "russian_translation"}}], "tests": [{{"rus_description": "test_description_in_russian", "question_content": "japanese_question", "answer": "correct_answer"}}]}}
+{{"title": "rule_title", "conspect": "detailed_conspect_in_russian_md", "part_of_speech": "part_of_speech_enum", "examples": [{{"title": "example_title", "content": "japanese_example", "description": "explanation_in_russian", "content_translation": "russian_translation"}}], "tests": [{{"rus_description": "test_description_in_russian", "question_content": "japanese_question", "answer": "correct_answer"}}]}}
 
 Описание правила:
 {}"#,
