@@ -111,6 +111,7 @@ pub struct LlmService {
     text_model: String,
     image_model: String,
     reasoning_model: String,
+    max_completion_tokens: u32,
 }
 
 impl LlmService {
@@ -120,6 +121,7 @@ impl LlmService {
         text_model: String,
         image_model: String,
         reasoning_model: String,
+        max_completion_tokens: u32,
     ) -> Self {
         info!(
             "Initializing LLM service with text model: {}, image model: {}, reasoning model: {}",
@@ -132,6 +134,7 @@ impl LlmService {
             text_model,
             image_model,
             reasoning_model,
+            max_completion_tokens,
         }
     }
     #[instrument(skip(self, prompt))]
@@ -150,8 +153,7 @@ impl LlmService {
             create_image_content(&image_base64),
         ])];
 
-        let max_tokens: u32 = 10000;
-        self.invoke_with_model(&self.image_model, messages, max_tokens, temperature)
+        self.invoke_with_model(&self.image_model, messages, temperature)
             .await
     }
 
@@ -161,8 +163,7 @@ impl LlmService {
         T: for<'de> Deserialize<'de>,
     {
         let messages = vec![create_user_message(vec![create_text_content(prompt)])];
-        let max_tokens: u32 = 10000;
-        self.invoke_with_model(&self.text_model, messages, max_tokens, temperature)
+        self.invoke_with_model(&self.text_model, messages, temperature)
             .await
     }
 
@@ -172,25 +173,18 @@ impl LlmService {
         T: for<'de> Deserialize<'de>,
     {
         let messages = vec![create_user_message(vec![create_text_content(prompt)])];
-        let max_completion_tokens: u32 = 13000;
-        self.invoke_reasoning(&self.reasoning_model, messages, max_completion_tokens)
-            .await
+        self.invoke_reasoning(&self.reasoning_model, messages).await
     }
 
     #[instrument(skip(self, messages))]
-    async fn invoke_reasoning<T>(
-        &self,
-        model: &str,
-        messages: Vec<Message>,
-        max_completion_tokens: u32,
-    ) -> Result<T>
+    async fn invoke_reasoning<T>(&self, model: &str, messages: Vec<Message>) -> Result<T>
     where
         T: for<'de> Deserialize<'de>,
     {
         let request = OpenRouterReasoningRequest {
             model: model.to_string(),
             messages,
-            max_completion_tokens,
+            max_completion_tokens: self.max_completion_tokens,
         };
 
         let url = format!("{}/chat/completions", self.base_url);
@@ -282,7 +276,6 @@ impl LlmService {
         &self,
         model: &str,
         messages: Vec<Message>,
-        max_tokens: u32,
         temperature: f32,
     ) -> Result<T>
     where
@@ -291,7 +284,7 @@ impl LlmService {
         let request = OpenRouterRequest {
             model: model.to_string(),
             messages,
-            max_tokens,
+            max_tokens: self.max_completion_tokens,
             temperature,
         };
 

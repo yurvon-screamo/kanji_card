@@ -52,6 +52,7 @@ struct OpenRouterConfig {
     text_model: String,
     image_model: String,
     reasoning_model: String,
+    max_completion_tokens: u32,
 }
 
 #[derive(Debug, Deserialize)]
@@ -100,6 +101,7 @@ async fn main() -> Result<()> {
         settings.openrouter.text_model.clone(),
         settings.openrouter.image_model.clone(),
         settings.openrouter.reasoning_model.clone(),
+        settings.openrouter.max_completion_tokens,
     );
     let set_service = SetService::new(
         set_repository.clone(),
@@ -119,7 +121,12 @@ async fn main() -> Result<()> {
         )
         .nest(
             "/api/query",
-            query::query_router(set_repository, release_repository, rule_repository.clone(), jwt_config.clone()),
+            query::query_router(
+                set_repository,
+                release_repository,
+                rule_repository.clone(),
+                jwt_config.clone(),
+            ),
         );
 
     let (router, mut api) = open_api_router.split_for_parts();
