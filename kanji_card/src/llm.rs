@@ -1,3 +1,4 @@
+use crate::domain::rule::JapanesePartOfSpeech;
 use anyhow::{Result, anyhow};
 use base64::{Engine, engine::general_purpose};
 use serde::{Deserialize, Serialize};
@@ -82,7 +83,7 @@ pub struct StoryResponse {
 pub struct GrammarRuleResponse {
     pub title: String,
     pub conspect: String,
-    pub part_of_speech: String,
+    pub part_of_speech: JapanesePartOfSpeech,
     pub examples: Vec<GrammarExampleResponse>,
     pub tests: Vec<GrammarTestResponse>,
 }
@@ -171,7 +172,7 @@ impl LlmService {
         T: for<'de> Deserialize<'de>,
     {
         let messages = vec![create_user_message(vec![create_text_content(prompt)])];
-        let max_completion_tokens: u32 = 50000;
+        let max_completion_tokens: u32 = 30000;
         self.invoke_reasoning(&self.reasoning_model, messages, max_completion_tokens)
             .await
     }
@@ -228,6 +229,8 @@ impl LlmService {
             );
             return Err(anyhow!("OpenRouter API error: {}", error_text));
         }
+
+        info!("Successfully received reasoning response from OpenRouter API");
 
         let openrouter_response: OpenRouterResponse = match response.json().await {
             Ok(resp) => resp,

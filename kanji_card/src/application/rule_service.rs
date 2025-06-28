@@ -2,7 +2,7 @@ use crate::domain::rule::{GrammarRule, JapanesePartOfSpeech, RuleExample, RuleTe
 use crate::llm::{GrammarRuleResponse, LlmService};
 use crate::rule_repository::RuleRepository;
 use anyhow::Result;
-use tracing::{error, info, instrument};
+use tracing::{info, instrument};
 
 pub struct RuleService {
     rule_repository: RuleRepository,
@@ -27,7 +27,7 @@ impl RuleService {
 
         let llm_response = self.extract_grammar_rule_from_text(japanese_text).await?;
 
-        let part_of_speech = self.parse_part_of_speech(&llm_response.part_of_speech)?;
+        let part_of_speech = llm_response.part_of_speech;
 
         let examples: Vec<RuleExample> = llm_response
             .examples
@@ -72,7 +72,7 @@ impl RuleService {
             .generate_grammar_rule_from_description(rule_description)
             .await?;
 
-        let part_of_speech = self.parse_part_of_speech(&llm_response.part_of_speech)?;
+        let part_of_speech = llm_response.part_of_speech;
 
         let examples: Vec<RuleExample> = llm_response
             .examples
@@ -105,25 +105,7 @@ impl RuleService {
         Ok(grammar_rule)
     }
 
-    fn parse_part_of_speech(&self, pos_str: &str) -> Result<JapanesePartOfSpeech> {
-        match pos_str {
-            "Meishi" => Ok(JapanesePartOfSpeech::Meishi),
-            "Daimeishi" => Ok(JapanesePartOfSpeech::Daimeishi),
-            "Doushi" => Ok(JapanesePartOfSpeech::Doushi),
-            "Keiyoushi" => Ok(JapanesePartOfSpeech::Keiyoushi),
-            "Keiyoudoushi" => Ok(JapanesePartOfSpeech::Keiyoudoushi),
-            "Fukushi" => Ok(JapanesePartOfSpeech::Fukushi),
-            "Rentaishi" => Ok(JapanesePartOfSpeech::Rentaishi),
-            "Setsuzokushi" => Ok(JapanesePartOfSpeech::Setsuzokushi),
-            "Joshi" => Ok(JapanesePartOfSpeech::Joshi),
-            "Jodoushi" => Ok(JapanesePartOfSpeech::Jodoushi),
-            "Kandoushi" => Ok(JapanesePartOfSpeech::Kandoushi),
-            _ => {
-                error!("Unknown part of speech: {}", pos_str);
-                Err(anyhow::anyhow!("Unknown part of speech: {}", pos_str))
-            }
-        }
-    }
+
 
     #[instrument(skip(self))]
     pub async fn check_test_answer(
