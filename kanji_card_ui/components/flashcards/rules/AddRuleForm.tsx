@@ -32,10 +32,24 @@ export const AddRuleForm = ({ onRuleAdded }: AddRuleFormProps) => {
 
     try {
       if (mode === 'description') {
-        const request: CreateRuleFromDescriptionRequest = {
-          description: description.trim()
-        };
-        await DefaultService.createRuleFromDescription(request);
+        // Разделяем описания по строкам и фильтруем пустые
+        const descriptions = description
+          .split('\n')
+          .map(desc => desc.trim())
+          .filter(desc => desc.length > 0);
+
+        if (descriptions.length === 0) {
+          setError('Пожалуйста, введите хотя бы одно описание правила');
+          return;
+        }
+
+        // Создаем правила последовательно
+        for (const desc of descriptions) {
+          const request: CreateRuleFromDescriptionRequest = {
+            description: desc
+          };
+          await DefaultService.createRuleFromDescription(request);
+        }
       } else {
         const request: CreateRuleFromTextRequest = {
           text: text.trim()
@@ -96,12 +110,15 @@ export const AddRuleForm = ({ onRuleAdded }: AddRuleFormProps) => {
                   &quot;конструкция て-формы&quot;, &quot;вежливая форма глаголов&quot; и т.д.
                   ИИ создаст подробное объяснение с примерами и тестами.
                 </p>
+                <p className={cn("text-sm mt-2 font-medium", colors.ui.text.primary)}>
+                  💡 Совет: Вы можете ввести несколько правил, разделив их переносом строки. Каждое правило будет создано отдельно.
+                </p>
               </div>
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Введите описание грамматического правила..."
-                rows={4}
+                placeholder="Введите описание грамматического правила...\n\nДля создания нескольких правил введите каждое с новой строки:\nправило использования частицы は\nконструкция て-формы\nвежливая форма глаголов"
+                rows={6}
                 className="w-full"
                 disabled={isLoading}
               />
@@ -139,7 +156,7 @@ export const AddRuleForm = ({ onRuleAdded }: AddRuleFormProps) => {
               icon={<Plus className="h-4 w-4" />}
               disabled={isLoading || !getCurrentInputValue().trim()}
             >
-              {isLoading ? 'Создание...' : 'Создать правило'}
+              {isLoading ? 'Создание...' : (mode === 'description' && description.split('\n').filter(d => d.trim()).length > 1 ? 'Создать правила' : 'Создать правило')}
             </Button>
           </div>
         </form>
