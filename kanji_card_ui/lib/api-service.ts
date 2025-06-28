@@ -1,4 +1,10 @@
-import { AuthService, DefaultService, OpenAPI, MarkAsTobeRequest, ExtractedWord } from '@/api';
+import { OpenAPI, AuthService, DefaultService, ExtractedWord, MarkAsTobeRequest } from '@/api';
+import axios from 'axios';
+
+// Создаем axios instance с таймаутом 3 минуты
+const axiosInstance = axios.create({
+    timeout: 180000, // 3 минуты в миллисекундах
+});
 
 function configureApi() {
     OpenAPI.BASE = process.env.NEXT_PUBLIC_API_URL || '';

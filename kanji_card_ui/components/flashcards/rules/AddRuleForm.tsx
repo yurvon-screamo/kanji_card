@@ -117,7 +117,12 @@ export const AddRuleForm = ({ onRuleAdded }: AddRuleFormProps) => {
               <Textarea
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Введите описание грамматического правила...\n\nДля создания нескольких правил введите каждое с новой строки:\nправило использования частицы は\nконструкция て-формы\nвежливая форма глаголов"
+                placeholder={`Введите описание грамматического правила...
+
+Для создания нескольких правил введите каждое с новой строки:
+правило использования частицы は
+конструкция て-формы
+вежливая форма глаголов`}
                 rows={6}
                 className="w-full"
                 disabled={isLoading}
