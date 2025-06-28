@@ -156,4 +156,13 @@ impl RuleService {
 
         Ok(())
     }
+
+    #[instrument(skip(self))]
+    pub async fn remove_rule(&self, user_login: &str, rule_id: &str) -> Result<()> {
+        info!("Removing rule: {}", rule_id);
+
+        self.rule_repository.remove(user_login, rule_id).await?;
+
+        Ok(())
+    }
 }

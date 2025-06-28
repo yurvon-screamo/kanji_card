@@ -7,7 +7,7 @@ use crate::{
 use auth::{Claims, JwtConfig, auth_middleware};
 use axum::{
     Json,
-    extract::{Extension, State},
+    extract::{Extension, Path, State},
     http::StatusCode,
     middleware,
 };
@@ -39,6 +39,7 @@ pub fn set_api_router(
         .routes(routes!(create_rule_from_description))
         .routes(routes!(check_test_answer))
         .routes(routes!(release_rule))
+        .routes(routes!(remove_rule))
         .layer(middleware::from_fn_with_state(
             jwt_config.clone(),
             auth_middleware,
@@ -297,6 +298,36 @@ async fn release_rule(
         }
         Err(e) => {
             error!("Failed to release rule: {}", e);
+            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        }
+    }
+}
+
+#[utoipa::path(
+    delete,
+    path = "/rules/{id}",
+    params(
+        ("id" = String, Path, description = "Rule ID")
+    ),
+    responses(
+        (status = 200, description = "Rule removed successfully"),
+        (status = 404, description = "Rule not found"),
+        (status = 500, description = "Internal server error")
+    )
+)]
+async fn remove_rule(
+    State(state): State<ApiState>,
+    Extension(claims): Extension<Claims>,
+    Path(id): Path<String>,
+) -> Result<StatusCode, (StatusCode, String)> {
+    info!("Removing rule: {}", id);
+    match state.rule_service.remove_rule(&claims.sub, &id).await {
+        Ok(_) => {
+            info!("Successfully removed rule: {}", id);
+            Ok(StatusCode::OK)
+        }
+        Err(e) => {
+            error!("Failed to remove rule: {}", e);
             Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
         }
     }
