@@ -1,4 +1,4 @@
-use crate::domain::rule::{GrammarRule, JapanesePartOfSpeech, RuleExample, RuleTest};
+use crate::domain::rule::{GrammarRule, RuleExample, RuleTest};
 use crate::llm::{GrammarRuleResponse, LlmService};
 use crate::rule_repository::RuleRepository;
 use anyhow::Result;
@@ -104,8 +104,6 @@ impl RuleService {
         );
         Ok(grammar_rule)
     }
-
-
 
     #[instrument(skip(self))]
     pub async fn check_test_answer(
