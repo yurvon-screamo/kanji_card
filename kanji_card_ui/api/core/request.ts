@@ -5,9 +5,9 @@
 import axios from 'axios';
 import type { AxiosError, AxiosRequestConfig, AxiosResponse, AxiosInstance } from 'axios';
 
-// Создаем axios instance с таймаутом 3 минуты по умолчанию
+// Создаем axios instance с таймаутом 5 минуты по умолчанию
 const defaultAxiosInstance = axios.create({
-    timeout: 180000, // 3 минуты в миллисекундах
+    timeout: 300000, // 5 минуты в миллисекундах
 });
 import FormData from 'form-data';
 
