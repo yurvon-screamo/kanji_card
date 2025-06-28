@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { RuleResponse, RuleDetailResponse, DefaultService } from '@/api';
 import { LayoutContainer } from '../../ui/LayoutContainer';
 import { LoadingSpinner } from '../../ui/LoadingSpinner';
@@ -15,6 +15,7 @@ type ViewMode = 'grid' | 'detail' | 'test' | 'add';
 
 export const RulesView = () => {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const [viewMode, setViewMode] = useState<ViewMode>('grid');
     const [rules, setRules] = useState<RuleResponse[]>([]);
     const [selectedRule, setSelectedRule] = useState<RuleDetailResponse | null>(null);
@@ -53,6 +54,8 @@ export const RulesView = () => {
         if (viewMode === 'test') {
             setViewMode('detail');
         } else if (viewMode === 'detail') {
+            // Убираем ID из URL при возврате к списку
+            router.push('/rules');
             setViewMode('grid');
             setSelectedRule(null);
         } else if (viewMode === 'add') {
@@ -63,6 +66,8 @@ export const RulesView = () => {
     };
 
     const handleRuleClick = (ruleId: string) => {
+        // Обновляем URL с ID правила
+        router.push(`/rules?id=${ruleId}`);
         loadRuleDetail(ruleId);
     };
 
@@ -105,15 +110,22 @@ export const RulesView = () => {
         if (selectedRule) {
             setRules(prevRules => prevRules.filter(rule => rule.id !== selectedRule.id));
         }
-        // Возвращаемся к списку правил
+        // Возвращаемся к списку правил и убираем ID из URL
+        router.push('/rules');
         setViewMode('grid');
         setSelectedRule(null);
     };
 
-    // Загрузка данных при монтировании
+    // Загрузка данных при монтировании и проверка URL параметров
     useEffect(() => {
         loadRules();
-    }, []);
+        
+        // Проверяем, есть ли ID правила в URL
+        const ruleId = searchParams.get('id');
+        if (ruleId) {
+            loadRuleDetail(ruleId);
+        }
+    }, [searchParams]);
 
     const renderContent = () => {
         if (isLoading) {

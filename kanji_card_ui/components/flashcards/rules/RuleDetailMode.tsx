@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from 'react';
 import { RuleDetailResponse, DefaultService, ReleaseRuleRequest } from "@/api";
 import { Button, Card, CardHeader } from "@fluentui/react-components";
 import { Play, BookOpen, Eye, EyeOff, CheckCircle, Trash2 } from "lucide-react";

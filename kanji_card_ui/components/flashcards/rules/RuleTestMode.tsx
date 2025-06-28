@@ -23,7 +23,7 @@ export const RuleTestMode = ({
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
   const [userAnswer, setUserAnswer] = useState("");
   const [showResult, setShowResult] = useState(false);
-  const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
+
   const [isCorrect, setIsCorrect] = useState(false);
   const [results, setResults] = useState<TestResult[]>([]);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -53,7 +53,7 @@ export const RuleTestMode = ({
       setCurrentTestIndex(prev => prev + 1);
       setUserAnswer("");
       setShowResult(false);
-      setShowCorrectAnswer(false);
+
     } else {
       setIsCompleted(true);
     }
@@ -63,7 +63,7 @@ export const RuleTestMode = ({
     setCurrentTestIndex(0);
     setUserAnswer("");
     setShowResult(false);
-    setShowCorrectAnswer(false);
+
     setResults([]);
     setIsCompleted(false);
   };
@@ -196,17 +196,6 @@ export const RuleTestMode = ({
                   </div>
 
                   {!isCorrect && (
-                    <div className="flex justify-start">
-                      <Button
-                        appearance="subtle"
-                        onClick={() => setShowCorrectAnswer(!showCorrectAnswer)}
-                      >
-                        {showCorrectAnswer ? "Скрыть правильный ответ" : "Показать правильный ответ"}
-                      </Button>
-                    </div>
-                  )}
-
-                  {showCorrectAnswer && !isCorrect && (
                     <div className={cn(
                       "p-3 rounded-lg border",
                       "bg-blue-50 border-blue-200"
