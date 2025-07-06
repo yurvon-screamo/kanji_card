@@ -11,3 +11,8 @@ api_key = "your-api-key-here"
 token_expiry = 2592000                         # 30 days
 refresh_threshold = 2591700                    # -5 minutes
 secret_key = "your-secret-key-here"
+
+# TLS config - option
+# [tls]
+# cert_path = "/etc/letsencrypt/live/kanji.uwuwu.net/fullchain.pem"
+# key_path = "/etc/letsencrypt/live/kanji.uwuwu.net/privkey.pem"

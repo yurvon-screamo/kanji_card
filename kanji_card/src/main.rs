@@ -63,10 +63,17 @@ struct JwtConfig {
 }
 
 #[derive(Debug, Deserialize)]
+struct TlsConfig {
+    cert_path: String,
+    key_path: String,
+}
+
+#[derive(Debug, Deserialize)]
 struct Settings {
     server: ServerConfig,
     openrouter: OpenRouterConfig,
     jwt: JwtConfig,
+    tls: Option<TlsConfig>,
 }
 
 #[derive(Parser, Debug)]
@@ -165,17 +172,29 @@ async fn main() -> Result<()> {
         .with_state(())
         .into_make_service();
 
-    let listener = tokio::net::TcpListener::bind(format!(
-        "{}:{}",
-        Ipv4Addr::UNSPECIFIED,
-        settings.server.port
-    ))
-    .await?;
-    info!(
-        "Server listening on {}:{}",
-        settings.server.domain, settings.server.port
-    );
-    axum::serve(listener, app).await?;
+    if let Some(tls) = &settings.tls {
+        use axum_server::tls_rustls::RustlsConfig;
+        use std::net::SocketAddr;
+        let config = RustlsConfig::from_pem_file(&tls.cert_path, &tls.key_path).await?;
+        let addr = SocketAddr::from((Ipv4Addr::UNSPECIFIED, settings.server.port));
+        info!(
+            "Server (TLS) listening on {}:{}",
+            settings.server.domain, settings.server.port
+        );
+        axum_server::bind_rustls(addr, config).serve(app).await?;
+    } else {
+        let listener = tokio::net::TcpListener::bind(format!(
+            "{}:{}",
+            Ipv4Addr::UNSPECIFIED,
+            settings.server.port
+        ))
+        .await?;
+        info!(
+            "Server listening on {}:{}",
+            settings.server.domain, settings.server.port
+        );
+        axum::serve(listener, app).await?;
+    }
 
     Ok(())
 }
