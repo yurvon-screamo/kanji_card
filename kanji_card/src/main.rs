@@ -1,15 +1,12 @@
-mod application;
-mod domain;
+mod config;
 mod environment;
 mod llm;
-mod rule_repository;
+mod rule;
 mod user_repository;
 mod web_ui;
-mod word_release_repository;
-mod word_repository;
+mod word;
 
 use anyhow::Result;
-use application::{rule_service::RuleService, set_service::SetService};
 use axum::{
     http::{
         Method,
@@ -18,63 +15,31 @@ use axum::{
     routing::get,
 };
 use clap::Parser;
-use config::Config;
 use llm::LlmService;
 use opentelemetry::global;
 use opentelemetry_otlp::{Protocol, WithExportConfig};
 use opentelemetry_sdk::{Resource, propagation::TraceContextPropagator, trace::SdkTracerProvider};
-use serde::Deserialize;
-use std::{net::Ipv4Addr, time::Duration};
+use std::net::Ipv4Addr;
 use tokio::fs;
 use tower_http::cors::CorsLayer;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
-use word_repository::WordRepository;
 
 use crate::{
-    environment::{api, auth, auth_api, query},
-    web_ui::static_handler,
-    word_release_repository::WordReleaseRepository,
+    config::Settings,
+    rule::{rule_repository, rule_service::RuleService},
+    word::{
+        set_repository::LearnSetRepository, set_service::SetService,
+        word_release_repository::WordReleaseRepository,
+    },
 };
 
-#[derive(Debug, Deserialize)]
-struct ServerConfig {
-    domain: String,
-    port: u16,
-}
-
-#[derive(Debug, Deserialize)]
-struct OpenRouterConfig {
-    base_url: String,
-    api_key: String,
-    text_model: String,
-    image_model: String,
-    reasoning_model: String,
-    max_completion_tokens: u32,
-}
-
-#[derive(Debug, Deserialize)]
-struct JwtConfig {
-    secret_key: String,
-    token_expiry: u64,
-    refresh_threshold: u64,
-}
-
-#[derive(Debug, Deserialize)]
-struct TlsConfig {
-    cert_path: String,
-    key_path: String,
-}
-
-#[derive(Debug, Deserialize)]
-struct Settings {
-    server: ServerConfig,
-    openrouter: OpenRouterConfig,
-    jwt: JwtConfig,
-    tls: Option<TlsConfig>,
-}
+use crate::{
+    environment::{api, auth_api, query},
+    web_ui::static_handler,
+};
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -88,20 +53,11 @@ async fn main() -> Result<()> {
     init_tracing()?;
 
     let args = Args::parse();
-    let settings = Config::builder()
-        .add_source(config::File::with_name("config"))
-        .build()?
-        .try_deserialize::<Settings>()?;
+    let settings = Settings::load()?;
 
-    let set_repository = WordRepository::new().await?;
-    let release_repository = WordReleaseRepository::new().await?;
     let user_repository = user_repository::UserRepository::new().await?;
     let rule_repository = rule_repository::RuleRepository::new().await?;
-    let jwt_config = auth::JwtConfig {
-        secret: settings.jwt.secret_key.as_bytes().to_vec(),
-        token_expiry: Duration::from_secs(settings.jwt.token_expiry),
-        refresh_threshold: Duration::from_secs(settings.jwt.refresh_threshold),
-    };
+    let jwt_config = settings.jwt_config();
     let llm_service = LlmService::new(
         settings.openrouter.base_url.clone(),
         settings.openrouter.api_key.clone(),
@@ -110,30 +66,37 @@ async fn main() -> Result<()> {
         settings.openrouter.reasoning_model.clone(),
         settings.openrouter.max_completion_tokens,
     );
+
+    let release_repository = WordReleaseRepository::new().await?;
+    let set_repository = LearnSetRepository::new().await?;
     let set_service = SetService::new(
         set_repository.clone(),
         release_repository.clone(),
         llm_service.clone(),
     );
+
     let rule_service = RuleService::new(rule_repository.clone(), llm_service);
 
     let open_api_router = OpenApiRouter::new()
-        .nest(
-            "/api/set",
-            api::set_api_router(set_service, rule_service, jwt_config.clone()),
-        )
         .nest(
             "/api/auth",
             auth_api::jwt_api_router(user_repository, jwt_config.clone()),
         )
         .nest(
-            "/api/query",
-            query::query_router(
-                set_repository,
-                release_repository,
-                rule_repository.clone(),
-                jwt_config.clone(),
-            ),
+            "/api/rule",
+            api::set_api_router(rule_service, jwt_config.clone()),
+        )
+        .nest(
+            "/api/rule/query",
+            query::query_router(rule_repository.clone(), jwt_config.clone()),
+        )
+        .nest(
+            "/api/word",
+            word::api::set_api_router(set_service, jwt_config.clone()),
+        )
+        .nest(
+            "/api/word/query",
+            word::query::query_router(set_repository, release_repository, jwt_config.clone()),
         );
 
     let (router, mut api) = open_api_router.split_for_parts();

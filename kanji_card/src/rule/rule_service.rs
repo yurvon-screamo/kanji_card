@@ -1,5 +1,5 @@
-use crate::domain::rule::{GrammarRule, RuleExample, RuleTest};
 use crate::llm::{GrammarRuleResponse, LlmService};
+use crate::rule::rule::{GrammarRule, RuleExample, RuleTest};
 use crate::rule_repository::RuleRepository;
 use anyhow::Result;
 use tracing::{info, instrument};

@@ -167,7 +167,7 @@ pub async fn register(
         .unwrap())
 }
 
-pub async fn logout(jwt_config: Arc<JwtConfig>) -> Result<Response, Response> {
+pub async fn logout() -> Result<Response, Response> {
     let mut response = Response::builder()
         .status(StatusCode::OK)
         .body(Body::empty())

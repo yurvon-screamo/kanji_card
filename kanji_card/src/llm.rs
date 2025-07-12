@@ -1,9 +1,10 @@
-use crate::domain::rule::JapanesePartOfSpeech;
 use anyhow::{Result, anyhow};
 use base64::{Engine, engine::general_purpose};
 use serde::{Deserialize, Serialize};
 use tracing::{error, info, instrument};
 use utoipa::ToSchema;
+
+use crate::rule::rule::JapanesePartOfSpeech;
 
 #[derive(Debug, Serialize)]
 struct OpenRouterRequest {
@@ -71,12 +72,6 @@ pub struct ExtractedWord {
 #[derive(Debug, Deserialize)]
 pub struct WordsResponse {
     pub words: Vec<ExtractedWord>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct StoryResponse {
-    pub story: Vec<String>,
-    pub story_translate: Vec<String>,
 }
 
 #[derive(Debug, Deserialize)]

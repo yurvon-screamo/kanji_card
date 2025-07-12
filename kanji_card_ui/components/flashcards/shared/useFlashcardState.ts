@@ -31,35 +31,20 @@ export function useFlashcardState() {
     setMounted(true);
   }, []);
 
-  const handleStartLearning = async () => {
+
+
+  const handleToNextLearnIter = async () => {
     if (!selectedSet?.set) return;
 
     setLoading(true);
     try {
       const repository = WordRepository.getInstance();
-      await repository.moveToInProgress(selectedSet.set.id);
+      await repository.toNextLearnIter(selectedSet.set.id);
       setWordCollection(Collection.IN_PROGRESS);
       setViewMode("set-selection");
       await refreshWords();
     } catch (error) {
-      console.error("Error starting learning:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleMarkAsLearned = async () => {
-    if (!selectedSet?.set) return;
-
-    setLoading(true);
-    try {
-      const repository = WordRepository.getInstance();
-      await repository.markAsFinished(selectedSet.set.id);
-      setWordCollection(Collection.IN_PROGRESS);
-      setViewMode("set-selection");
-      await refreshWords();
-    } catch (error) {
-      console.error("Error marking as learned:", error);
+      console.error("Error moving to next iteration:", error);
     } finally {
       setLoading(false);
     }
@@ -100,7 +85,7 @@ export function useFlashcardState() {
 
   const handleShuffleWords = () => {
     if (!selectedSet?.set?.words) return;
-    
+
     const shuffledWords = [...selectedSet.set.words].sort(() => Math.random() - 0.5);
     setSelectedSet({
       ...selectedSet,
@@ -145,8 +130,7 @@ export function useFlashcardState() {
     setLoading,
 
     // Actions
-    handleStartLearning,
-    handleMarkAsLearned,
+    handleToNextLearnIter,
     updateUrlParams,
     refreshWords,
     handleWordsUpdated,

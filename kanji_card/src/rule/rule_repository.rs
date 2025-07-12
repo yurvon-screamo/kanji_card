@@ -1,16 +1,17 @@
-use crate::domain::word::{CardSet, SetState};
 use anyhow::anyhow;
 use std::path::PathBuf;
 use tokio::fs;
 
-const STORAGE_DIR: &str = "data/cardsets";
+use crate::rule::rule::GrammarRule;
+
+const STORAGE_DIR: &str = "data/rule";
 
 #[derive(Clone)]
-pub struct WordRepository {
+pub struct RuleRepository {
     storage_dir: PathBuf,
 }
 
-impl WordRepository {
+impl RuleRepository {
     pub async fn new() -> anyhow::Result<Self> {
         let storage_dir = PathBuf::from(STORAGE_DIR);
         fs::create_dir_all(&storage_dir).await?;
@@ -23,49 +24,44 @@ impl WordRepository {
         self.storage_dir.join(user_login)
     }
 
-    pub async fn remove(&self, user_login: &str, card_set_id: &str) -> anyhow::Result<()> {
+    pub async fn remove(&self, user_login: &str, rule_id: &str) -> anyhow::Result<()> {
         let file_path = self
             .get_user_path(user_login)
-            .join(format!("{}.json", card_set_id));
+            .join(format!("{}.json", rule_id));
 
         fs::remove_file(file_path).await?;
         Ok(())
     }
 
-    pub async fn save(&self, user_login: &str, card_set: &CardSet) -> anyhow::Result<()> {
-        let json = serde_json::to_string_pretty(card_set)?;
+    pub async fn save(&self, user_login: &str, rule: &GrammarRule) -> anyhow::Result<()> {
+        let json = serde_json::to_string_pretty(rule)?;
         let file_path = self
             .get_user_path(user_login)
-            .join(format!("{}.json", card_set.id()));
+            .join(format!("{}.json", rule.id()));
 
         fs::write(file_path, json).await?;
         Ok(())
     }
 
-    pub async fn load(&self, user_login: &str, id: &str) -> anyhow::Result<CardSet> {
+    pub async fn load(&self, user_login: &str, id: &str) -> anyhow::Result<GrammarRule> {
         let file_path = self.get_user_path(user_login).join(format!("{}.json", id));
         if file_path.exists() {
             let json = fs::read_to_string(file_path).await?;
             return Ok(serde_json::from_str(&json)?);
         }
-        Err(anyhow!("Card set not found"))
+        Err(anyhow!("Rule not found"))
     }
 
-    pub async fn list_ids(
-        &self,
-        user_login: &str,
-        state: &SetState,
-    ) -> anyhow::Result<Vec<String>> {
-        let all = self.list_all(user_login).await?;
-
-        Ok(all
+    pub async fn list_ids(&self, user_login: &str) -> anyhow::Result<Vec<String>> {
+        Ok(self
+            .list_all(user_login)
+            .await?
             .into_iter()
-            .filter(|x| x.state() == state)
             .map(|x| x.id().to_owned())
             .collect())
     }
 
-    pub async fn list_all(&self, user_login: &str) -> anyhow::Result<Vec<CardSet>> {
+    pub async fn list_all(&self, user_login: &str) -> anyhow::Result<Vec<GrammarRule>> {
         let mut ids = Vec::new();
         let state_dir = self.get_user_path(user_login);
 

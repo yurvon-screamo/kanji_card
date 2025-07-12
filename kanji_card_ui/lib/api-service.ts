@@ -94,17 +94,7 @@ class ApiService {
         );
     }
 
-    public async markAsFinished(setId: string) {
-        return this.handleRequest(() =>
-            DefaultService.markAsFinished(setId)
-        );
-    }
 
-    public async markAsCurrent(setId: string) {
-        return this.handleRequest(() =>
-            DefaultService.markAsCurrent(setId)
-        );
-    }
 
     public async markAsTobe(wordIds: string[]) {
         return this.handleRequest(() =>
@@ -131,6 +121,12 @@ class ApiService {
     public async saveWords(words: ExtractedWord[]) {
         return this.handleRequest(() =>
             DefaultService.saveWords({ words })
+        );
+    }
+
+    public async toNextLearnIter(setId: string) {
+        return this.handleRequest(() =>
+            DefaultService.toNextLearnIter(setId)
         );
     }
 }

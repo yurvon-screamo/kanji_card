@@ -5,11 +5,8 @@ import {
   JapaneseWord,
   StudyMode,
   ViewMode,
-  Collection,
 } from "../shared";
-import { StoryResponse } from "../../../api";
 import { GridStudyMode } from "./GridStudyMode";
-import { StoryStudyMode } from "./StoryStudyMode";
 import { SingleCardStudyMode } from "./SingleCardStudyMode";
 import { StudyToolbar } from "./StudyToolbar";
 import { EmptyStudyState } from "./EmptyStudyState";
@@ -24,11 +21,8 @@ interface StudyViewProps {
   setCurrentSide: (side: CardSide | ((prev: CardSide) => CardSide)) => void;
   setStudyMode: (mode: StudyMode) => void;
   onWordsUpdated: () => void;
-  collection: Collection;
-  onStartLearning: () => void;
-  onMarkAsLearned: () => void;
+  onToNextLearnIter: () => void;
   onShuffleWords: () => void;
-  story?: StoryResponse | null;
 }
 
 export const StudyView = ({
@@ -41,11 +35,8 @@ export const StudyView = ({
   setCurrentSide,
   setStudyMode,
   onWordsUpdated,
-  collection,
-  onStartLearning,
-  onMarkAsLearned,
+  onToNextLearnIter,
   onShuffleWords,
-  story,
 }: StudyViewProps) => {
   if (activeChunk.length === 0) {
     return <EmptyStudyState onViewModeChange={setViewMode} />;
@@ -97,9 +88,6 @@ export const StudyView = ({
   };
 
   const renderStudyContent = () => {
-    if (studyMode === "story" && story) {
-      return <StoryStudyMode story={story} />;
-    }
 
     if (studyMode === "grid") {
       return <GridStudyMode activeChunk={activeChunk} />;
@@ -124,12 +112,9 @@ export const StudyView = ({
         <div className="w-full space-y-12 max-w-screen-lg mx-auto px-4">
           <StudyToolbar
             studyMode={studyMode}
-            collection={collection}
-            story={story}
             onViewModeChange={setViewMode}
             onStudyModeChange={handleStudyModeChange}
-            onStartLearning={onStartLearning}
-            onMarkAsLearned={onMarkAsLearned}
+            onToNextLearnIter={onToNextLearnIter}
             onWordsUpdated={onWordsUpdated}
             onShuffleWords={handleShuffleWords}
           />

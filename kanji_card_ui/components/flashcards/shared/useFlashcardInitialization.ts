@@ -63,7 +63,8 @@ export function useFlashcardInitialization({
               let sets: Set[] = [];
               switch (type) {
                 case Collection.IN_PROGRESS:
-                  sets = await repository.getInProgressSets();
+                  const currentSets = await repository.getInProgressSets();
+                  sets = [...currentSets.needToLearn, ...currentSets.toFeature];
                   break;
                 case Collection.NEW:
                   sets = await repository.getUnlearnedSets();

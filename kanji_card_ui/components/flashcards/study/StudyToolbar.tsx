@@ -1,42 +1,29 @@
 import React from "react";
-import { ArrowLeft, Check, Grid, BookOpen, Languages, Dice3 } from "lucide-react";
+import { ArrowLeft, Check, Grid, Languages, Dice3 } from "lucide-react";
 import { Button } from "@fluentui/react-components";
 import { ArrowShuffle24Regular } from "@fluentui/react-icons";
-import { Collection, StudyMode, ViewMode } from "../shared";
-import { StoryResponse } from "@/api";
+import { StudyMode, ViewMode } from "../shared";
 import { Toolbar } from "@/components/ui/Toolbar";
 
 interface StudyToolbarProps {
   studyMode: StudyMode;
-  collection: Collection;
-  story?: StoryResponse | null;
   onViewModeChange: (mode: ViewMode) => void;
   onStudyModeChange: (mode: StudyMode) => void;
-  onStartLearning: () => void;
-  onMarkAsLearned: () => void;
+  onToNextLearnIter: () => void;
   onWordsUpdated: () => void;
   onShuffleWords: () => void;
 }
 
 export const StudyToolbar = ({
   studyMode,
-  collection,
-  story,
   onViewModeChange,
   onStudyModeChange,
-  onStartLearning,
-  onMarkAsLearned,
+  onToNextLearnIter,
   onWordsUpdated,
   onShuffleWords,
 }: StudyToolbarProps) => {
-  const handleStartLearning = () => {
-    onStartLearning();
-    onWordsUpdated();
-    onViewModeChange("set-selection");
-  };
-
-  const handleMarkAsLearned = () => {
-    onMarkAsLearned();
+  const handleToNextLearnIter = () => {
+    onToNextLearnIter();
     onWordsUpdated();
     onViewModeChange("set-selection");
   };
@@ -87,50 +74,27 @@ export const StudyToolbar = ({
         >
           <Dice3 className="h-3 w-3" />
         </Button>
-        {story && (
-          <Button
-            appearance={studyMode === "story" ? "primary" : "outline"}
-            size="small"
-            onClick={() => onStudyModeChange("story")}
-            className="text-xs"
-          >
-            <BookOpen className="h-3 w-3" />
-          </Button>
-        )}
+
       </div>
 
-      {collection === Collection.NEW && (
-        <Button
-          appearance="outline"
-          size="small"
-          onClick={handleStartLearning}
-        >
-          <Check className="h-4 w-4 mr-1" />
-          Учить
-        </Button>
-      )}
-      {collection === Collection.IN_PROGRESS && (
-        <>
 
-          <Button
-            appearance="outline"
-            size="small"
-            onClick={onShuffleWords}
-            className="text-xs"
-            title="Перемешать слова"
-          >
-            <ArrowShuffle24Regular className="h-4 w-4" />
-          </Button>
-          <Button
-            appearance="outline"
-            size="small"
-            onClick={handleMarkAsLearned}
-          >
-            <Check className="h-4 w-4 mr-1" />
-            Выучено
-          </Button>
-        </>
-      )}
+      <Button
+        appearance="outline"
+        size="small"
+        onClick={onShuffleWords}
+        className="text-xs"
+        title="Перемешать слова"
+      >
+        <ArrowShuffle24Regular className="h-4 w-4" />
+      </Button>
+      <Button
+        appearance="outline"
+        size="small"
+        onClick={handleToNextLearnIter}
+      >
+        <Check className="h-4 w-4 mr-1" />
+        Выучил
+      </Button>
     </Toolbar>
   );
 };

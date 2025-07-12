@@ -25,7 +25,7 @@ export const SingleCardStudyMode = ({
   onRotateSide,
 }: SingleCardStudyModeProps) => {
   const currentWord = activeChunk[currentWordIndex];
-  const cardStudyMode = studyMode === "story" ? "mixed" : studyMode as "jp" | "translate" | "mixed" | "grid";
+  const cardStudyMode = studyMode as "jp" | "translate" | "mixed" | "grid";
 
   return (
     <>

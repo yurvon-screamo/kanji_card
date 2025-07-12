@@ -1,4 +1,3 @@
-import { StoryResponse } from "@/api";
 
 export interface JapaneseWord {
   id: string;
@@ -20,13 +19,14 @@ export interface SetList {
 export interface Set {
   id: string;
   words: JapaneseWord[];
-  state: Collection;
-  story?: StoryResponse | null;
+  state: string; // теперь raw-статус
+  timeToLearn?: string;
+  needToLearn: boolean;
 }
 
 export type ViewMode = "study" | "set-selection" | "pool" | "add-cards" | "learned" | "rules";
 export type CardSide = 0 | 1 | 2;
-export type StudyMode = "grid" | "jp" | "translate" | "mixed" | "story";
+export type StudyMode = "grid" | "jp" | "translate" | "mixed";
 
 export interface GlobalStats {
   totalCards: number;

@@ -90,10 +90,10 @@ async fn login(
     ),
     tag = "auth"
 )]
-#[instrument(skip(state))]
-async fn logout(State(state): State<AuthApiState>) -> impl IntoResponse {
+#[instrument(skip(_state))]
+async fn logout(State(_state): State<AuthApiState>) -> impl IntoResponse {
     info!("Logout request");
-    let response = auth::logout(state.jwt_config).await;
+    let response = auth::logout().await;
 
     match &response {
         Ok(_) => {

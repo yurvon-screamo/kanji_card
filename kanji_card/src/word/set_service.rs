@@ -1,20 +1,24 @@
-use crate::domain::word::{CardSet, SetState};
-use crate::llm::{ExtractedWord, LlmService, StoryResponse, WordsResponse};
-use crate::word_release_repository::WordReleaseRepository;
-use crate::word_repository::WordRepository;
+use crate::{
+    llm::{ExtractedWord, LlmService, WordsResponse},
+    word::{
+        domain::set::{LearnSet, LearnSetState},
+        set_repository::LearnSetRepository,
+        word_release_repository::WordReleaseRepository,
+    },
+};
 use anyhow::Result;
 use std::collections::HashSet;
-use tracing::{error, info, instrument};
+use tracing::{info, instrument};
 
 pub struct SetService {
-    set_repository: WordRepository,
+    set_repository: LearnSetRepository,
     release_repository: WordReleaseRepository,
     llm_service: LlmService,
 }
 
 impl SetService {
     pub fn new(
-        set_repository: WordRepository,
+        set_repository: LearnSetRepository,
         release_repository: WordReleaseRepository,
         llm_service: LlmService,
     ) -> Self {
@@ -92,7 +96,7 @@ impl SetService {
     }
 
     #[instrument(skip(self, words), fields(user_login = %user_login))]
-    pub async fn save_words(
+    pub async fn save_extracted_words(
         &self,
         user_login: &str,
         words: Vec<ExtractedWord>,
@@ -134,16 +138,27 @@ impl SetService {
 
         let mut current_ids = self
             .set_repository
-            .list_ids(user_login, &SetState::Tobe)
-            .await?;
+            .list_all(user_login)
+            .await?
+            .into_iter()
+            .filter_map(|x| {
+                if x.state() == &LearnSetState::Tobe {
+                    Some(x.id().to_owned())
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+
         let mut current_set = if current_ids.is_empty() {
             info!("Creating new set for user {}", user_login);
-            CardSet::new()
+            LearnSet::new()
         } else {
             current_ids.sort_by(|a, b| b.cmp(a));
-            let latest_id = current_ids.first().unwrap();
+            let latest_id = current_ids.first().cloned().unwrap_or_default();
+
             info!("Loading existing set {} for user {}", latest_id, user_login);
-            let set = self.set_repository.load(user_login, latest_id).await?;
+            let set = self.set_repository.load(user_login, &latest_id).await?;
 
             if set.is_writabe() {
                 set
@@ -152,49 +167,21 @@ impl SetService {
                     "Creating new set for user {} as current set is not writable",
                     user_login
                 );
-                CardSet::new()
+                LearnSet::new()
             }
         };
 
         for word_data in unique_words {
             if !current_set.is_writabe() {
-                match self.generate_story_for_words(current_set.words()).await {
-                    Ok((story, story_translate)) => {
-                        if let Err(e) = current_set.put_story(&story, &story_translate) {
-                            error!("Failed to put story to set: {:?}", e);
-                        } else {
-                            info!("Successfully generated and added story to set");
-                        }
-                    }
-                    Err(e) => {
-                        error!("Failed to generate story for set: {:?}", e);
-                    }
-                }
-
                 info!(
                     "Saving current set and creating new one for user {}",
                     user_login
                 );
                 self.set_repository.save(user_login, &current_set).await?;
-                current_set = CardSet::new();
+                current_set = LearnSet::new();
             }
 
             current_set.push(word_data.word, word_data.translation)?;
-        }
-
-        if !current_set.is_writabe() {
-            match self.generate_story_for_words(current_set.words()).await {
-                Ok((story, story_translate)) => {
-                    if let Err(e) = current_set.put_story(&story, &story_translate) {
-                        error!("Failed to put story to final set: {:?}", e);
-                    } else {
-                        info!("Successfully generated and added story to final set");
-                    }
-                }
-                Err(e) => {
-                    error!("Failed to generate story for final set: {:?}", e);
-                }
-            }
         }
 
         info!("Saving final set for user {}", user_login);
@@ -204,31 +191,23 @@ impl SetService {
     }
 
     #[instrument(skip(self), fields(user_login = %user_login, set_id = %set_id))]
-    pub async fn mark_as_current(&self, user_login: &str, set_id: &str) -> Result<()> {
-        info!("Marking set {} as current for user {}", set_id, user_login);
-        let mut card_set = self.set_repository.load(user_login, set_id).await?;
-        card_set.as_current()?;
-        self.set_repository.save(user_login, &card_set).await?;
+    pub async fn to_next_iter(&self, user_login: &str, set_id: &str) -> Result<()> {
         info!(
-            "Successfully marked set {} as current for user {}",
+            "Move to next iter set {} as current for user {}",
             set_id, user_login
         );
-        Ok(())
-    }
+        let mut card_set = self.set_repository.load(user_login, set_id).await?;
 
-    #[instrument(skip(self), fields(user_login = %user_login, set_id = %set_id))]
-    pub async fn release_set(&self, user_login: &str, set_id: &str) -> Result<()> {
-        info!("Releasing set {} for user {}", set_id, user_login);
-        let card_set = self.set_repository.load(user_login, set_id).await?;
-        let set_release = card_set.release()?;
-
-        self.set_repository.remove(user_login, set_id).await?;
-        self.release_repository
-            .save(user_login, &set_release.words, &set_release.story)
-            .await?;
+        let release = card_set.iter();
+        if let Some(release) = release {
+            self.set_repository.remove(user_login, set_id).await?;
+            self.release_repository.save(user_login, &release).await?;
+        } else {
+            self.set_repository.save(user_login, &card_set).await?;
+        }
 
         info!(
-            "Successfully released set {} for user {}",
+            "Successfully moved to next set {} as current for user {}",
             set_id, user_login
         );
         Ok(())
@@ -252,55 +231,13 @@ impl SetService {
             })
             .collect();
 
-        self.save_words(user_login, extracted_words, true).await?;
+        self.save_extracted_words(user_login, extracted_words, true)
+            .await?;
         self.release_repository
             .remove_word_by_ids(user_login, &word_ids)
             .await?;
 
         info!("Successfully marked words as tobe for user {}", user_login);
         Ok(())
-    }
-
-    #[instrument(skip(self, words))]
-    async fn generate_story_for_words(
-        &self,
-        words: &[crate::domain::word::Card],
-    ) -> Result<(Vec<String>, Vec<String>)> {
-        info!("Generating story from {} words", words.len());
-
-        let words_list: Vec<String> = words
-            .iter()
-            .map(|c| format!("{} - {}", c.word(), c.translation()))
-            .collect();
-
-        let prompt = format!(
-            r#"Ты эксперт по японскому языку и рассказчик. Создай связную короткую историю, используя предоставленные японские слова. Используй ТОЛЬКО грамматику уровня N5.
-
-ВАЖНЫЕ ПРАВИЛА:
-1. Используй ВСЕ предоставленные слова в истории
-2. Ты также можешь использовать базовые японские слова (частицы, обычные глаголы, прилагательные), чтобы сделать историю связной
-3. Делай историю простой и понятной для изучающих японский язык
-4. История должна быть длиной 3-5 предложений
-5. Каждое предложение должно быть на отдельной строке
-6. Предоставь точный русский перевод для каждого предложения
-7. История должна быть логичной и интересной
-
-Слова для использования:
-{}
-
-Возвращай ТОЛЬКО валидный JSON в точно таком формате:
-{{"story": ["sentence1_in_japanese", "sentence2_in_japanese", "sentence3_in_japanese"], "story_translate": ["sentence1_in_russian", "sentence2_in_russian", "sentence3_in_russian"]}}
-
-Создай историю"#,
-            words_list.join("\n")
-        );
-
-        let response: StoryResponse = self.llm_service.send_reasoning_request(&prompt).await?;
-
-        info!(
-            "Successfully generated story with {} sentences",
-            response.story.len()
-        );
-        Ok((response.story, response.story_translate))
     }
 }

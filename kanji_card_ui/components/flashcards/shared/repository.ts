@@ -1,5 +1,5 @@
 import { JapaneseWord, Set, Collection } from ".";
-import { ExtractedWord as ApiExtractedWord, ExtractedWord, SetResponse, SetState, WordOverview, WordResponse } from "../../../api";
+import { ExtractedWord as ApiExtractedWord, ExtractedWord, SetResponse, LearnSetState, WordOverview, WordResponse } from "../../../api";
 import { apiService } from "@/lib/api-service";
 
 export class WordRepository {
@@ -22,8 +22,9 @@ export class WordRepository {
       words: setResponse.words.map((w) =>
         this.mapWordResponseToJapaneseWord(w),
       ),
-      state: this.mapSetStateToCollection(setResponse.state),
-      story: setResponse.story,
+      state: setResponse.state || '',
+      timeToLearn: setResponse.time_to_learn || undefined,
+      needToLearn: setResponse.need_to_learn,
     };
   }
 
@@ -48,9 +49,14 @@ export class WordRepository {
     return response.map(x => this.mapWordResponseToJapaneseWord(x))
   }
 
-  public async getInProgressSets(): Promise<Set[]> {
+  public async getInProgressSets(): Promise<{ needToLearn: Set[], toFeature: Set[], wordCountToLearn: number, wordCountToFeature: number }> {
     const response = await apiService.listCurrentSets();
-    return response.map(x => this.mapSetResponseToSet(x))
+    return {
+      needToLearn: response.need_to_learn.map(x => this.mapSetResponseToSet(x)),
+      toFeature: response.to_feature.map(x => this.mapSetResponseToSet(x)),
+      wordCountToLearn: response.word_count_to_learn,
+      wordCountToFeature: response.word_count_to_feature,
+    };
   }
 
   public async getUnlearnedSets(): Promise<Set[]> {
@@ -58,13 +64,7 @@ export class WordRepository {
     return response.map(x => this.mapSetResponseToSet(x))
   }
 
-  public async markSetAsLearned(setId: string): Promise<void> {
-    await apiService.markAsFinished(setId);
-  }
 
-  public async moveToInProgress(setId: string): Promise<void> {
-    await apiService.markAsCurrent(setId);
-  }
 
   public async getOverview(): Promise<WordOverview> {
     return await apiService.getOverview();
@@ -76,14 +76,12 @@ export class WordRepository {
     return this.mapSetResponseToSet(setResponse);
   }
 
-  private mapSetStateToCollection(state: SetState): Collection {
+  private mapSetStateToCollection(state: LearnSetState): Collection {
     switch (state) {
-      case SetState.CURRENT:
-        return Collection.IN_PROGRESS;
-      case SetState.TOBE:
+      case LearnSetState.TOBE:
         return Collection.NEW;
       default:
-        return Collection.NEW;
+        return Collection.IN_PROGRESS;
     }
   }
 
@@ -108,15 +106,13 @@ export class WordRepository {
     await apiService.saveWords(words);
   }
 
-  public async markAsCurrent(setId: string): Promise<void> {
-    await apiService.markAsCurrent(setId);
-  }
 
-  public async markAsFinished(setId: string): Promise<void> {
-    await apiService.markAsFinished(setId);
-  }
 
   public async markAsTobe(wordIds: string[]): Promise<void> {
     await apiService.markAsTobe(wordIds);
+  }
+
+  public async toNextLearnIter(setId: string): Promise<void> {
+    await apiService.toNextLearnIter(setId);
   }
 }

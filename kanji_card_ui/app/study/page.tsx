@@ -20,8 +20,7 @@ function StudyPageContent() {
     setCurrentWordIndex,
     setCurrentSide,
     setStudyMode,
-    handleStartLearning,
-    handleMarkAsLearned,
+    handleToNextLearnIter,
     handleWordsUpdated,
     handleShuffleWords,
   } = useFlashcardState();
@@ -48,7 +47,8 @@ function StudyPageContent() {
           switch (collection) {
             case Collection.IN_PROGRESS:
               const inProgressSets = await repository.getInProgressSets();
-              set = inProgressSets.find(s => s.id === setId);
+              set = inProgressSets.needToLearn.find(s => s.id === setId) ||
+                inProgressSets.toFeature.find(s => s.id === setId);
               break;
             case Collection.NEW:
               const unlearnedSets = await repository.getUnlearnedSets();
@@ -93,7 +93,6 @@ function StudyPageContent() {
       currentWordIndex={currentWordIndex}
       currentSide={currentSide}
       studyMode={studyMode}
-      story={selectedSet.set.story}
       setViewMode={() => {
         const params = new URLSearchParams();
         params.set('collection', selectedSet.type);
@@ -103,9 +102,7 @@ function StudyPageContent() {
       setCurrentSide={setCurrentSide}
       setStudyMode={setStudyMode}
       onWordsUpdated={handleWordsUpdated}
-      collection={selectedSet.type}
-      onStartLearning={handleStartLearning}
-      onMarkAsLearned={handleMarkAsLearned}
+      onToNextLearnIter={handleToNextLearnIter}
       onShuffleWords={handleShuffleWords}
     />
   );

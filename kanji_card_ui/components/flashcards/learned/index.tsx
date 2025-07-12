@@ -3,14 +3,12 @@ import { WordRepository } from "../shared/repository";
 import { JapaneseWord, CardSide } from "../shared";
 import { useDebounce } from "@/lib/hooks/use-debounce";
 import { LayoutContainer } from "../../ui/LayoutContainer";
-import { DefaultService, StoryResponse } from "@/api";
 import { LearnedWordsToolbar } from "./LearnedWordsToolbar";
 import { LearnedWordsGridMode } from "./LearnedWordsGridMode";
 import { LearnedWordsTestMode } from "./LearnedWordsTestMode";
-import { LearnedStoriesMode } from "./LearnedStoriesMode";
 import { LoadingState } from "./LoadingState";
 
-type ViewMode = "grid" | "test" | "stories";
+type ViewMode = "grid" | "test";
 
 interface LearnedWordsViewProps {
     onBack: () => void;
@@ -18,8 +16,6 @@ interface LearnedWordsViewProps {
 
 export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
     const [words, setWords] = useState<JapaneseWord[]>([]);
-    const [stories, setStories] = useState<StoryResponse[]>([]);
-    const [selectedStory, setSelectedStory] = useState<StoryResponse | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const [loading, setLoading] = useState(true);
     const [cardSides, setCardSides] = useState<CardSide[]>([]);
@@ -32,24 +28,19 @@ export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
             try {
                 setLoading(true);
 
-                if (viewMode === "stories") {
-                    // Загружаем истории
-                    const storiesData = await DefaultService.listReleasedStories(debouncedSearch || undefined);
-                    setStories(storiesData);
+
+                // Загружаем слова
+                const repository = WordRepository.getInstance();
+                let learnedWords: JapaneseWord[];
+
+                if (viewMode === "test") {
+                    learnedWords = await repository.getTestWords();
                 } else {
-                    // Загружаем слова
-                    const repository = WordRepository.getInstance();
-                    let learnedWords: JapaneseWord[];
-
-                    if (viewMode === "test") {
-                        learnedWords = await repository.getTestWords();
-                    } else {
-                        learnedWords = await repository.getLearnedWords(debouncedSearch || undefined);
-                    }
-
-                    setWords(learnedWords);
-                    setCardSides(Array(learnedWords.length).fill(0 as CardSide));
+                    learnedWords = await repository.getLearnedWords(debouncedSearch || undefined);
                 }
+
+                setWords(learnedWords);
+                setCardSides(Array(learnedWords.length).fill(0 as CardSide));
             } catch (error) {
                 console.error("Error loading data:", error);
             } finally {
@@ -117,17 +108,6 @@ export function LearnedWordsView({ onBack }: LearnedWordsViewProps) {
     const renderContent = () => {
         if (loading) {
             return <LoadingState />;
-        }
-
-        if (viewMode === "stories") {
-            return (
-                <LearnedStoriesMode
-                    stories={stories}
-                    selectedStory={selectedStory}
-                    onStorySelect={setSelectedStory}
-                    onBackToStories={() => setSelectedStory(null)}
-                />
-            );
         }
 
         if (viewMode === "grid") {
