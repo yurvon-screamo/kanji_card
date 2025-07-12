@@ -19,7 +19,6 @@ RUN cargo build --release --workspace --bin kanji_card
 FROM debian AS runtime
 WORKDIR /app
 ENV RUST_LOG=INFO
-COPY --from=builder /usr/src/app/target/release/kanji_card /app/kanji_card
 RUN apt-get update && \
     apt-get install -y libssl-dev openssl ca-certificates && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
@@ -29,5 +28,7 @@ RUN groupadd -g 1001 kanji && \
     useradd -u 1001 -g kanji -m -s /bin/bash kanji && \
     chown -R kanji:kanji /app
 
+COPY --from=builder /usr/src/app/target/release/kanji_card /app/kanji_card
+COPY config.toml.template /app/config.toml
 EXPOSE 3000
 ENTRYPOINT ["/app/kanji_card"]

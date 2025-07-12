@@ -73,9 +73,10 @@ async fn main() -> Result<()> {
         set_repository.clone(),
         release_repository.clone(),
         llm_service.clone(),
+        settings.clone(),
     );
 
-    let rule_service = RuleService::new(rule_repository.clone(), llm_service);
+    let rule_service = RuleService::new(rule_repository.clone(), llm_service, settings.clone());
 
     let open_api_router = OpenApiRouter::new()
         .nest(

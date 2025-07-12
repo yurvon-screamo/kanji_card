@@ -1,4 +1,5 @@
 use crate::{
+    config::Settings,
     llm::{ExtractedWord, LlmService, WordsResponse},
     word::{
         domain::set::{LearnSet, LearnSetState},
@@ -14,6 +15,7 @@ pub struct SetService {
     set_repository: LearnSetRepository,
     release_repository: WordReleaseRepository,
     llm_service: LlmService,
+    config: Settings,
 }
 
 impl SetService {
@@ -21,36 +23,24 @@ impl SetService {
         set_repository: LearnSetRepository,
         release_repository: WordReleaseRepository,
         llm_service: LlmService,
+        config: Settings,
     ) -> Self {
         Self {
             set_repository,
             release_repository,
             llm_service,
+            config,
         }
     }
 
     #[instrument(skip(self, text))]
     pub async fn extract_words_from_text(&self, text: String) -> Result<Vec<ExtractedWord>> {
         info!("Extracting words from text");
-        let prompt = format!(
-            r#"Ты эксперт по японскому языку. Извлеки все японские слова из следующего текста и предоставь точные переводы.
-
-ВАЖНЫЕ ПРАВИЛА:
-1. Извлекай ТОЛЬКО японские слова (хирагана, катакана, кандзи или смешанные)
-2. Предоставляй точные русские переводы
-3. Игнорируй знаки препинания, числа и не-японский текст
-4. Каждое слово должно извлекаться отдельно (не объединяй фразы)
-5. Включай частицы (は, が, を, に и т.д.) как отдельные слова, если они встречаются отдельно
-6. Для указательных местоимений (これ, それ, あれ и т.д.) предоставляй конкретные переводы
-7. Пропускай дубликаты - если одно и то же слово встречается несколько раз, включи его только один раз
-
-Возвращай ТОЛЬКО валидный JSON в точно таком формате:
-{{"words": [{{"word": "japanese_word", "translation": "russian_translation"}}]}}
-
-Текст для анализа:
-{}"#,
-            text
-        );
+        let prompt = self
+            .config
+            .prompts
+            .extract_words_from_text
+            .replace("{text}", &text);
 
         let response: WordsResponse = self.llm_service.send_request(&prompt, 0.1).await?;
 
@@ -67,21 +57,7 @@ impl SetService {
         image_data: Vec<u8>,
     ) -> Result<Vec<ExtractedWord>> {
         info!("Extracting words from image");
-        let prompt = r#"Ты эксперт по японскому языку. Извлеки все японские слова из этого изображения и предоставь точные переводы.
-
-ВАЖНЫЕ ПРАВИЛА:
-1. Извлекай ТОЛЬКО японские слова (хирагана, катакана, кандзи или смешанные)
-2. Предоставляй точные русские переводы
-3. Игнорируй знаки препинания, числа и не-японский текст
-4. Каждое слово должно извлекаться отдельно (не объединяй фразы)
-5. Включай частицы (は, が, を, に и т.д.) как отдельные слова, если они встречаются отдельно
-6. Для указательных местоимений (これ, それ, あれ и т.д.) предоставляй конкретные переводы
-7. Пропускай дубликаты - если одно и то же слово встречается несколько раз, включи его только один раз
-
-Возвращай ТОЛЬКО валидный JSON в точно таком формате:
-{"words": [{"word": "japanese_word", "translation": "russian_translation"}]}
-
-Проанализируй изображение и извлеки все японские слова"#;
+        let prompt = &self.config.prompts.extract_words_from_image;
 
         let response: WordsResponse = self
             .llm_service
