@@ -4,7 +4,7 @@
 /* eslint-disable */
 export enum LearnSetState {
     TOBE = 'Tobe',
-    ONE_DAY = 'OneDay',
+    CURRENT = 'Current',
     TWO_DAY = 'TwoDay',
     THREE_DAY = 'ThreeDay',
     FIVE_DAY = 'FiveDay',

@@ -5,6 +5,7 @@ import { formatTimeToLearn, getTimeToLearnColor } from "../../../lib/timeUtils";
 
 const statusLabels: Record<string, string> = {
     Tobe: "Новые",
+    Current: "1 день",
     OneDay: "1 день",
     TwoDay: "2 дня",
     ThreeDay: "3 дня",
@@ -15,6 +16,7 @@ const statusLabels: Record<string, string> = {
 
 const statusColors: Record<string, "brand" | "danger" | "warning" | "success" | "important"> = {
     Tobe: "brand",
+    Current: "success",
     OneDay: "success",
     TwoDay: "success",
     ThreeDay: "success",
