@@ -1,4 +1,4 @@
-name: Deploy VPN
+name: Deploy kanji.uwuwu.net
 
 on:
   workflow_run:
