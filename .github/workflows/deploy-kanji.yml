@@ -9,7 +9,7 @@ on:
       - main
 
 jobs:
-  deploy-vpn:
+  deploy-kanji:
     runs-on: [self-hosted, uwuwu]
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     
