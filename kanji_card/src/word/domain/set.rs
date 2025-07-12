@@ -17,6 +17,7 @@ pub struct LearnSet {
 #[derive(PartialEq, Debug, Clone, Serialize, Deserialize, ToSchema)]
 pub enum LearnSetState {
     Tobe,
+    #[serde(rename = "Current")]
     OneDay,
     TwoDay,
     ThreeDay,
