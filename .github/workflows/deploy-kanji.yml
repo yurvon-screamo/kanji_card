@@ -14,7 +14,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     
     steps:
-      - name: Deploy VPN
+      - name: Deploy kanji.uwuwu.net
         run: |
           cd /root/uwuwu-vpn
           ./up.bash
