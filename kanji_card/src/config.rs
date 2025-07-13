@@ -1,6 +1,5 @@
 use serde::Deserialize;
 use std::time::Duration;
-use tracing::info;
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct ServerConfig {
@@ -54,7 +53,7 @@ impl Settings {
             .add_source(config::File::with_name("config"))
             .add_source(
                 config::Environment::with_prefix("KANJI_CARD")
-                    .separator("_")
+                    .separator("__")
                     .try_parsing(true),
             )
             .build()?
