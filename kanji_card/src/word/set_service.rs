@@ -87,13 +87,21 @@ impl SetService {
         let unique_words: Vec<ExtractedWord> = match skip_uniq {
             true => words,
             false => {
-                let mut existing_words = HashSet::new();
                 let all_sets = self.set_repository.list_all(user_login).await?;
+                let mut existing_words = self
+                    .release_repository
+                    .list_all_words(user_login)
+                    .await?
+                    .iter()
+                    .map(|x| x.word().to_owned())
+                    .collect::<HashSet<_>>();
+
                 for set in all_sets {
                     for card in set.words() {
                         existing_words.insert(card.word().to_string());
                     }
                 }
+
                 words
                     .into_iter()
                     .filter(|word| !existing_words.contains(&word.word))
