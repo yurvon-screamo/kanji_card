@@ -84,8 +84,8 @@ impl SetService {
             return Ok(());
         }
 
-        let unique_words: Vec<ExtractedWord> = match skip_uniq {
-            true => words,
+        let unique_words: HashSet<ExtractedWord> = match skip_uniq {
+            true => words.into_iter().collect(),
             false => {
                 let all_sets = self.set_repository.list_all(user_login).await?;
                 let mut existing_words = self

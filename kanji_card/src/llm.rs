@@ -63,7 +63,7 @@ struct ResponseMessage {
 }
 
 // Public types that will be used by services
-#[derive(Debug, Deserialize, Serialize, ToSchema)]
+#[derive(Debug, Deserialize, Serialize, PartialEq, Eq, ToSchema, Clone, Hash)]
 pub struct ExtractedWord {
     pub word: String,
     pub translation: String,
