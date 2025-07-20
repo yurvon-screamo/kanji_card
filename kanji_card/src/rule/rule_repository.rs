@@ -27,7 +27,7 @@ impl RuleRepository {
     pub async fn remove(&self, user_login: &str, rule_id: &str) -> anyhow::Result<()> {
         let file_path = self
             .get_user_path(user_login)
-            .join(format!("{}.json", rule_id));
+            .join(format!("{rule_id}.json"));
 
         fs::remove_file(file_path).await?;
         Ok(())
@@ -44,7 +44,7 @@ impl RuleRepository {
     }
 
     pub async fn load(&self, user_login: &str, id: &str) -> anyhow::Result<GrammarRule> {
-        let file_path = self.get_user_path(user_login).join(format!("{}.json", id));
+        let file_path = self.get_user_path(user_login).join(format!("{id}.json"));
         if file_path.exists() {
             let json = fs::read_to_string(file_path).await?;
             return Ok(serde_json::from_str(&json)?);

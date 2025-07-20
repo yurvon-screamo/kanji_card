@@ -24,7 +24,7 @@ impl UserRepository {
     }
 
     pub async fn save_user(&self, login: &str, password_hash: &str) -> Result<()> {
-        let user_path = self.base_path.join(format!("{}.json", login));
+        let user_path = self.base_path.join(format!("{login}.json"));
         let user = User {
             password_hash: password_hash.to_string(),
         };
@@ -34,7 +34,7 @@ impl UserRepository {
     }
 
     pub async fn get_user(&self, login: &str) -> Result<Option<User>> {
-        let user_path = self.base_path.join(format!("{}.json", login));
+        let user_path = self.base_path.join(format!("{login}.json"));
         if !user_path.exists() {
             return Ok(None);
         }

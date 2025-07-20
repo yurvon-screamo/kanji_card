@@ -26,7 +26,7 @@ impl WordReleaseRepository {
     pub async fn remove_word(&self, user_login: &str, card_id: &str) -> anyhow::Result<()> {
         let file_path = self
             .get_word_user_path(user_login)
-            .join(format!("{}.json", card_id));
+            .join(format!("{card_id}.json"));
 
         fs::remove_file(file_path).await?;
         Ok(())
@@ -65,7 +65,7 @@ impl WordReleaseRepository {
     pub async fn load_word(&self, user_login: &str, id: &str) -> anyhow::Result<WordCard> {
         let file_path = self
             .get_word_user_path(user_login)
-            .join(format!("{}.json", id));
+            .join(format!("{id}.json"));
         if file_path.exists() {
             let json = fs::read_to_string(file_path).await?;
             return Ok(serde_json::from_str(&json)?);

@@ -371,7 +371,7 @@ fn create_text_content(text: &str) -> Content {
 }
 
 fn create_image_content(image_base64: &str) -> Content {
-    let image_url = format!("data:image/jpeg;base64,{}", image_base64);
+    let image_url = format!("data:image/jpeg;base64,{image_base64}");
     Content::Image {
         content_type: "image_url".to_string(),
         image_url: ImageUrl { url: image_url },
