@@ -1,4 +1,3 @@
-use anyhow::{Result, anyhow};
 use chrono::{DateTime, Days, Utc};
 use serde::{Deserialize, Serialize};
 use ulid::Ulid;
@@ -26,14 +25,12 @@ pub enum LearnSetState {
     TenDay,
 }
 
-const MAX_SET_LEN: usize = 8;
-
 impl LearnSet {
-    pub fn new() -> Self {
+    pub fn new(words: Vec<WordCard>) -> Self {
         Self {
             id: Ulid::new().to_string(),
             state: LearnSetState::Tobe,
-            words: vec![],
+            words,
             state_timestamp: None,
         }
     }
@@ -70,7 +67,7 @@ impl LearnSet {
         &self.words
     }
 
-    pub fn iter(&mut self) -> Option<Vec<WordCard>> {
+    pub fn upgrade(&mut self) -> anyhow::Result<Option<Vec<WordCard>>> {
         self.state_timestamp = Some(Utc::now());
         self.state = match &self.state {
             LearnSetState::Tobe => LearnSetState::OneDay,
@@ -85,25 +82,14 @@ impl LearnSet {
             let mut words = vec![];
             for word in self.words.iter() {
                 let mut word = word.clone();
-                word.release_timestamp = Some(Utc::now());
+                word.mark_as_release()?;
                 words.push(word);
             }
-            Some(words)
+
+            self.words.clear();
+            Ok(Some(words))
         } else {
-            None
+            Ok(None)
         }
-    }
-
-    pub fn is_writabe(&self) -> bool {
-        self.words.len() < MAX_SET_LEN && self.state == LearnSetState::Tobe
-    }
-
-    pub fn push(&mut self, word: String, translation: String) -> Result<()> {
-        if !self.is_writabe() {
-            return Err(anyhow!("Set is not writable"));
-        }
-
-        self.words.push(WordCard::new(word, translation));
-        Ok(())
     }
 }

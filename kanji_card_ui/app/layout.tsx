@@ -1,8 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import "./globals.css";
-import { colors } from "@/lib/theme";
-import { ThemeProvider } from "next-themes";
+
 import { Providers } from "@/components/ui/providers";
 
 const mapleMono = localFont({
@@ -26,13 +25,14 @@ const mapleMono = localFont({
 
 export const metadata: Metadata = {
   title: "Kanji Card",
-  description: "Japanese kanji learning app with flashcards and spaced repetition",
+  description:
+    "Japanese kanji learning app with flashcards and spaced repetition",
   icons: {
-    icon: '/logo.svg',
-    apple: '/logo.svg',
-    shortcut: '/logo.svg',
+    icon: "/logo.svg",
+    apple: "/logo.svg",
+    shortcut: "/logo.svg",
   },
-  manifest: '/manifest.json',
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -42,17 +42,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${mapleMono.variable} antialiased ${colors.ui.background.main}`}
-      >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <Providers>{children}</Providers>
-        </ThemeProvider>
+      <body className={`${mapleMono.variable} antialiased`}>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

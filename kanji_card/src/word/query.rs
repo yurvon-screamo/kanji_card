@@ -12,38 +12,37 @@ use utoipa::ToSchema;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
 use crate::{
-    environment::auth::{Claims, JwtConfig, auth_middleware},
-    word::{
-        domain::set::LearnSetState, set_repository::LearnSetRepository,
-        word_release_repository::WordReleaseRepository,
-    },
+    user::auth::{Claims, JwtConfig, auth_middleware},
+    word::{domain::set::LearnSetState, set_repository::LearnSetRepository},
 };
+
+use super::{domain::JapanesePartOfSpeech, word_repository::WordRepository};
 
 #[derive(Clone)]
 struct QueryState {
-    repository: Arc<LearnSetRepository>,
-    release_repository: Arc<WordReleaseRepository>,
+    set_repository: Arc<LearnSetRepository>,
+    word_repository: Arc<WordRepository>,
 }
 
 pub fn query_router(
     set_repository: LearnSetRepository,
-    release_repository: WordReleaseRepository,
+    word_repository: WordRepository,
     jwt_config: JwtConfig,
 ) -> OpenApiRouter {
     OpenApiRouter::new()
+        .routes(routes!(get_overview))
+        .routes(routes!(list_unknown_words))
+        .routes(routes!(list_sets))
         .routes(routes!(get_set))
-        .routes(routes!(list_tobe_sets))
-        .routes(routes!(list_current_sets))
         .routes(routes!(list_released_words))
         .routes(routes!(list_test_released_words))
-        .routes(routes!(get_overview))
         .layer(middleware::from_fn_with_state(
             jwt_config.clone(),
             auth_middleware,
         ))
         .with_state(QueryState {
-            repository: Arc::new(set_repository),
-            release_repository: Arc::new(release_repository),
+            set_repository: Arc::new(set_repository),
+            word_repository: Arc::new(word_repository),
         })
 }
 
@@ -53,15 +52,7 @@ struct WordResponse {
     word: String,
     reading: Option<String>,
     translation: String,
-}
-
-#[derive(Serialize, ToSchema)]
-struct CurrentSets {
-    word_count_to_learn: usize,
-    need_to_learn: Vec<SetResponse>,
-
-    word_count_to_feature: usize,
-    to_feature: Vec<SetResponse>,
+    part_of_speech: Option<JapanesePartOfSpeech>,
 }
 
 #[derive(Serialize, ToSchema)]
@@ -109,7 +100,7 @@ async fn get_set(
     Path(set_id): Path<String>,
     Extension(claims): Extension<Claims>,
 ) -> Result<axum::Json<SetResponse>, (StatusCode, String)> {
-    match state.repository.load(&claims.sub, &set_id).await {
+    match state.set_repository.load_set(&claims.sub, &set_id).await {
         Ok(card_set) => {
             let response = SetResponse {
                 id: card_set.id().to_string(),
@@ -122,6 +113,7 @@ async fn get_set(
                         word: w.word().to_string(),
                         reading: Some(w.reading()),
                         translation: w.translation().to_string(),
+                        part_of_speech: w.part_of_speech().cloned(),
                     })
                     .collect(),
                 time_to_learn: card_set.time_to_learn(),
@@ -135,40 +127,39 @@ async fn get_set(
 
 #[utoipa::path(
     get,
-    path = "/sets/tobe",
+    path = "/sets/unknown",
     responses(
-        (status = 200, description = "List of tobe sets retrieved successfully", body = Vec<SetResponse>),
+        (status = 200, description = "List of unknown words retrieved successfully", body = Vec<WordResponse>),
         (status = 500, description = "Internal server error")
     )
 )]
 #[instrument(skip(state, claims))]
-async fn list_tobe_sets(
+async fn list_unknown_words(
     State(state): State<QueryState>,
     Extension(claims): Extension<Claims>,
-) -> Result<axum::Json<Vec<SetResponse>>, (StatusCode, String)> {
-    match state.repository.list_all(&claims.sub).await {
-        Ok(sets) => {
-            let response = sets
-                .into_iter()
-                .filter(|set| set.state() == &LearnSetState::Tobe)
-                .map(|set| SetResponse {
-                    id: set.id().to_string(),
-                    state: set.state().clone(),
-                    words: set
-                        .words()
-                        .iter()
-                        .map(|w| WordResponse {
-                            id: w.id().to_string(),
-                            word: w.word().to_string(),
-                            reading: Some(w.reading()),
-                            translation: w.translation().to_string(),
-                        })
-                        .collect(),
-                    time_to_learn: set.time_to_learn(),
-                    need_to_learn: set.need_to_learn(),
-                })
-                .collect();
-            Ok(axum::Json(response))
+) -> Result<axum::Json<Vec<WordResponse>>, (StatusCode, String)> {
+    // Get all word IDs from word repository
+    match state.word_repository.list_word_ids(&claims.sub).await {
+        Ok(word_ids) => {
+            let mut words = Vec::new();
+
+            // Load each word
+            for word_id in word_ids {
+                match state.word_repository.load_word(&claims.sub, &word_id).await {
+                    Ok(word) => {
+                        words.push(WordResponse {
+                            id: word.id().to_string(),
+                            word: word.word().to_string(),
+                            reading: Some(word.reading()),
+                            translation: word.translation().to_string(),
+                            part_of_speech: word.part_of_speech().cloned(),
+                        });
+                    }
+                    Err(_) => continue, // Skip words that couldn't be loaded
+                }
+            }
+
+            Ok(axum::Json(words))
         }
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     }
@@ -176,59 +167,49 @@ async fn list_tobe_sets(
 
 #[utoipa::path(
     get,
-    path = "/sets/current",
+    path = "/sets",
     responses(
-        (status = 200, description = "Current sets retrieved successfully", body = CurrentSets),
+        (status = 200, description = "List of all sets retrieved successfully", body = Vec<SetResponse>),
         (status = 500, description = "Internal server error")
     )
 )]
 #[instrument(skip(state, claims))]
-async fn list_current_sets(
+async fn list_sets(
     State(state): State<QueryState>,
     Extension(claims): Extension<Claims>,
-) -> Result<axum::Json<CurrentSets>, (StatusCode, String)> {
-    match state.repository.list_all(&claims.sub).await {
-        Ok(sets) => {
-            let mut need_to_learn = Vec::new();
-            let mut to_feature = Vec::new();
-            let mut word_count_to_learn = 0;
-            let mut word_count_to_feature = 0;
+) -> Result<axum::Json<Vec<SetResponse>>, (StatusCode, String)> {
+    // Get all set IDs from repository
+    match state.set_repository.list_ids(&claims.sub).await {
+        Ok(set_ids) => {
+            let mut sets = Vec::new();
 
-            for set in sets {
-                if set.state() != &LearnSetState::Tobe {
-                    let set_response = SetResponse {
-                        id: set.id().to_string(),
-                        state: set.state().clone(),
-                        words: set
-                            .words()
-                            .iter()
-                            .map(|w| WordResponse {
-                                id: w.id().to_string(),
-                                word: w.word().to_string(),
-                                reading: Some(w.reading()),
-                                translation: w.translation().to_string(),
-                            })
-                            .collect(),
-                        time_to_learn: set.time_to_learn(),
-                        need_to_learn: set.need_to_learn(),
-                    };
-
-                    if set.need_to_learn() {
-                        word_count_to_learn += set.words().len();
-                        need_to_learn.push(set_response);
-                    } else {
-                        word_count_to_feature += set.words().len();
-                        to_feature.push(set_response);
+            // Load each set
+            for set_id in set_ids {
+                match state.set_repository.load_set(&claims.sub, &set_id).await {
+                    Ok(set) => {
+                        sets.push(SetResponse {
+                            id: set.id().to_string(),
+                            state: set.state().clone(),
+                            words: set
+                                .words()
+                                .iter()
+                                .map(|w| WordResponse {
+                                    id: w.id().to_string(),
+                                    word: w.word().to_string(),
+                                    reading: Some(w.reading()),
+                                    translation: w.translation().to_string(),
+                                    part_of_speech: w.part_of_speech().cloned(),
+                                })
+                                .collect(),
+                            time_to_learn: set.time_to_learn(),
+                            need_to_learn: set.need_to_learn(),
+                        });
                     }
+                    Err(_) => continue, // Skip sets that couldn't be loaded
                 }
             }
 
-            Ok(axum::Json(CurrentSets {
-                word_count_to_learn,
-                need_to_learn,
-                word_count_to_feature,
-                to_feature,
-            }))
+            Ok(axum::Json(sets))
         }
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     }
@@ -253,26 +234,33 @@ async fn list_released_words(
 ) -> Result<axum::Json<Vec<WordResponse>>, (StatusCode, String)> {
     let search = params.search.map(|x| x.to_lowercase());
 
-    match state.release_repository.list_all_words(&claims.sub).await {
-        Ok(cards) => {
-            let response = cards
-                .iter()
-                .filter(|w| {
-                    if let Some(search) = &search {
-                        w.word().to_lowercase().contains(search)
-                            || w.translation().to_lowercase().contains(search)
+    match state.word_repository.list_word_ids(&claims.sub).await {
+        Ok(word_ids) => {
+            let mut words = Vec::new();
+
+            // Load each word and filter by search
+            for word_id in word_ids {
+                if let Ok(word) = state.word_repository.load_word(&claims.sub, &word_id).await {
+                    let matches_search = if let Some(search) = &search {
+                        word.word().to_lowercase().contains(search)
+                            || word.translation().to_lowercase().contains(search)
                     } else {
                         true
+                    };
+
+                    if matches_search {
+                        words.push(WordResponse {
+                            id: word.id().to_string(),
+                            word: word.word().to_string(),
+                            reading: Some(word.reading()),
+                            translation: word.translation().to_string(),
+                            part_of_speech: word.part_of_speech().cloned(),
+                        });
                     }
-                })
-                .map(|w| WordResponse {
-                    id: w.id().to_string(),
-                    word: w.word().to_string(),
-                    reading: Some(w.reading()),
-                    translation: w.translation().to_string(),
-                })
-                .collect();
-            Ok(axum::Json(response))
+                }
+            }
+
+            Ok(axum::Json(words))
         }
         Err(e) => Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     }
@@ -307,52 +295,55 @@ async fn get_overview(
     };
 
     // Handle current and tobe sets
-    match state.repository.list_all(&claims.sub).await {
-        Ok(all_sets) => {
-            for card_set in all_sets {
-                let preview = match card_set.state() {
-                    LearnSetState::Tobe => &mut overview.tobe,
-                    _ => &mut overview.current,
-                };
+    match state.set_repository.list_ids(&claims.sub).await {
+        Ok(set_ids) => {
+            for set_id in set_ids {
+                if let Ok(card_set) = state.set_repository.load_set(&claims.sub, &set_id).await {
+                    let preview = match card_set.state() {
+                        LearnSetState::Tobe => &mut overview.tobe,
+                        _ => &mut overview.current,
+                    };
 
-                preview.total_words += card_set.words().len();
+                    preview.total_words += card_set.words().len();
 
-                if preview.preview_words.len() < 3 {
-                    preview.preview_words.extend(
-                        card_set
-                            .words()
-                            .iter()
-                            .take(3 - preview.preview_words.len())
-                            .map(|w| WordResponse {
-                                id: w.id().to_string(),
-                                word: w.word().to_string(),
-                                reading: Some(w.reading()),
-                                translation: w.translation().to_string(),
-                            }),
-                    );
+                    if preview.preview_words.len() < 3 {
+                        preview.preview_words.extend(
+                            card_set
+                                .words()
+                                .iter()
+                                .take(3 - preview.preview_words.len())
+                                .map(|w| WordResponse {
+                                    id: w.id().to_string(),
+                                    word: w.word().to_string(),
+                                    reading: Some(w.reading()),
+                                    translation: w.translation().to_string(),
+                                    part_of_speech: w.part_of_speech().cloned(),
+                                }),
+                        );
+                    }
                 }
             }
         }
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     }
 
-    match state.release_repository.list_all_words(&claims.sub).await {
-        Ok(finished_cards) => {
-            overview.finished.total_words = finished_cards.len();
+    match state.word_repository.list_word_ids(&claims.sub).await {
+        Ok(word_ids) => {
+            overview.finished.total_words = word_ids.len();
 
-            if overview.finished.preview_words.len() < 3 {
-                overview.finished.preview_words.extend(
-                    finished_cards
-                        .iter()
-                        .take(3 - overview.finished.preview_words.len())
-                        .map(|w| WordResponse {
-                            id: w.id().to_string(),
-                            word: w.word().to_string(),
-                            reading: Some(w.reading()),
-                            translation: w.translation().to_string(),
-                        }),
-                );
+            let mut finished_words = Vec::new();
+            for word_id in word_ids.iter().take(3) {
+                if let Ok(word) = state.word_repository.load_word(&claims.sub, word_id).await {
+                    finished_words.push(WordResponse {
+                        id: word.id().to_string(),
+                        word: word.word().to_string(),
+                        reading: Some(word.reading()),
+                        translation: word.translation().to_string(),
+                        part_of_speech: word.part_of_speech().cloned(),
+                    });
+                }
             }
+            overview.finished.preview_words = finished_words;
         }
         Err(e) => return Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string())),
     }
@@ -373,9 +364,19 @@ async fn list_test_released_words(
     State(state): State<QueryState>,
     Extension(claims): Extension<Claims>,
 ) -> Result<axum::Json<Vec<WordResponse>>, (StatusCode, String)> {
-    match state.release_repository.list_all_words(&claims.sub).await {
-        Ok(mut cards) => {
-            cards.sort_by(|a, b| {
+    match state.word_repository.list_word_ids(&claims.sub).await {
+        Ok(word_ids) => {
+            let mut words = Vec::new();
+
+            // Load each word
+            for word_id in word_ids {
+                if let Ok(word) = state.word_repository.load_word(&claims.sub, &word_id).await {
+                    words.push(word);
+                }
+            }
+
+            // Sort by release timestamp if available
+            words.sort_by(|a, b| {
                 match (a.release_timestamp(), b.release_timestamp()) {
                     (Some(a_time), Some(b_time)) => b_time.cmp(&a_time), // newest first
                     (Some(_), None) => std::cmp::Ordering::Less,
@@ -384,13 +385,14 @@ async fn list_test_released_words(
                 }
             });
 
-            let result = cards
+            let result = words
                 .iter()
                 .map(|w| WordResponse {
                     id: w.id().to_string(),
                     word: w.word().to_string(),
                     reading: Some(w.reading()),
                     translation: w.translation().to_string(),
+                    part_of_speech: w.part_of_speech().cloned(),
                 })
                 .collect();
 

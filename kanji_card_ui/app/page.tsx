@@ -1,51 +1,20 @@
-'use client';
+"use client";
 
-import { Suspense } from 'react';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { PoolView } from '@/components/flashcards/pool/PoolView';
-import { LoadingSpinner } from '@/components/ui/LoadingSpinner';
-import { useRouter } from 'next/navigation';
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
-function HomePageContent() {
+export default function HomePage() {
   const router = useRouter();
 
-  const handleViewModeChange = (mode: string, collection?: string) => {
-    // Navigate based on the mode
-    switch (mode) {
-      case 'set-selection':
-        const url = collection ? `/sets?collection=${collection}` : '/sets';
-        router.push(url);
-        break;
-      case 'study':
-        router.push('/study');
-        break;
-      case 'add-cards':
-        router.push('/add-cards');
-        break;
-      case 'learned':
-        router.push('/learned');
-        break;
-      case 'rules':
-        router.push('/rules');
-        break;
-      default:
-        break;
-    }
-  };
+  useEffect(() => {
+    router.replace("/sets");
+  }, [router]);
 
-  return (
-    <PoolView
-      setViewMode={handleViewModeChange}
-    />
-  );
-}
-
-export default function Page() {
   return (
     <ProtectedRoute>
-      <Suspense fallback={<LoadingSpinner />}>
-        <HomePageContent />
-      </Suspense>
+      <LoadingSpinner size="lg" label="Redirecting to sets..." />
     </ProtectedRoute>
   );
 }

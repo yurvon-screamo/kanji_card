@@ -1,26 +1,43 @@
-"use client"
+"use client";
 
-import { FluentProvider, webLightTheme, webDarkTheme } from "@fluentui/react-components";
-import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { ChakraProvider } from "@chakra-ui/react";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { useState, useEffect } from "react";
+import { ColorModeProvider, type ColorModeProviderProps } from "./color-mode";
+import { system } from "@/lib/theme";
+import { OpenAPI } from "@/api";
 
-export function Providers({ children }: { children: React.ReactNode }) {
-    const { theme, resolvedTheme } = useTheme();
-    const [mounted, setMounted] = useState(false);
+export function Providers(props: ColorModeProviderProps) {
+  const [queryClient] = useState(
+    () =>
+      new QueryClient({
+        defaultOptions: {
+          queries: {
+            staleTime: 60 * 1000, // 1 minute
+            refetchOnWindowFocus: false,
+          },
+        },
+      }),
+  );
 
-    useEffect(() => {
-        setMounted(true);
-    }, []);
+  useEffect(() => {
+    OpenAPI.BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+    OpenAPI.WITH_CREDENTIALS = true;
+    OpenAPI.CREDENTIALS = "include";
+    OpenAPI.HEADERS = {
+      "Content-Type": "application/json",
+    };
+  }, []);
 
-    if (!mounted) {
-        return null;
-    }
-
-    const currentTheme = theme === 'dark' || resolvedTheme === 'dark' ? webDarkTheme : webLightTheme;
-
-    return (
-        <FluentProvider theme={currentTheme}>
-            {children}
-        </FluentProvider>
-    );
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ChakraProvider value={system}>
+        <ColorModeProvider {...props}>
+          {props.children}
+          <ReactQueryDevtools initialIsOpen={false} />
+        </ColorModeProvider>
+      </ChakraProvider>
+    </QueryClientProvider>
+  );
 }

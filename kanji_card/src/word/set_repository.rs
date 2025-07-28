@@ -24,32 +24,31 @@ impl LearnSetRepository {
         self.storage_dir.join(user_login)
     }
 
-    pub async fn remove(&self, user_login: &str, card_set_id: &str) -> anyhow::Result<()> {
-        let file_path = self
-            .get_user_path(user_login)
-            .join(format!("{card_set_id}.json"));
-
-        fs::remove_file(file_path).await?;
+    pub async fn remove_set(&self, user_login: &str, card_set_id: &str) -> anyhow::Result<()> {
+        fs::remove_file(
+            self.get_user_path(user_login)
+                .join(format!("{card_set_id}.json")),
+        )
+        .await?;
         Ok(())
     }
 
-    pub async fn save(&self, user_login: &str, card_set: &LearnSet) -> anyhow::Result<()> {
+    pub async fn save_set(&self, user_login: &str, card_set: &LearnSet) -> anyhow::Result<()> {
         let json = serde_json::to_string_pretty(card_set)?;
         let file_path = self
             .get_user_path(user_login)
             .join(format!("{}.json", card_set.id()));
-
         fs::write(file_path, json).await?;
         Ok(())
     }
 
-    pub async fn load(&self, user_login: &str, id: &str) -> anyhow::Result<LearnSet> {
+    pub async fn load_set(&self, user_login: &str, id: &str) -> anyhow::Result<LearnSet> {
         let file_path = self.get_user_path(user_login).join(format!("{id}.json"));
         if file_path.exists() {
-            let json = fs::read_to_string(file_path).await?;
-            return Ok(serde_json::from_str(&json)?);
+            Ok(serde_json::from_str(&fs::read_to_string(file_path).await?)?)
+        } else {
+            Err(anyhow!("Card set not found"))
         }
-        Err(anyhow!("Card set not found"))
     }
 
     pub async fn list_ids(&self, user_login: &str) -> anyhow::Result<Vec<String>> {
@@ -68,17 +67,5 @@ impl LearnSetRepository {
         }
 
         Ok(ids)
-    }
-
-    pub async fn list_all(&self, user_login: &str) -> anyhow::Result<Vec<LearnSet>> {
-        let mut all_sets = Vec::new();
-
-        for id in self.list_ids(user_login).await? {
-            if let Ok(set) = self.load(user_login, &id).await {
-                all_sets.push(set);
-            }
-        }
-
-        Ok(all_sets)
     }
 }

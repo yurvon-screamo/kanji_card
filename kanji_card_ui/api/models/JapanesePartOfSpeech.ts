@@ -4,6 +4,7 @@
 /* eslint-disable */
 export enum JapanesePartOfSpeech {
     MEISHI = 'Meishi',
+    KOYUUMEISHI = 'Koyuumeishi',
     DAIMEISHI = 'Daimeishi',
     DOUSHI = 'Doushi',
     KEIYOUSHI = 'Keiyoushi',
@@ -14,4 +15,10 @@ export enum JapanesePartOfSpeech {
     JOSHI = 'Joshi',
     JODOUSHI = 'Jodoushi',
     KANDOUSHI = 'Kandoushi',
+    SUUSHI = 'Suushi',
+    SETTOUSHI = 'Settoushi',
+    SETSUBIJI = 'Setsubiji',
+    KANYOGO = 'Kanyogo',
+    GITAIGO = 'Gitaigo',
+    OTHER = 'Other',
 }

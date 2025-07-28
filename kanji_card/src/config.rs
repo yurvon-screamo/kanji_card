@@ -34,8 +34,6 @@ pub struct TlsConfig {
 pub struct PromptsConfig {
     pub extract_words_from_text: String,
     pub extract_words_from_image: String,
-    pub extract_grammar_rule_from_text: String,
-    pub generate_grammar_rule_from_description: String,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -60,8 +58,8 @@ impl Settings {
             .try_deserialize::<Settings>()
     }
 
-    pub fn jwt_config(&self) -> crate::environment::auth::JwtConfig {
-        crate::environment::auth::JwtConfig {
+    pub fn jwt_config(&self) -> crate::user::auth::JwtConfig {
+        crate::user::auth::JwtConfig {
             secret: self.jwt.secret_key.as_bytes().to_vec(),
             token_expiry: Duration::from_secs(self.jwt.token_expiry),
             refresh_threshold: Duration::from_secs(self.jwt.refresh_threshold),

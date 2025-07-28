@@ -1,4 +1,4 @@
-use crate::{environment::auth, llm::ExtractedWord, word::set_service::SetService};
+use crate::{llm::ExtractedWord, user::auth, word::set_service::SetService};
 use auth::{Claims, JwtConfig, auth_middleware};
 use axum::{
     Json,
@@ -12,24 +12,37 @@ use tracing::{error, info, instrument};
 use utoipa::ToSchema;
 use utoipa_axum::{router::OpenApiRouter, routes};
 
+use super::{word_creator::WordCreator, word_release_manager::WordReleaseManager};
+
 #[derive(Clone)]
 struct ApiState {
+    word_creator: Arc<WordCreator>,
     set_service: Arc<SetService>,
+    word_release_manager: Arc<WordReleaseManager>,
 }
 
-pub fn set_api_router(set_service: SetService, jwt_config: JwtConfig) -> OpenApiRouter {
+pub fn set_api_router(
+    word_creator: WordCreator,
+    set_service: SetService,
+    word_release_manager: WordReleaseManager,
+
+    jwt_config: JwtConfig,
+) -> OpenApiRouter {
     OpenApiRouter::new()
         .routes(routes!(extract_words_from_text))
         .routes(routes!(extract_words_from_image))
         .routes(routes!(save_words))
-        .routes(routes!(to_next_learn_iter))
-        .routes(routes!(mark_as_tobe))
+        .routes(routes!(next_iter))
+        .routes(routes!(build_new_set))
+        .routes(routes!(mark_word_as_unknown))
         .layer(middleware::from_fn_with_state(
             jwt_config.clone(),
             auth_middleware,
         ))
         .with_state(ApiState {
+            word_creator: Arc::new(word_creator),
             set_service: Arc::new(set_service),
+            word_release_manager: Arc::new(word_release_manager),
         })
 }
 
@@ -48,26 +61,19 @@ struct SaveWordsRequest {
     words: Vec<ExtractedWord>,
 }
 
-#[derive(Serialize, Deserialize, ToSchema)]
-pub struct LoginRequest {
-    login: String,
-    password: String,
-}
-
-#[derive(Serialize, Deserialize, ToSchema)]
-pub struct RegisterRequest {
-    login: String,
-    password: String,
+#[derive(Serialize, Deserialize, ToSchema, Debug)]
+struct MarkAsTobeRequest {
+    set_size: usize,
 }
 
 #[derive(Serialize, Deserialize, ToSchema, Debug)]
-struct MarkAsTobeRequest {
-    word_ids: Vec<String>,
+struct MarkAsUnknownRequest {
+    word_id: String,
 }
 
 #[utoipa::path(
     post,
-    path = "/sets/words/extract/text",
+    path = "/extract/text",
     request_body = ExtractWordsFromTextRequest,
     responses(
         (status = 200, description = "Words extracted successfully", body = Vec<ExtractedWord>),
@@ -81,7 +87,7 @@ async fn extract_words_from_text(
 ) -> Result<axum::Json<Vec<ExtractedWord>>, (StatusCode, String)> {
     info!("Extracting words from text");
     match state
-        .set_service
+        .word_creator
         .extract_words_from_text(request.text)
         .await
     {
@@ -98,7 +104,7 @@ async fn extract_words_from_text(
 
 #[utoipa::path(
     post,
-    path = "/sets/words/extract/image",
+    path = "/extract/image",
     request_body = ExtractWordsFromImageRequest,
     responses(
         (status = 200, description = "Words extracted successfully", body = Vec<ExtractedWord>),
@@ -112,7 +118,7 @@ async fn extract_words_from_image(
 ) -> Result<axum::Json<Vec<ExtractedWord>>, (StatusCode, String)> {
     info!("Extracting words from image");
     match state
-        .set_service
+        .word_creator
         .extract_words_from_image(request.image_data)
         .await
     {
@@ -129,7 +135,7 @@ async fn extract_words_from_image(
 
 #[utoipa::path(
     post,
-    path = "/sets/words/save",
+    path = "/save_word",
     request_body = SaveWordsRequest,
     responses(
         (status = 200, description = "Words saved successfully"),
@@ -148,8 +154,8 @@ async fn save_words(
         claims.sub
     );
     match state
-        .set_service
-        .save_extracted_words(&claims.sub, request.words, false)
+        .word_creator
+        .save_extracted_words(&claims.sub, request.words)
         .await
     {
         Ok(_) => {
@@ -165,9 +171,9 @@ async fn save_words(
 
 #[utoipa::path(
     put,
-    path = "/sets/{id}/to_next_learn_iter",
+    path = "/next_iter/{set_id}",
     params(
-        ("id" = String, Path, description = "Set ID")
+        ("set_id" = String, Path, description = "Set ID")
     ),
     responses(
         (status = 200, description = "Set to next learn stage successfully"),
@@ -175,7 +181,7 @@ async fn save_words(
     )
 )]
 #[instrument(skip(state, claims), fields(set_id = %set_id))]
-async fn to_next_learn_iter(
+async fn next_iter(
     State(state): State<ApiState>,
     axum::extract::Path(set_id): axum::extract::Path<String>,
     Extension(claims): Extension<Claims>,
@@ -194,8 +200,8 @@ async fn to_next_learn_iter(
 }
 
 #[utoipa::path(
-    put,
-    path = "/sets/tobe",
+    post,
+    path = "/build_set",
     request_body = MarkAsTobeRequest,
     responses(
         (status = 200, description = "Words marked as tobe successfully"),
@@ -203,19 +209,19 @@ async fn to_next_learn_iter(
     )
 )]
 #[instrument(skip(state, claims, request))]
-async fn mark_as_tobe(
+async fn build_new_set(
     State(state): State<ApiState>,
     Extension(claims): Extension<Claims>,
     Json(request): Json<MarkAsTobeRequest>,
 ) -> Result<StatusCode, (StatusCode, String)> {
     info!(
         "Marking {} words as tobe for user {}",
-        request.word_ids.len(),
-        claims.sub
+        request.set_size, claims.sub
     );
+
     match state
         .set_service
-        .mark_as_tobe(&claims.sub, request.word_ids)
+        .build_new_set(&claims.sub, request.set_size)
         .await
     {
         Ok(_) => {
@@ -225,6 +231,48 @@ async fn mark_as_tobe(
         Err(e) => {
             error!(
                 "Failed to mark words as tobe for user {}: {}",
+                claims.sub, e
+            );
+            Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))
+        }
+    }
+}
+
+#[utoipa::path(
+    put,
+    path = "/word_as_unknown",
+    request_body = MarkAsUnknownRequest,
+    responses(
+        (status = 200, description = "Words marked as unknown successfully"),
+        (status = 500, description = "Internal server error")
+    )
+)]
+#[instrument(skip(state, claims, request))]
+async fn mark_word_as_unknown(
+    State(state): State<ApiState>,
+    Extension(claims): Extension<Claims>,
+    Json(request): Json<MarkAsUnknownRequest>,
+) -> Result<StatusCode, (StatusCode, String)> {
+    info!(
+        "Marking {} words as unknown for user {}",
+        request.word_id, claims.sub
+    );
+
+    match state
+        .word_release_manager
+        .unknown_word(&claims.sub, &request.word_id)
+        .await
+    {
+        Ok(_) => {
+            info!(
+                "Successfully marked words as unknown for user {}",
+                claims.sub
+            );
+            Ok(StatusCode::OK)
+        }
+        Err(e) => {
+            error!(
+                "Failed to mark words as unknown for user {}: {}",
                 claims.sub, e
             );
             Err((StatusCode::INTERNAL_SERVER_ERROR, e.to_string()))

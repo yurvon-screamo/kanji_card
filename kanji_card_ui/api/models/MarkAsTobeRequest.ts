@@ -3,6 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 export type MarkAsTobeRequest = {
-    word_ids: Array<string>;
+    set_size: number;
 };
 

@@ -1,8 +1,6 @@
 mod config;
-mod environment;
 mod llm;
-mod rule;
-mod user_repository;
+mod user;
 mod web_ui;
 mod word;
 
@@ -24,22 +22,20 @@ use tokio::fs;
 use tower_http::cors::CorsLayer;
 use tracing::info;
 use tracing_subscriber::EnvFilter;
+use user::{auth_api, user_repository};
 use utoipa_axum::router::OpenApiRouter;
 use utoipa_swagger_ui::SwaggerUi;
+use word::{
+    word_creator::WordCreator, word_release_manager::WordReleaseManager,
+    word_repository::WordRepository,
+};
 
 use crate::{
     config::Settings,
-    rule::{rule_repository, rule_service::RuleService},
-    word::{
-        set_repository::LearnSetRepository, set_service::SetService,
-        word_release_repository::WordReleaseRepository,
-    },
+    word::{set_repository::LearnSetRepository, set_service::SetService},
 };
 
-use crate::{
-    environment::{api, auth_api, query},
-    web_ui::static_handler,
-};
+use crate::web_ui::static_handler;
 
 #[derive(Parser, Debug)]
 #[command(author, version, about, long_about = None)]
@@ -56,7 +52,9 @@ async fn main() -> Result<()> {
     let settings = Settings::load()?;
 
     let user_repository = user_repository::UserRepository::new().await?;
-    let rule_repository = rule_repository::RuleRepository::new().await?;
+    let set_repository = LearnSetRepository::new().await?;
+    let word_repository = WordRepository::new().await?;
+
     let jwt_config = settings.jwt_config();
     let llm_service = LlmService::new(
         settings.openrouter.base_url.clone(),
@@ -67,16 +65,14 @@ async fn main() -> Result<()> {
         settings.openrouter.max_completion_tokens,
     );
 
-    let release_repository = WordReleaseRepository::new().await?;
-    let set_repository = LearnSetRepository::new().await?;
-    let set_service = SetService::new(
+    let word_creator = WordCreator::new(
         set_repository.clone(),
-        release_repository.clone(),
+        word_repository.clone(),
         llm_service.clone(),
         settings.clone(),
     );
-
-    let rule_service = RuleService::new(rule_repository.clone(), llm_service, settings.clone());
+    let set_service = SetService::new(set_repository.clone(), word_repository.clone());
+    let word_release_manager = WordReleaseManager::new(word_repository.clone());
 
     let open_api_router = OpenApiRouter::new()
         .nest(
@@ -84,20 +80,17 @@ async fn main() -> Result<()> {
             auth_api::jwt_api_router(user_repository, jwt_config.clone()),
         )
         .nest(
-            "/api/rule",
-            api::set_api_router(rule_service, jwt_config.clone()),
-        )
-        .nest(
-            "/api/rule/query",
-            query::query_router(rule_repository.clone(), jwt_config.clone()),
-        )
-        .nest(
             "/api/word",
-            word::api::set_api_router(set_service, jwt_config.clone()),
+            word::api::set_api_router(
+                word_creator,
+                set_service,
+                word_release_manager,
+                jwt_config.clone(),
+            ),
         )
         .nest(
             "/api/word/query",
-            word::query::query_router(set_repository, release_repository, jwt_config.clone()),
+            word::query::query_router(set_repository, word_repository, jwt_config.clone()),
         );
 
     let (router, mut api) = open_api_router.split_for_parts();

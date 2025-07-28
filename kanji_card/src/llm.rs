@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 use tracing::{error, info, instrument};
 use utoipa::ToSchema;
 
-use crate::rule::rule::JapanesePartOfSpeech;
+use crate::word::domain::JapanesePartOfSpeech;
 
 #[derive(Debug, Serialize)]
 struct OpenRouterRequest {
@@ -62,40 +62,16 @@ struct ResponseMessage {
     content: String,
 }
 
-// Public types that will be used by services
 #[derive(Debug, Deserialize, Serialize, PartialEq, Eq, ToSchema, Clone, Hash)]
 pub struct ExtractedWord {
     pub word: String,
     pub translation: String,
+    pub part_of_speech: JapanesePartOfSpeech,
 }
 
 #[derive(Debug, Deserialize)]
 pub struct WordsResponse {
     pub words: Vec<ExtractedWord>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct GrammarRuleResponse {
-    pub title: String,
-    pub conspect: String,
-    pub part_of_speech: JapanesePartOfSpeech,
-    pub examples: Vec<GrammarExampleResponse>,
-    pub tests: Vec<GrammarTestResponse>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct GrammarExampleResponse {
-    pub title: String,
-    pub content: String,
-    pub description: String,
-    pub content_translation: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct GrammarTestResponse {
-    pub rus_description: String,
-    pub question_content: String,
-    pub answer: String,
 }
 
 #[derive(Clone)]
